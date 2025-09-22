@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Community - {{ community.name }}{% endblock %}
+
+{% block sidebar %}
+<ul>
+    <li><a href="{% url 'home' %}">Home</a></li>
+    {% if request.user.is_authenticated %}
+        <li><a href="{% url 'profile_view' %}">My Profile</a></li>
+        <li><a href="{% url 'create-community' %}">Create Community</a></li>
+        <li><a href="{% url 'create-post' %}">Create Post</a></li>
+    {% else %}
+        <li><a href="{% url 'login' %}">Login</a></li>
+        <li><a href="{% url 'register' %}">Register</a></li>
+    {% endif %}
+</ul>
+{% endblock %}
+
+{% block content %}
+<h1>Edit Community: {{ community.name }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="name">Community Name:</label>
+        <input type="text" name="name" id="name" value="{{ community.name }}" class="form-control" required>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea name="description" id="description" class="form-control" rows="4">{{ community.description }}</textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Update Community</button>
+    <a href="{% url 'community-detail' community.id %}" class="btn btn-secondary mt-2">Cancel</a>
+</form>
+{% endblock %}

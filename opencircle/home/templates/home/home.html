@@ -1,0 +1,894 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home - OpenCircle{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="home-zinc-container">
+    
+    <!-- Welcome Header Section -->
+    <div class="welcome-section-zinc">
+        <div class="container-fluid px-4">
+            <div class="welcome-content">
+                <div class="welcome-text">
+                    <h1 class="welcome-title">Welcome to OpenCircle</h1>
+                    <p class="welcome-subtitle">Connect, share, and discover amazing content from your communities</p>
+                </div>
+                
+                {% if user.is_authenticated %}
+                    <div class="quick-actions-zinc">
+                        <a href="{% url 'create-community' %}" class="btn-zinc-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Create Community
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="auth-actions-zinc">
+                        <a href="{% url 'register' %}" class="btn-zinc-primary">
+                            <i class="bi bi-person-plus me-2"></i>Join OpenCircle
+                        </a>
+                        <a href="{% url 'login' %}" class="btn-zinc-secondary">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="main-content-layout">
+        <div class="container-fluid px-4">
+            <div class="row">
+                
+                <!-- Main Feed Column -->
+                <div class="col-lg-8">
+                    
+                    <!-- Feed Controls -->
+                    <div class="feed-controls-zinc">
+                        <div class="feed-header">
+                            <h2 class="feed-title">
+                                <i class="bi bi-newspaper me-2"></i>Your Feed
+                            </h2>
+                            <div class="feed-filters">
+                                <button class="filter-btn-zinc active" data-filter="all">All Posts</button>
+                                <button class="filter-btn-zinc" data-filter="following">Following</button>
+                                <button class="filter-btn-zinc" data-filter="trending">Trending</button>
+                            </div>
+                        </div>
+                        
+                        {% if user.is_authenticated %}
+                            <!-- Quick Post Creator -->
+                            <div class="quick-post-creator-zinc">
+                                <div class="creator-avatar">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ user.profile_picture.url }}" alt="Your avatar" class="avatar-img">
+                                    {% else %}
+                                        <div class="avatar-placeholder">{{ user.username|first|upper }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="creator-input-area">
+                                    <input type="text" 
+                                           placeholder="What's on your mind, {{ user.first_name|default:user.username }}?" 
+                                           class="quick-post-input"
+                                           readonly>
+                                    <div class="creator-actions">
+                                        <button class="action-btn-zinc photo-btn">
+                                            <i class="bi bi-image"></i>
+                                            Photo
+                                        </button>
+                                        <button class="action-btn-zinc video-btn">
+                                            <i class="bi bi-camera-video"></i>
+                                            Video
+                                        </button>
+                                        <button class="action-btn-zinc poll-btn">
+                                            <i class="bi bi-bar-chart"></i>
+                                            Poll
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Posts Feed -->
+                    <div class="posts-feed-zinc">
+                        {% for post in posts %}
+                            {% include "posts/post_item.html" with post=post %}
+                        {% empty %}
+                            <div class="empty-feed-zinc">
+                                <div class="empty-illustration">
+                                    <i class="bi bi-chat-square-text"></i>
+                                </div>
+                                <h3>Your feed is empty</h3>
+                                <p>Start following communities and users to see their posts in your feed</p>
+                                
+                                {% if user.is_authenticated %}
+                                    <div class="empty-actions">
+                                        <a href="{% url 'create-community' %}" class="btn-zinc-primary">
+                                            <i class="bi bi-plus-circle me-2"></i>Create Community
+                                        </a>
+                                        <button class="btn-zinc-secondary explore-btn">
+                                            <i class="bi bi-compass me-2"></i>Explore Communities
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="empty-actions">
+                                        <a href="{% url 'register' %}" class="btn-zinc-primary">Get Started</a>
+                                        <a href="{% url 'login' %}" class="btn-zinc-secondary">Sign In</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <!-- Load More Button -->
+                        {% if posts %}
+                            <div class="load-more-section">
+                                <button class="btn-zinc-secondary load-more-btn">
+                                    <i class="bi bi-arrow-down-circle me-2"></i>Load More Posts
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Sidebar Column -->
+                <div class="col-lg-4">
+                    
+                    <!-- Trending Communities -->
+                    <div class="sidebar-card-zinc">
+                        <h3 class="sidebar-title">
+                            <i class="bi bi-people-fill me-2"></i>Popular Communities
+                        </h3>
+                        <div class="trending-communities">
+                            {% for community in top_communities %}
+                            <div class="community-item-zinc">
+                                <div class="community-avatar-small">{{ community.name|first|upper }}</div>
+                                <div class="community-info">
+                                    <a href="{% url 'community-detail' community.id %}" class="community-name">
+                                        <h5>{{ community.name }}</h5>
+                                    </a>
+                                    <span class="member-count">{{ community.member_count }} member{{ community.member_count|pluralize }}</span>
+                                </div>
+                                {% if user.is_authenticated %}
+                                    {% if user in community.members.all %}
+                                        <a href="{% url 'leave-community' community.id %}" class="btn btn-sm btn-outline-danger">Leave</a>
+                                    {% else %}
+                                        <form method="post" action="{% url 'community-detail' community.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" name="join_community" class="btn btn-sm btn-primary">Join</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">No communities yet</p>
+                            {% endfor %}
+                                <button class="join-btn-small">Join</button>
+                            </div>
+                            <div class="community-item-zinc">
+                                <div class="community-avatar-small">P</div>
+                                <div class="community-info">
+                                    <h5>Photography</h5>
+                                    <span class="member-count">642 members</span>
+                                </div>
+                                <button class="join-btn-small">Join</button>
+                            </div>
+                        </div>
+                        <a href="#" class="see-more-link">See all communities</a>
+                    </div>
+
+                    <!-- Suggested Users -->
+                    {% if user.is_authenticated %}
+                        <div class="sidebar-card-zinc">
+                            <h3 class="sidebar-title">
+                                <i class="bi bi-people me-2"></i>My Followers
+                            </h3>
+                            <div class="followers-list">
+                                {% for follower in followers %}
+                                <div class="user-item-zinc">
+                                    <div class="user-avatar-small">
+                                        {% if follower.profile_picture %}
+                                            <img src="{{ follower.profile_picture.url }}" alt="{{ follower.username }}">
+                                        {% else %}
+                                            <div class="avatar-placeholder">{{ follower.username|first|upper }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="user-info">
+                                        <a href="{% url 'view_profile' follower.username %}" class="user-name">
+                                            <h5>{{ follower.get_full_name|default:follower.username }}</h5>
+                                        </a>
+                                        <span class="user-handle">@{{ follower.username }}</span>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-muted">No followers yet</p>
+                                {% endfor %}
+                                <div class="user-item-zinc">
+                                    <div class="user-avatar-small">
+                                        <div class="avatar-placeholder-small">M</div>
+                                    </div>
+                                    <div class="user-info">
+                                        <h5>Mike Chen</h5>
+                                        <span class="user-handle">@mikechen</span>
+                                    </div>
+                                    <button class="follow-btn-small">Follow</button>
+                                </div>
+                            </div>
+                            <a href="#" class="see-more-link">See more suggestions</a>
+                        </div>
+                    {% endif %}
+
+
+                                <div class="activity-icon">
+                                    <i class="bi bi-person-plus-fill text-success"></i>
+                                </div>
+                                <div class="activity-text">
+                                    <strong>Tom</strong> started following you
+                                    <span class="activity-time">1 day ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced CSS for Home Page -->
+<style>
+/* Zinc Color Palette */
+:root {
+    --zinc-50: #F8FAFC;
+    --zinc-100: #F1F5F9;
+    --zinc-200: #E2E8F0;
+    --zinc-300: #CBD5E1;
+    --zinc-400: #94A3B8;
+    --zinc-500: #64748B;
+    --zinc-600: #475569;
+    --zinc-700: #334155;
+    --zinc-800: #1E293B;
+    --zinc-900: #0F172A;
+    --zinc-accent: #3B82F6;
+}
+
+/* Main Container */
+.home-zinc-container {
+    background-color: var(--zinc-50);
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Welcome Section */
+.welcome-section-zinc {
+    background: linear-gradient(135deg, var(--zinc-700) 0%, var(--zinc-accent) 100%);
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    color: white;
+}
+
+.welcome-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.welcome-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.welcome-subtitle {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.quick-actions-zinc,
+.auth-actions-zinc {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Main Content Layout */
+.main-content-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Feed Controls */
+.feed-controls-zinc {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--zinc-200);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.feed-title {
+    color: var(--zinc-800);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.feed-filters {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-btn-zinc {
+    background: none;
+    border: none;
+    color: var(--zinc-500);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn-zinc:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+}
+
+.filter-btn-zinc.active {
+    background: var(--zinc-accent);
+    color: white;
+}
+
+/* Quick Post Creator */
+.quick-post-creator-zinc {
+    display: flex;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--zinc-200);
+}
+
+.creator-avatar {
+    flex-shrink: 0;
+}
+
+.avatar-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--zinc-200);
+}
+
+.avatar-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--zinc-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--zinc-600);
+    font-weight: 600;
+    border: 2px solid var(--zinc-200);
+}
+
+.creator-input-area {
+    flex: 1;
+}
+
+.quick-post-input {
+    width: 100%;
+    border: 1.5px solid var(--zinc-300);
+    border-radius: 24px;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    background: var(--zinc-50);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.quick-post-input:hover {
+    border-color: var(--zinc-accent);
+    background: white;
+}
+
+.creator-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn-zinc {
+    background: none;
+    border: none;
+    color: var(--zinc-500);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.action-btn-zinc:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+}
+
+/* Buttons */
+.btn-zinc-primary {
+    background: var(--zinc-700);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-zinc-primary:hover {
+    background: var(--zinc-800);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
+    color: white;
+}
+
+.btn-zinc-secondary {
+    background: white;
+    color: var(--zinc-700);
+    border: 1.5px solid var(--zinc-300);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.btn-zinc-secondary:hover {
+    background: var(--zinc-100);
+    border-color: var(--zinc-400);
+    color: var(--zinc-700);
+    transform: translateY(-1px);
+}
+
+/* Posts Feed */
+.posts-feed-zinc {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Empty Feed */
+.empty-feed-zinc {
+    background: white;
+    border-radius: 16px;
+    padding: 4rem 2rem;
+    text-align: center;
+    border: 1px solid var(--zinc-200);
+}
+
+.empty-illustration {
+    font-size: 4rem;
+    color: var(--zinc-400);
+    margin-bottom: 1.5rem;
+}
+
+.empty-feed-zinc h3 {
+    color: var(--zinc-800);
+    margin-bottom: 0.75rem;
+}
+
+.empty-feed-zinc p {
+    color: var(--zinc-600);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.empty-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+/* Load More */
+.load-more-section {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+/* Sidebar Cards */
+.sidebar-card-zinc {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--zinc-200);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.sidebar-title {
+    color: var(--zinc-800);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Trending Communities */
+.trending-communities {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.community-item-zinc {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.community-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--zinc-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.community-info {
+    flex: 1;
+}
+
+.community-info h5 {
+    margin: 0 0 0.25rem 0;
+    color: var(--zinc-800);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.member-count {
+    color: var(--zinc-500);
+    font-size: 0.75rem;
+}
+
+.join-btn-small {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+    border: none;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.join-btn-small:hover {
+    background: var(--zinc-accent);
+    color: white;
+}
+
+/* Suggested Users */
+.suggested-users {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-item-zinc {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--zinc-200);
+}
+
+.user-avatar-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder-small {
+    width: 100%;
+    height: 100%;
+    background: var(--zinc-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--zinc-600);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-info h5 {
+    margin: 0 0 0.25rem 0;
+    color: var(--zinc-800);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.user-handle {
+    color: var(--zinc-500);
+    font-size: 0.75rem;
+}
+
+.follow-btn-small {
+    background: var(--zinc-accent);
+    color: white;
+    border: none;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.follow-btn-small:hover {
+    background: var(--zinc-700);
+}
+
+/* Activity Feed */
+.activity-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--zinc-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.activity-text {
+    flex: 1;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.activity-text strong {
+    color: var(--zinc-800);
+}
+
+.activity-time {
+    color: var(--zinc-500);
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* See More Links */
+.see-more-link {
+    color: var(--zinc-accent);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: block;
+    text-align: center;
+    padding: 0.5rem 0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.see-more-link:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .welcome-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .feed-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .feed-filters {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 768px) {
+    .welcome-section-zinc {
+        padding: 2rem 0;
+    }
+    
+    .welcome-title {
+        font-size: 2rem;
+    }
+    
+    .quick-post-creator-zinc {
+        flex-direction: column;
+    }
+    
+    .creator-actions {
+        justify-content: space-around;
+    }
+    
+    .empty-actions,
+    .auth-actions-zinc {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .activity-item {
+        align-items: center;
+    }
+}
+</style>
+
+<!-- Enhanced JavaScript for Home Page -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter button functionality
+    const filterButtons = document.querySelectorAll('.filter-btn-zinc');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Here you would typically filter the posts based on the selected filter
+            const filter = this.getAttribute('data-filter');
+            console.log('Filtering by:', filter);
+            
+            // Add your filtering logic here
+        });
+    });
+    
+    // Quick post input click handler
+    const quickPostInput = document.querySelector('.quick-post-input');
+    if (quickPostInput) {
+        quickPostInput.addEventListener('click', function() {
+            // Redirect to create post page or open modal
+            window.location.href = "{% url 'create-post' %}";
+        });
+    }
+    
+    // Action buttons in post creator
+    const actionButtons = document.querySelectorAll('.action-btn-zinc');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Add visual feedback
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+            
+            // Handle specific action
+            if (this.classList.contains('photo-btn')) {
+                console.log('Photo button clicked');
+            } else if (this.classList.contains('video-btn')) {
+                console.log('Video button clicked');
+            } else if (this.classList.contains('poll-btn')) {
+                console.log('Poll button clicked');
+            }
+        });
+    });
+    
+    // Load more button
+    const loadMoreBtn = document.querySelector('.load-more-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="bi bi-arrow-clockwise me-2 spin"></i>Loading...';
+            this.disabled = true;
+            
+            // Simulate loading - replace with actual AJAX call
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.disabled = false;
+                // Add new posts here
+            }, 2000);
+        });
+    }
+    
+    // Join/Follow button handlers
+    const joinButtons = document.querySelectorAll('.join-btn-small, .follow-btn-small');
+    joinButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const originalText = this.textContent;
+            this.textContent = '...';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                if (originalText === 'Join') {
+                    this.textContent = 'Joined';
+                    this.style.background = '#059669';
+                } else if (originalText === 'Follow') {
+                    this.textContent = 'Following';
+                    this.style.background = '#059669';
+                }
+                this.disabled = false;
+            }, 1000);
+        });
+    });
+    
+    // Explore communities button
+    const exploreBtn = document.querySelector('.explore-btn');
+    if (exploreBtn) {
+        exploreBtn.addEventListener('click', function() {
+            // Navigate to communities page
+            console.log('Explore communities clicked');
+        });
+    }
+    
+    // Add spinning animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin { animation: spin 1s linear infinite; }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

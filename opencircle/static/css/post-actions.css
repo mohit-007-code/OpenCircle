@@ -1,0 +1,98 @@
+/* Post Actions */
+.engagement-actions {
+    display: flex;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--zinc-200);
+}
+
+.engagement-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--zinc-600);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.engagement-btn:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-900);
+}
+
+.engagement-btn i {
+    font-size: 1.25rem;
+}
+
+.engagement-btn.liked {
+    color: #ef4444;
+}
+
+.engagement-btn.liked i {
+    color: #ef4444;
+}
+
+/* Comments Section */
+.comments-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--zinc-200);
+}
+
+.comments-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.comment-item {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background: var(--zinc-50);
+    margin-bottom: 0.5rem;
+}
+
+.comment-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.comment-time {
+    font-size: 0.875rem;
+    color: var(--zinc-500);
+}
+
+.comment-content {
+    color: var(--zinc-700);
+    line-height: 1.5;
+}
+
+.comment-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--zinc-200);
+    border-radius: 0.5rem;
+    resize: vertical;
+    min-height: 80px;
+    margin-bottom: 0.5rem;
+}
+
+.comment-form button {
+    padding: 0.5rem 1rem;
+    background: var(--zinc-800);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.comment-form button:hover {
+    background: var(--zinc-900);
+}

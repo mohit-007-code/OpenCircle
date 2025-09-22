@@ -1,0 +1,314 @@
+<!-- Sidebar with Zinc Theme -->
+<div class="d-flex flex-column flex-shrink-0 p-0 sidebar-zinc vh-100" style="width: 280px;">
+    
+    <!-- Brand Header -->
+    <div class="px-4 py-3 border-bottom border-zinc-light">
+        <a href="{% url 'home' %}" class="d-flex align-items-center text-decoration-none">
+            <div class="brand-icon me-2">
+                <i class="bi bi-circle-fill text-zinc-accent"></i>
+            </div>
+            <span class="fs-3 fw-semibold text-zinc-dark">OpenCircle</span>
+        </a>
+    </div>
+
+    <!-- Search Section -->
+    <div class="px-4 py-3 border-bottom border-zinc-light">
+        <div class="search-container position-relative">
+            <div class="input-group">
+                <span class="input-group-text bg-zinc-50 border-zinc-200">
+                    <i class="bi bi-search text-zinc-500"></i>
+                </span>
+                <input type="text" 
+                       id="communitySearch" 
+                       class="form-control border-zinc-200 bg-zinc-50 text-zinc-700 search-input" 
+                       placeholder="Search communities...">
+            </div>
+            <div id="searchResults" 
+                 class="search-results position-absolute w-100 bg-white border border-zinc-200 rounded-2 mt-1 shadow-sm" 
+                 style="display: none; z-index: 1000;">
+                <!-- Search results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+        <!-- User Profile Section -->
+        <div class="px-4 py-3 border-bottom border-zinc-light">
+            <a href="{% url 'view_profile' user.username %}" class="text-decoration-none">
+                <div class="d-flex align-items-center p-2 rounded-2 profile-hover">
+                    <div class="position-relative me-3">
+                        <img src="{{ user.profile_picture.url }}" 
+                             alt="Profile" 
+                             class="rounded-circle profile-img" 
+                             style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #E9E7E8;">
+                        <div class="position-absolute bottom-0 end-0 bg-success rounded-circle status-indicator"></div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="text-zinc-800 fw-medium">{{ user.username }}</div>
+                        <small class="text-zinc-500">View Profile</small>
+                    </div>
+                    <i class="bi bi-chevron-right text-zinc-400"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- Navigation Menu -->
+        <div class="flex-grow-1 px-2 py-3">
+            <nav class="nav flex-column">
+                
+                <!-- Home -->
+                <a href="{% url 'home' %}" class="nav-link nav-item-zinc d-flex align-items-center rounded-2 mb-1">
+                    <div class="nav-icon me-3">
+                        <i class="bi bi-house-door-fill"></i>
+                    </div>
+                    <span class="fw-medium">Home</span>
+                </a>
+
+                <!-- Communities Section -->
+                <div class="nav-item mb-1">
+                    <button class="nav-link nav-item-zinc d-flex align-items-center w-100 border-0 bg-transparent rounded-2 position-relative" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#communitiesCollapse" 
+                            aria-expanded="false" 
+                            aria-controls="communitiesCollapse">
+                        <div class="nav-icon me-3">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <span class="fw-medium flex-grow-1 text-start">Your Communities</span>
+                        <i class="bi bi-chevron-down collapse-indicator transition-all"></i>
+                    </button>
+                    
+                    <!-- Collapsible Communities -->
+                    <div class="collapse mt-2" id="communitiesCollapse">
+                        <div class="submenu-zinc ps-4">
+                            {% if user.is_authenticated %}
+                                {% with user_communities=user.joined_communities.all %}
+                                    {% if user_communities %}
+                                        {% for community in user_communities %}
+                                            <a href="{% url 'community-detail' community.id %}" 
+                                               class="submenu-item-zinc d-flex align-items-center py-2 px-3 rounded-1 mb-1 text-decoration-none">
+                                                <i class="bi bi-dot me-2 text-zinc-accent fs-4"></i>
+                                                <span class="text-zinc-600">{{ community.name }}</span>
+                                            </a>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="submenu-item-zinc py-2 px-3 text-zinc-400">
+                                            <small><i class="bi bi-info-circle me-2"></i>No communities joined yet</small>
+                                        </div>
+                                    {% endif %}
+                                    <a href="{% url 'create-community' %}" 
+                                       class="submenu-item-zinc d-flex align-items-center py-2 px-3 rounded-1 text-decoration-none create-community-btn">
+                                        <i class="bi bi-plus-circle me-2 text-zinc-accent"></i>
+                                        <span class="text-zinc-700 fw-medium">Create New Community</span>
+                                    </a>
+                                {% endwith %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Profile -->
+                <a href="{% url 'profile_view' %}" class="nav-link nav-item-zinc d-flex align-items-center rounded-2 mb-1">
+                    <div class="nav-icon me-3">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <span class="fw-medium">My Profile</span>
+                </a>
+
+            </nav>
+        </div>
+
+        <!-- Logout Section -->
+        <div class="px-4 py-3 border-top border-zinc-light">
+            <a href="{% url 'logout' %}" class="btn btn-zinc-outline w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-box-arrow-right me-2"></i>
+                <span>Sign Out</span>
+            </a>
+        </div>
+
+    {% else %}
+        <!-- Authentication Buttons -->
+        <div class="px-4 py-3 mt-auto">
+            <div class="d-flex flex-column gap-2">
+                <a href="{% url 'register' %}" class="btn btn-zinc-primary w-100 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-person-plus-fill me-2"></i>
+                    <span>Create Account</span>
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-zinc-outline w-100 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    <span>Sign In</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Required CSS for Zinc Theme -->
+<style>
+/* Zinc Color Palette */
+:root {
+    --zinc-50: #F8FAFC;
+    --zinc-100: #F1F5F9;
+    --zinc-200: #E2E8F0;
+    --zinc-300: #CBD5E1;
+    --zinc-400: #94A3B8;
+    --zinc-500: #64748B;
+    --zinc-600: #475569;
+    --zinc-700: #334155;
+    --zinc-800: #1E293B;
+    --zinc-900: #0F172A;
+    --zinc-accent: #3B82F6;
+}
+
+/* Sidebar Base */
+.sidebar-zinc {
+    background: linear-gradient(180deg, var(--zinc-50) 0%, #FFFFFF 100%);
+    border-right: 1px solid var(--zinc-200);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Brand Styling */
+.brand-icon i {
+    font-size: 0.875rem;
+}
+
+/* Search Input */
+.search-input:focus {
+    border-color: var(--zinc-accent);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+    background-color: #FFFFFF;
+}
+
+/* Profile Section */
+.profile-hover:hover {
+    background-color: var(--zinc-100);
+    transition: all 0.2s ease;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border: 2px solid white;
+}
+
+/* Navigation Items */
+.nav-item-zinc {
+    color: var(--zinc-600);
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    font-size: 0.925rem;
+}
+
+.nav-item-zinc:hover, .nav-item-zinc:focus {
+    background-color: var(--zinc-100);
+    color: var(--zinc-800);
+    transform: translateX(2px);
+}
+
+.nav-item-zinc.active {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--zinc-accent);
+    border-left: 3px solid var(--zinc-accent);
+}
+
+.nav-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* Collapse Indicator */
+.collapse-indicator {
+    transition: transform 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.collapse-indicator[aria-expanded="true"] {
+    transform: rotate(180deg);
+}
+
+/* Submenu Styling */
+.submenu-item-zinc {
+    color: var(--zinc-500);
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.submenu-item-zinc:hover {
+    background-color: var(--zinc-100);
+    color: var(--zinc-700);
+    transform: translateX(4px);
+}
+
+.create-community-btn:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Custom Buttons */
+.btn-zinc-primary {
+    background-color: var(--zinc-700);
+    border-color: var(--zinc-700);
+    color: white;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-zinc-primary:hover {
+    background-color: var(--zinc-800);
+    border-color: var(--zinc-800);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
+}
+
+.btn-zinc-outline {
+    border: 1.5px solid var(--zinc-300);
+    color: var(--zinc-600);
+    background-color: transparent;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-zinc-outline:hover {
+    background-color: var(--zinc-100);
+    border-color: var(--zinc-400);
+    color: var(--zinc-700);
+    transform: translateY(-1px);
+}
+
+/* Utility Classes */
+.text-zinc-dark { color: var(--zinc-800); }
+.text-zinc-700 { color: var(--zinc-700); }
+.text-zinc-600 { color: var(--zinc-600); }
+.text-zinc-500 { color: var(--zinc-500); }
+.text-zinc-400 { color: var(--zinc-400); }
+.text-zinc-accent { color: var(--zinc-accent); }
+.bg-zinc-50 { background-color: var(--zinc-50); }
+.border-zinc-light { border-color: var(--zinc-200); }
+.border-zinc-200 { border-color: var(--zinc-200); }
+
+/* Scrollbar Styling */
+.sidebar-zinc::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-zinc::-webkit-scrollbar-track {
+    background: var(--zinc-100);
+}
+
+.sidebar-zinc::-webkit-scrollbar-thumb {
+    background: var(--zinc-300);
+    border-radius: 3px;
+}
+
+.sidebar-zinc::-webkit-scrollbar-thumb:hover {
+    background: var(--zinc-400);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar-zinc {
+        width: 100% !important;
+    }
+}
+</style>

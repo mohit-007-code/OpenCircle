@@ -1,0 +1,33 @@
+.creator-link {
+    color: #3B82F6; /* Blue accent color */
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.creator-link:hover {
+    text-decoration: underline;
+}
+
+.community-header {
+    margin-bottom: 2rem;
+}
+
+.community-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.community-creator {
+    color: #64748B; /* Zinc-500 */
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.community-description {
+    color: #475569; /* Zinc-600 */
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}

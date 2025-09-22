@@ -1,0 +1,415 @@
+<!-- Post Item Template -->
+<article class="post-item-zinc">
+    <div class="post-header-zinc">
+        <div class="author-section">
+            <div class="author-avatar">
+                {% if post.user.profile_picture %}
+                    <img src="{{ post.user.profile_picture.url }}" alt="{{ post.user.username }}" class="avatar-img">
+                {% else %}
+                    <div class="avatar-placeholder">{{ post.user.username|first|upper }}</div>
+                {% endif %}
+            </div>
+            <div class="author-details">
+                <a href="{% url 'view_profile' post.user.username %}" class="author-name">
+                    {{ post.user.first_name }} {{ post.user.last_name|default:post.user.username }}
+                </a>
+                <div class="post-meta">
+                    <span class="author-handle">@{{ post.user.username }}</span>
+                    <span class="post-dot">•</span>
+                    <time class="post-time" datetime="{{ post.created_at|date:'c' }}">
+                        {{ post.created_at|timesince }} ago
+                    </time>
+                    {% if post.community %}
+                        <span class="post-dot">•</span>
+                        <a href="{% url 'community-detail' post.community.id %}" class="community-link">
+                            {{ post.community.name }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if user.is_authenticated and user == post.user %}
+            <div class="post-options">
+                <button class="options-btn" data-post-id="{{ post.id }}">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+                <div class="options-menu" id="options-{{ post.id }}">
+                    <a href="{% url 'edit-post' post.id %}" class="option-item">
+                        <i class="bi bi-pencil me-2"></i>Edit Post
+                    </a>
+                    <a href="{% url 'delete-post' post.id %}" class="option-item danger">
+                        <i class="bi bi-trash me-2"></i>Delete Post
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="post-content-zinc">
+        <h3 class="post-title">{{ post.title }}</h3>
+        <div class="post-text">{{ post.content|linebreaks }}</div>
+        
+        {% if post.image %}
+            <div class="post-image-container">
+                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image img-fluid rounded">
+            </div>
+        {% endif %}
+        <div class="post-text">{{ post.content|linebreaks }}</div>
+        
+        {% if post.featured_image %}
+            <div class="post-image-container">
+                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="post-image">
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="post-footer-zinc">
+        <div class="engagement-stats">
+            <span class="stat-item">
+                <i class="bi bi-heart"></i>
+                <span class="stat-count">{{ post.likes.count|default:0 }}</span>
+            </span>
+            <span class="stat-item">
+                <i class="bi bi-chat"></i>
+                <span class="stat-count">{{ post.comments.count|default:0 }}</span>
+            </span>
+            <span class="stat-item">
+                <i class="bi bi-share"></i>
+                <span class="stat-count">{{ post.shares.count|default:0 }}</span>
+            </span>
+        </div>
+        
+        <div class="engagement-actions">
+            <button class="engagement-btn like-btn {% if user in post.likes.all %}liked{% endif %}" 
+                    data-post-id="{{ post.id }}" 
+                    onclick="handleLike({{ post.id }})">
+                <i class="bi {% if user in post.likes.all %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                <span>Like</span>
+            </button>
+            <button class="engagement-btn comment-btn" data-post-id="{{ post.id }}" onclick="toggleComments({{ post.id }})">
+                <i class="bi bi-chat"></i>
+                <span>Comment</span>
+            </button>
+            <button class="engagement-btn share-btn" data-post-id="{{ post.id }}">
+                <i class="bi bi-share"></i>
+                <span>Share</span>
+            </button>
+        </div>
+        
+        <!-- Comments Section -->
+        <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+            <div class="comments-list" id="comments-list-{{ post.id }}">
+                {% for comment in post.comments.all %}
+                    <div class="comment-item">
+                        <div class="comment-user">
+                            <strong>{{ comment.user.username }}</strong>
+                            <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                        </div>
+                        <div class="comment-content">{{ comment.content }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="comment-form">
+                <textarea class="form-control" id="comment-text-{{ post.id }}" 
+                          placeholder="Write a comment..."></textarea>
+                <button class="btn btn-primary mt-2" onclick="submitComment({{ post.id }})">
+                    Post Comment
+                </button>
+            </div>
+        </div>
+    </div>
+</article>
+
+<style>
+/* Post Item Styles */
+.post-item-zinc {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid var(--zinc-200);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.post-item-zinc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.post-header-zinc {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.author-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.author-avatar .avatar-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--zinc-200);
+}
+
+.author-avatar .avatar-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--zinc-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--zinc-600);
+    font-weight: 600;
+    border: 2px solid var(--zinc-200);
+}
+
+.author-name {
+    color: var(--zinc-800);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.author-name:hover {
+    color: var(--zinc-accent);
+}
+
+.post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--zinc-500);
+    margin-top: 0.25rem;
+}
+
+.post-dot {
+    color: var(--zinc-400);
+}
+
+.community-link {
+    color: var(--zinc-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.community-link:hover {
+    text-decoration: underline;
+}
+
+.post-options {
+    position: relative;
+}
+
+.options-btn {
+    background: none;
+    border: none;
+    color: var(--zinc-400);
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.options-btn:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-600);
+}
+
+.options-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--zinc-200);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    padding: 0.5rem 0;
+    min-width: 150px;
+    display: none;
+    z-index: 10;
+}
+
+.options-menu.show {
+    display: block;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--zinc-700);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.option-item:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-800);
+}
+
+.option-item.danger {
+    color: #DC2626;
+}
+
+.option-item.danger:hover {
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.post-content-zinc {
+    margin-bottom: 1rem;
+}
+
+.post-title {
+    color: var(--zinc-800);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.4;
+}
+
+.post-text {
+    color: var(--zinc-600);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.post-image-container {
+    margin-top: 1rem;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.post-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.post-footer-zinc {
+    border-top: 1px solid var(--zinc-200);
+    padding-top: 1rem;
+}
+
+.engagement-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--zinc-500);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.engagement-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.engagement-btn {
+    background: none;
+    border: none;
+    color: var(--zinc-500);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    flex: 1;
+    justify-content: center;
+}
+
+.engagement-btn:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+}
+
+.engagement-btn.liked {
+    color: #DC2626;
+}
+
+.engagement-btn.liked:hover {
+    background: rgba(220, 38, 38, 0.1);
+}
+
+@media (max-width: 768px) {
+    .post-header-zinc {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .engagement-actions {
+        justify-content: space-around;
+    }
+    
+    .engagement-stats {
+        justify-content: space-around;
+    }
+}
+</style>
+
+<script>
+// Post item interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Options menu toggle
+    const optionsBtns = document.querySelectorAll('.options-btn');
+    optionsBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const postId = this.getAttribute('data-post-id');
+            const menu = document.getElementById(`options-${postId}`);
+            
+            // Close other menus
+            document.querySelectorAll('.options-menu').forEach(m => {
+                if (m !== menu) m.classList.remove('show');
+            });
+            
+            menu.classList.toggle('show');
+        });
+    });
+    
+    // Close menus when clicking outside
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.options-menu').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    });
+    
+    // Engagement buttons
+    const engagementBtns = document.querySelectorAll('.engagement-btn');
+    engagementBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const postId = this.getAttribute('data-post-id');
+            
+            if (this.classList.contains('like-btn')) {
+                this.classList.toggle('liked');
+                // Handle like functionality
+            } else if (this.classList.contains('comment-btn')) {
+                // Handle comment functionality
+                console.log('Comment on post:', postId);
+            } else if (this.classList.contains('share-btn')) {
+                // Handle share functionality
+                console.log('Share post:', postId);
+            }
+        });
+    });
+});
+</script>

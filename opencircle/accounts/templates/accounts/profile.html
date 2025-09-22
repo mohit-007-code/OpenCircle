@@ -1,0 +1,1242 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ profile_user.username }}'s Profile{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Bootstrap Icons for consistency -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/follow.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="profile-zinc-container">
+    
+    <!-- Profile Header Section -->
+    <div class="profile-header-zinc">
+        <!-- Cover Background -->
+        <div class="profile-cover-zinc"></div>
+        
+        <!-- Profile Content -->
+        <div class="container-fluid px-4">
+            <div class="profile-content-zinc">
+                
+                <!-- Profile Image & Basic Info -->
+                <div class="profile-main-info">
+                    <div class="profile-image-section">
+                        {% if profile_user.profile_picture %}
+                            <img src="{{ profile_user.profile_picture.url }}" 
+                                 class="profile-avatar-zinc" 
+                                 alt="{{ profile_user.username }}'s Profile">
+                        {% else %}
+                            <div class="profile-avatar-placeholder-zinc">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Online Status Indicator -->
+                        <div class="status-indicator-zinc"></div>
+                    </div>
+                    
+                    <!-- Profile Details -->
+                    <div class="profile-details-zinc">
+                        <div class="profile-name-section">
+                            <h1 class="profile-display-name">
+                                {{ profile_user.first_name }} {{ profile_user.last_name }}
+                                {% if profile_user.is_verified %}
+                                    <span class="verified-badge-zinc">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                    </span>
+                                {% endif %}
+                            </h1>
+                            <p class="profile-username">@{{ profile_user.username }}</p>
+                            <p class="profile-location-zinc">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                {{ profile_user.location|default:"San Antonio, TX" }}
+                            </p>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="profile-actions-zinc">
+                            {% if is_own_profile %}
+                                <a href="{% url 'edit-profile' %}" class="btn-zinc-primary">
+                                    <i class="bi bi-pencil-fill me-2"></i>Edit Profile
+                                </a>
+                            {% else %}
+                                <form action="{% url 'follow_user' profile_user.username %}" 
+                                      method="post" 
+                                      class="follow-form d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            class="btn-zinc-primary follow-btn" 
+                                            data-username="{{ profile_user.username }}">
+                                        <i class="bi bi-{% if is_following %}person-dash{% else %}person-plus{% endif %}-fill me-2"></i>
+                                        {% if is_following %}Unfollow{% else %}Follow{% endif %}
+                                    </button>
+                                </form>
+                                <button class="btn-zinc-secondary ms-2">
+                                    <i class="bi bi-chat-fill me-2"></i>Message
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Profile Statistics -->
+                <div class="profile-stats-zinc">
+                    <div class="stat-card-zinc">
+                        <div class="stat-number followers-count">{{ followers_count }}</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat-card-zinc">
+                        <div class="stat-number following-count">{{ following_count }}</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                    <div class="stat-card-zinc">
+                        <div class="stat-number">{{ posts.count }}</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                    <div class="stat-card-zinc">
+                        <div class="stat-number">{{ created_communities.count }}</div>
+                        <div class="stat-label">Created Communities</div>
+                    </div>
+                    <div class="stat-card-zinc">
+                        <div class="stat-number">{{ joined_communities.count }}</div>
+                        <div class="stat-label">Joined Communities</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="profile-navigation-zinc">
+        <div class="container-fluid px-4">
+            <nav class="nav-tabs-zinc">
+                <button class="nav-tab-zinc active" data-tab="work">
+                    <i class="bi bi-briefcase-fill"></i>
+                    <span>Work</span>
+                </button>
+                <button class="nav-tab-zinc" data-tab="communities">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Communities</span>
+                </button>
+                <button class="nav-tab-zinc" data-tab="posts">
+                    <i class="bi bi-file-text-fill"></i>
+                    <span>Posts</span>
+                </button>
+                <button class="nav-tab-zinc" data-tab="about">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>About</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="profile-tab-content-zinc">
+        <div class="container-fluid px-4 py-4">
+            
+            <!-- Work Tab -->
+            <div id="work-content" class="tab-pane-zinc active">
+                <div class="work-grid-zinc">
+                    {% for post in user_posts %}
+                        <div class="work-card-zinc">
+                            <div class="work-image-container">
+                                {% if post.featured_image %}
+                                    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+                                {% else %}
+                                    <div class="work-placeholder-zinc">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="work-overlay">
+                                    <i class="bi bi-eye-fill"></i>
+                                </div>
+                            </div>
+                            <div class="work-card-body">
+                                <h3 class="work-title">{{ post.title }}</h3>
+                                <p class="work-description">{{ post.content|truncatewords:15 }}</p>
+                                <div class="work-meta">
+                                    <span class="work-date">{{ post.created_at|date:"M d, Y" }}</span>
+                                    <span class="work-category">{{ post.community.name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-state-zinc">
+                            <i class="bi bi-folder2-open"></i>
+                            <h3>No work to display</h3>
+                            <p>Upload your first project to showcase your talent</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Communities Tab -->
+            <div id="communities-content" class="tab-pane-zinc">
+                <div class="communities-section-zinc">
+                    
+                    <!-- Created Communities -->
+                    <div class="section-zinc mb-5">
+                        <h3 class="section-title-zinc">Created Communities</h3>
+                        <div class="communities-grid-zinc">
+                            {% for community in created_communities %}
+                                <div class="community-card-zinc">
+                                    <div class="community-header">
+                                        <div class="community-avatar-zinc">{{ community.name|first|upper }}</div>
+                                        <div class="community-info">
+                                            <h4><a href="{% url 'community-detail' community.id %}">{{ community.name }}</a></h4>
+                                            <p>{{ community.description|truncatewords:12 }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="community-stats">
+                                        <div class="members-info">
+                                            <span class="member-count">
+                                                <i class="bi bi-people-fill"></i>
+                                                <strong>{{ community.members.count }}</strong> members
+                                            </span>
+                                            {% if community.members.count > 0 %}
+                                                <div class="member-growth">+{{ community.members.count|add:"0" }} from creation</div>
+                                            {% endif %}
+                                        </div>
+                                        <span class="community-badge">Owner</span>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state-zinc">
+                                    <i class="bi bi-plus-circle"></i>
+                                    <h4>No communities created</h4>
+                                    <p>Create your first community to connect with like-minded people</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Joined Communities -->
+                    <div class="section-zinc">
+                        <h3 class="section-title-zinc">Joined Communities</h3>
+                        <div class="communities-grid-zinc">
+                            {% for community in joined_communities %}
+                                    <div class="community-card-zinc">
+                                        <div class="community-header">
+                                            <div class="community-avatar-zinc">{{ community.name|first|upper }}</div>
+                                            <div class="community-info">
+                                                <h4><a href="{% url 'community-detail' community.id %}">{{ community.name }}</a></h4>
+                                                <p class="community-desc">{{ community.description|truncatewords:12 }}</p>
+                                                <p class="community-creator">
+                                                    Created by <a href="{% url 'view_profile' community.creator.username %}" class="creator-link">{{ community.creator.username }}</a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="community-stats">
+                                            <div class="members-info">
+                                                <span class="member-count">
+                                                    <i class="bi bi-people-fill"></i>
+                                                    <strong>{{ community.members.count }}</strong> members
+                                                </span>
+                                                <div class="member-growth">Active Community</div>
+                                            </div>
+                                            <span class="community-badge member">Member</span>
+                                        </div>
+                                    </div>
+                            {% empty %}
+                                <div class="empty-state-zinc">
+                                    <i class="bi bi-search"></i>
+                                    <h4>No communities joined</h4>
+                                    <p>Discover and join communities that match your interests</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posts Tab -->
+            <div id="posts-content" class="tab-pane-zinc">
+                <div class="posts-grid-zinc">
+                    {% for post in posts %}
+                        <article class="post-card-zinc">
+                            <div class="post-header-zinc">
+                                <h3><a href="#">{{ post.title }}</a></h3>
+                                <span class="post-date-zinc">{{ post.created_at|date:"F j, Y" }}</span>
+                            </div>
+                            <div class="post-content-zinc">
+                                <p>{{ post.content|truncatewords:25 }}</p>
+                            </div>
+                            <div class="post-footer-zinc">
+                                <span class="community-tag-zinc">
+                                    <i class="bi bi-people-fill"></i>
+                                    <a href="{% url 'community-detail' post.community.id %}">in {{ post.community.name }}</a>
+                                </span>
+                                <div class="post-actions-zinc">
+                                    <button class="action-btn-zinc"><i class="bi bi-heart"></i> {{ post.total_likes }}</button>
+                                    <button class="action-btn-zinc"><i class="bi bi-chat"></i> {{ post.total_comments }}</button>
+                                    <button class="action-btn-zinc"><i class="bi bi-share"></i></button>
+                                </div>
+                            </div>
+                        </article>
+                    {% empty %}
+                        <div class="empty-state-zinc">
+                            <i class="bi bi-pencil-square"></i>
+                            <h3>No posts yet</h3>
+                            {% if is_own_profile %}
+                                <p>Join communities and create your first post to share your thoughts!</p>
+                            {% else %}
+                                <p>This user hasn't created any posts yet.</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- About Tab -->
+            <div id="about-content" class="tab-pane-zinc">
+                <div class="about-grid-zinc">
+                    
+                    <!-- Bio Card -->
+                    <div class="bio-card-zinc">
+                        <h3 class="card-title-zinc">About {{ profile_user.first_name }}</h3>
+                        <p class="bio-text">{{ user.bio|default:"This user hasn't written a bio yet. When they do, it will appear here." }}</p>
+                        
+                        {% if user.social_links %}
+                            <div class="social-links-zinc">
+                                <h4 class="social-title">Connect</h4>
+                                <a href="{{ user.social_links }}" target="_blank" class="social-link-zinc">
+                                    <i class="bi bi-link-45deg"></i>
+                                    Visit Website
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Activity Stats -->
+                    <div class="activity-card-zinc">
+                        <h3 class="card-title-zinc">Activity Overview</h3>
+                        <div class="activity-stats-zinc">
+                            <div class="activity-item-zinc">
+                                <div class="activity-icon">
+                                    <i class="bi bi-file-text-fill"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <span class="activity-number">{{ user_posts.count }}</span>
+                                    <span class="activity-label">Posts Created</span>
+                                </div>
+                            </div>
+                            <div class="activity-item-zinc">
+                                <div class="activity-icon">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <span class="activity-number">{{ user.created_communities.count }}</span>
+                                    <span class="activity-label">Communities Founded</span>
+                                </div>
+                            </div>
+                            <div class="activity-item-zinc">
+                                <div class="activity-icon">
+                                    <i class="bi bi-person-check-fill"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <span class="activity-number">{{ user.joined_communities.count }}</span>
+                                    <span class="activity-label">Communities Joined</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Facts -->
+                    <div class="facts-card-zinc">
+                        <h3 class="card-title-zinc">Quick Facts</h3>
+                        <div class="facts-list-zinc">
+                            <div class="fact-item-zinc">
+                                <i class="bi bi-calendar-event"></i>
+                                <span>Joined {{ user.date_joined|date:"F Y" }}</span>
+                            </div>
+                            <div class="fact-item-zinc">
+                                <i class="bi bi-clock"></i>
+                                <span>Last active {{ user.last_login|timesince }} ago</span>
+                            </div>
+                            {% if profile_user.is_verified %}
+                                <div class="fact-item-zinc verified">
+                                    <i class="bi bi-patch-check-fill"></i>
+                                    <span>Verified Account</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced CSS for Zinc Theme Profile -->
+<style>
+/* Zinc Color Palette (matching sidebar) */
+:root {
+    --zinc-50: #F8FAFC;
+    --zinc-100: #F1F5F9;
+    --zinc-200: #E2E8F0;
+    --zinc-300: #CBD5E1;
+    --zinc-400: #94A3B8;
+    --zinc-500: #64748B;
+    --zinc-600: #475569;
+    --zinc-700: #334155;
+    --zinc-800: #1E293B;
+    --zinc-900: #0F172A;
+    --zinc-accent: #3B82F6;
+}
+
+/* Profile Container */
+.profile-zinc-container {
+    background-color: var(--zinc-50);
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Profile Header */
+.profile-header-zinc {
+    position: relative;
+    background: white;
+    border-bottom: 1px solid var(--zinc-200);
+}
+
+.profile-cover-zinc {
+    height: 200px;
+    background: linear-gradient(135deg, var(--zinc-700) 0%, var(--zinc-accent) 100%);
+    position: relative;
+}
+
+.profile-cover-zinc::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.8) 100%);
+}
+
+.profile-content-zinc {
+    position: relative;
+    padding: 2rem 0;
+    margin-top: -100px;
+}
+
+.profile-main-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Profile Image */
+.profile-image-section {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profile-avatar-zinc {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid white;
+    object-fit: cover;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.profile-avatar-placeholder-zinc {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: var(--zinc-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--zinc-600);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.status-indicator-zinc {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: #22C55E;
+    border: 3px solid white;
+    border-radius: 50%;
+}
+
+/* Profile Details */
+.profile-details-zinc {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.profile-display-name {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--zinc-900);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.verified-badge-zinc {
+    color: var(--zinc-accent);
+    font-size: 1.5rem;
+}
+
+.profile-username {
+    font-size: 1.1rem;
+    color: var(--zinc-500);
+    margin: 0 0 0.5rem 0;
+}
+
+.profile-location-zinc {
+    color: var(--zinc-600);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Action Buttons */
+.profile-actions-zinc {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-zinc-primary {
+    background: var(--zinc-700);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.btn-zinc-primary:hover {
+    background: var(--zinc-800);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
+    color: white;
+}
+
+.btn-zinc-secondary {
+    background: white;
+    color: var(--zinc-700);
+    border: 1.5px solid var(--zinc-300);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.btn-zinc-secondary:hover {
+    background: var(--zinc-100);
+    border-color: var(--zinc-400);
+    transform: translateY(-1px);
+}
+
+/* Profile Statistics */
+.profile-stats-zinc {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat-card-zinc {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid var(--zinc-200);
+    transition: all 0.2s ease;
+}
+
+.stat-card-zinc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--zinc-800);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: var(--zinc-500);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Navigation Tabs */
+.profile-navigation-zinc {
+    background: white;
+    border-bottom: 1px solid var(--zinc-200);
+    padding: 0 0 -1px 0;
+}
+
+.nav-tabs-zinc {
+    display: flex;
+    gap: 0;
+}
+
+.nav-tab-zinc {
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    color: var(--zinc-500);
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 3px solid transparent;
+}
+
+.nav-tab-zinc:hover {
+    color: var(--zinc-700);
+    background: var(--zinc-50);
+}
+
+.nav-tab-zinc.active {
+    color: var(--zinc-accent);
+    border-bottom-color: var(--zinc-accent);
+}
+
+.nav-tab-zinc i {
+    font-size: 1rem;
+}
+
+/* Tab Content */
+.profile-tab-content-zinc {
+    background: var(--zinc-50);
+}
+
+.tab-pane-zinc {
+    display: none;
+}
+
+.tab-pane-zinc.active {
+    display: block;
+}
+
+/* Work Grid */
+.work-grid-zinc {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.work-card-zinc {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid var(--zinc-200);
+    transition: all 0.3s ease;
+}
+
+.work-card-zinc:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.work-image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.work-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.work-card-zinc:hover .work-image-container img {
+    transform: scale(1.05);
+}
+
+.work-placeholder-zinc {
+    width: 100%;
+    height: 100%;
+    background: var(--zinc-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--zinc-400);
+}
+
+.work-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.work-card-zinc:hover .work-overlay {
+    opacity: 1;
+}
+
+.work-card-body {
+    padding: 1.25rem;
+}
+
+.work-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--zinc-800);
+    margin: 0 0 0.5rem 0;
+}
+
+.work-description {
+    color: var(--zinc-600);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0 0 1rem 0;
+}
+
+.work-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+}
+
+.work-date {
+    color: var(--zinc-500);
+}
+
+.work-category {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Communities Grid */
+.communities-grid-zinc {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.section-title-zinc {
+    color: var(--zinc-800);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.community-card-zinc {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--zinc-200);
+    transition: all 0.2s ease;
+}
+
+.community-card-zinc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.community-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.community-avatar-zinc {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--zinc-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.community-info h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.community-info h4 a {
+    color: var(--zinc-800);
+    text-decoration: none;
+}
+
+.community-info h4 a:hover {
+    color: var(--zinc-accent);
+}
+
+.community-info .community-desc {
+    color: var(--zinc-600);
+    font-size: 0.875rem;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.4;
+}
+
+.community-info .community-creator {
+    color: var(--zinc-500);
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+.community-info .creator-link {
+    color: var(--zinc-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.community-info .creator-link:hover {
+    text-decoration: underline;
+}
+
+.community-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.members-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.member-count {
+    color: var(--zinc-600);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.member-count strong {
+    color: var(--zinc-800);
+}
+
+.member-growth {
+    color: var(--zinc-500);
+    font-size: 0.75rem;
+}
+
+.community-badge {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.community-badge.member {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--zinc-accent);
+}
+
+/* Posts Grid */
+.posts-grid-zinc {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.post-card-zinc {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--zinc-200);
+    transition: all 0.2s ease;
+}
+
+.post-card-zinc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.post-header-zinc {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.post-header-zinc h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.post-header-zinc h3 a {
+    color: var(--zinc-800);
+    text-decoration: none;
+}
+
+.post-header-zinc h3 a:hover {
+    color: var(--zinc-accent);
+}
+
+.post-date-zinc {
+    color: var(--zinc-500);
+    font-size: 0.875rem;
+}
+
+.post-content-zinc p {
+    color: var(--zinc-600);
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+}
+
+.post-footer-zinc {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.community-tag-zinc {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--zinc-500);
+    font-size: 0.875rem;
+}
+
+.community-tag-zinc a {
+    color: var(--zinc-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.post-actions-zinc {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn-zinc {
+    background: none;
+    border: none;
+    color: var(--zinc-500);
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn-zinc:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+}
+
+/* About Grid */
+.about-grid-zinc {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.bio-card-zinc,
+.activity-card-zinc,
+.facts-card-zinc {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--zinc-200);
+    height: fit-content;
+}
+
+.card-title-zinc {
+    color: var(--zinc-800);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.bio-text {
+    color: var(--zinc-600);
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+}
+
+.social-links-zinc .social-title {
+    color: var(--zinc-700);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.social-link-zinc {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--zinc-accent);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.social-link-zinc:hover {
+    color: var(--zinc-700);
+}
+
+/* Activity Stats */
+.activity-stats-zinc {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item-zinc {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--zinc-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--zinc-600);
+}
+
+.activity-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.activity-number {
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--zinc-800);
+}
+
+.activity-label {
+    font-size: 0.75rem;
+    color: var(--zinc-500);
+}
+
+/* Quick Facts */
+.facts-list-zinc {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.fact-item-zinc {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--zinc-600);
+    font-size: 0.875rem;
+}
+
+.fact-item-zinc.verified {
+    color: var(--zinc-accent);
+}
+
+.fact-item-zinc i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Empty States */
+.empty-state-zinc {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--zinc-500);
+}
+
+.empty-state-zinc i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--zinc-400);
+}
+
+.empty-state-zinc h3,
+.empty-state-zinc h4 {
+    color: var(--zinc-600);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-zinc p {
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .about-grid-zinc {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-main-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-details-zinc {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-content-zinc {
+        padding: 1rem 0;
+        margin-top: -60px;
+    }
+    
+    .profile-avatar-zinc,
+    .profile-avatar-placeholder-zinc {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .profile-display-name {
+        font-size: 1.75rem;
+    }
+    
+    .profile-stats-zinc {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .nav-tabs-zinc {
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    
+    .nav-tabs-zinc::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .nav-tab-zinc {
+        flex-shrink: 0;
+        padding: 1rem 1.5rem;
+    }
+    
+    .work-grid-zinc,
+    .communities-grid-zinc {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Smooth Transitions */
+* {
+    scroll-behavior: smooth;
+}
+</style>
+
+<!-- Enhanced JavaScript for Tab Functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching functionality
+    const tabButtons = document.querySelectorAll('.nav-tab-zinc');
+    const tabPanes = document.querySelectorAll('.tab-pane-zinc');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Remove active class from all tabs and panes
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding pane
+            this.classList.add('active');
+            document.getElementById(targetTab + '-content').classList.add('active');
+        });
+    });
+    
+    // Follow button enhancement
+    const followBtn = document.querySelector('.follow-btn');
+    if (followBtn) {
+        followBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Add loading state
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="bi bi-arrow-clockwise me-2 spin"></i>Processing...';
+            this.disabled = true;
+            
+            // Simulate API call (replace with actual form submission)
+            setTimeout(() => {
+                // Toggle follow state
+                const isFollowing = this.textContent.includes('Unfollow');
+                if (isFollowing) {
+                    this.innerHTML = '<i class="bi bi-person-plus-fill me-2"></i>Follow';
+                    // Update follower count
+                    const followerCount = document.querySelector('.followers-count');
+                    if (followerCount) {
+                        followerCount.textContent = parseInt(followerCount.textContent) - 1;
+                    }
+                } else {
+                    this.innerHTML = '<i class="bi bi-person-dash-fill me-2"></i>Unfollow';
+                    // Update follower count
+                    const followerCount = document.querySelector('.followers-count');
+                    if (followerCount) {
+                        followerCount.textContent = parseInt(followerCount.textContent) + 1;
+                    }
+                }
+                this.disabled = false;
+                
+                // Submit the actual form
+                this.closest('form').submit();
+            }, 500);
+        });
+    }
+    
+    // Add spinning animation for loading states
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin { animation: spin 1s linear infinite; }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

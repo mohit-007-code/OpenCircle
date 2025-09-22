@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    {% for post in posts %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="card-title">{{ post.title }}</h5>
+                    <small class="text-muted">
+                        Posted by <a href="{% url 'view_profile' post.user.username %}" class="text-decoration-none">{{ post.user.username }}</a>
+                        in <a href="{% url 'community-detail' post.community.id %}" class="text-decoration-none">{{ post.community.name }}</a>
+                    </small>
+                </div>
+                <p class="card-text">{{ post.content }}</p>
+                <div class="text-muted small">{{ post.created_at|date:"F j, Y, P" }}</div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="text-center mt-4">
+            <p>No posts yet.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

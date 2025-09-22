@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-danger">{{ message }}</h2>
+    <a href="{% url 'home' %}" class="btn btn-secondary mt-3">Go Back Home</a>
+</div>
+{% endblock %}

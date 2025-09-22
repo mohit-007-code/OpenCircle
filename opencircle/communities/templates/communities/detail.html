@@ -1,0 +1,1142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ community.name }} - OpenCircle{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/detail.css' %}">
+{% endblock %}
+
+{% block sidebar %}
+<!-- Sidebar (using your existing zinc sidebar) -->
+<ul class="sidebar-menu">
+    <li><a href="{% url 'home' %}">Home</a></li>
+    {% if request.user.is_authenticated %}
+        <li><a href="{% url 'profile_view' %}">My Profile</a></li>
+        <li><a href="{% url 'create-community' %}">Create Community</a></li>
+    {% endif %}
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="community-zinc-container">
+    
+    <!-- Community Header -->
+    <div class="community-header-zinc">
+        <div class="community-banner-zinc"></div>
+        
+        <div class="community-content-zinc">
+            <!-- Community Avatar & Info -->
+            <div class="community-main-info">
+                <div class="community-avatar-section">
+                    <div class="community-avatar-large-zinc">
+                        {{ community.name|first|upper }}
+                    </div>
+                </div>
+                
+                <div class="community-details-section">
+                    <div class="community-title-section">
+                        <h1 class="community-title-zinc">{{ community.name }}</h1>
+                        <div class="community-creator-info">
+                            <span class="creator-label">Founded by</span>
+                            <a href="{% url 'view_profile' community.creator.username %}" 
+                               class="creator-link-zinc">
+                                @{{ community.creator.username }}
+                            </a>
+                        </div>
+                        <p class="community-description-zinc">{{ community.description }}</p>
+                    </div>
+                    
+                    <!-- Community Actions -->
+                    {% if request.user.is_authenticated %}
+                        <div class="community-actions-zinc">
+                            {% if request.user == community.creator %}
+                                <div class="owner-actions">
+                                    <a href="{% url 'edit-community' community.id %}" 
+                                       class="btn-zinc-primary">
+                                        <i class="bi bi-pencil-fill me-2"></i>Edit Community
+                                    </a>
+                                    <a href="{% url 'delete-community' community.id %}" 
+                                       class="btn-zinc-danger">
+                                        <i class="bi bi-trash-fill me-2"></i>Delete
+                                    </a>
+                                </div>
+                            {% elif request.user in community.members.all %}
+                                <div class="member-actions">
+                                    <div class="member-status-zinc">
+                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                        <span>Member</span>
+                                    </div>
+                                    <a href="{% url 'leave-community' community.id %}" 
+                                       class="btn-zinc-warning">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Leave
+                                    </a>
+                                </div>
+                            {% else %}
+                                <form method="post" class="join-form-zinc">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            name="join_community" 
+                                            class="btn-zinc-success">
+                                        <i class="bi bi-plus-circle-fill me-2"></i>Join Community
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="auth-prompt-zinc">
+                            <p class="auth-message">Join the conversation!</p>
+                            <div class="auth-buttons">
+                                <a href="{% url 'login' %}" class="btn-zinc-primary">Sign In</a>
+                                <a href="{% url 'register' %}" class="btn-zinc-secondary">Register</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Community Statistics -->
+            <div class="community-stats-zinc">
+                <div class="stat-card-zinc">
+                    <div class="stat-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-number">{{ community.members.count }}</div>
+                        <div class="stat-label">Members</div>
+                    </div>
+                </div>
+                <div class="stat-card-zinc">
+                    <div class="stat-icon">
+                        <i class="bi bi-file-text-fill"></i>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-number">{{ posts.count }}</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                </div>
+                <div class="stat-card-zinc">
+                    <div class="stat-icon">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-number">{{ community.created_at|date:"M Y" }}</div>
+                        <div class="stat-label">Created</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="community-main-content">
+        
+        <!-- Post Creation Section -->
+        {% if request.user.is_authenticated and request.user in community.members.all or request.user == community.creator %}
+            <div class="post-creator-zinc">
+                <h3 class="section-title-zinc">
+                    <i class="bi bi-pencil-square me-2"></i>Create New Post
+                </h3>
+                <form method="post" class="post-form-zinc" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group-zinc">
+                        <input type="text" 
+                               name="title" 
+                               placeholder="What's your post about?" 
+                               required 
+                               class="form-input-zinc title-input">
+                    </div>
+                    <div class="form-group-zinc">
+                        <textarea name="content" 
+                                  placeholder="Share your thoughts with the community..." 
+                                  required 
+                                  class="form-input-zinc content-input"
+                                  rows="4"></textarea>
+                    </div>
+                    <div class="form-group-zinc">
+                        <label for="post-image" class="form-label-zinc">
+                            <i class="bi bi-image me-2"></i>Add Image (optional)
+                        </label>
+                        <input type="file" 
+                               name="image" 
+                               id="post-image" 
+                               accept="image/*" 
+                               class="form-input-zinc image-input">
+                    </div>
+                    <button type="submit" name="post_content" class="btn-zinc-primary">
+                        <i class="bi bi-send me-2"></i>Create Post
+                    </button>
+                </form>
+            </div>
+        {% elif request.user.is_authenticated %}
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-info-circle me-2"></i>You need to join this community to create posts.
+                <form method="post" class="d-inline ms-2">
+                    {% csrf_token %}
+                    <button type="submit" name="join_community" class="btn-zinc-primary btn-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Join Community
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <div class="guest-prompt-zinc">
+                <div class="prompt-icon">
+                    <i class="bi bi-chat-square-text"></i>
+                </div>
+                <h3>Share Your Voice</h3>
+                <p>Join {{ community.name }} to start meaningful conversations and connect with the community.</p>
+                <div class="prompt-actions">
+                    <a href="{% url 'login' %}" class="btn-zinc-primary">Login</a>
+                    <a href="{% url 'register' %}" class="btn-zinc-secondary">Register</a>
+                </div>
+            </div>
+                    <a href="{% url 'login' %}" class="btn-zinc-primary">Sign In to Post</a>
+                    <a href="{% url 'register' %}" class="btn-zinc-secondary">Create Account</a>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Posts Feed Section -->
+        <div class="posts-section-zinc">
+            <div class="posts-header">
+                <h3 class="section-title-zinc">
+                    <i class="bi bi-newspaper me-2"></i>Community Posts
+                </h3>
+                <div class="posts-count-badge">{{ posts.count }} posts</div>
+            </div>
+            
+            <div class="posts-feed-zinc">
+                {% for post in posts %}
+                    <article class="post-card-zinc">
+                        <div class="post-author-section">
+                            <div class="author-avatar-zinc">
+                                {% if post.user.profile_picture %}
+                                    <img src="{{ post.user.profile_picture.url }}" 
+                                         alt="{{ post.user.username }}"
+                                         class="author-image">
+                                {% else %}
+                                    <div class="author-placeholder">
+                                        {{ post.user.username|first|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="author-info">
+                                <a href="{% url 'view_profile' post.user.username %}" 
+                                   class="author-name">
+                                    {{ post.user.first_name }} {{ post.user.last_name }}
+                                </a>
+                                <div class="author-meta">
+                                    <span class="author-username">@{{ post.user.username }}</span>
+                                    <span class="post-date">{{ post.created_at|date:"M d, Y" }}</span>
+                                </div>
+                            </div>
+                            
+                            {% if request.user.is_authenticated %}
+                                {% if request.user == post.user or request.user == community.creator %}
+                                    <div class="post-actions-dropdown">
+                                        <button class="dropdown-toggle-zinc" data-post-id="{{ post.id }}">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                        <div class="dropdown-menu-zinc" id="dropdown-{{ post.id }}">
+                                            <a href="{% url 'edit-post' post.id %}" class="dropdown-item-zinc">
+                                                <i class="bi bi-pencil me-2"></i>Edit Post
+                                            </a>
+                                            <a href="{% url 'delete-post' post.id %}" class="dropdown-item-zinc danger">
+                                                <i class="bi bi-trash me-2"></i>Delete Post
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="post-content-section">
+                            <h4 class="post-title-zinc">{{ post.title }}</h4>
+                            <div class="post-text-zinc">{{ post.content|linebreaks }}</div>
+                        </div>
+                        
+                        <div class="post-engagement-section">
+                            <div class="engagement-actions">
+                                <button class="engagement-btn-zinc like-btn" data-post-id="{{ post.id }}">
+                                    <i class="bi bi-heart"></i>
+                                    <span>Like</span>
+                                </button>
+                                <button class="engagement-btn-zinc comment-btn" data-post-id="{{ post.id }}">
+                                    <i class="bi bi-chat"></i>
+                                    <span>Comment</span>
+                                </button>
+                                <button class="engagement-btn-zinc share-btn" data-post-id="{{ post.id }}">
+                                    <i class="bi bi-share"></i>
+                                    <span>Share</span>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                {% empty %}
+                    <div class="empty-posts-zinc">
+                        <div class="empty-icon">
+                            <i class="bi bi-chat-square-text"></i>
+                        </div>
+                        <h3>No posts yet</h3>
+                        <p>Be the first to start a conversation in {{ community.name }}!</p>
+                        {% if request.user.is_authenticated %}
+                            <button class="btn-zinc-primary scroll-to-creator">
+                                <i class="bi bi-plus-circle me-2"></i>Create First Post
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced CSS for Community Detail Page -->
+<style>
+/* Zinc Color Palette (consistent with other components) */
+:root {
+    --zinc-50: #F8FAFC;
+    --zinc-100: #F1F5F9;
+    --zinc-200: #E2E8F0;
+    --zinc-300: #CBD5E1;
+    --zinc-400: #94A3B8;
+    --zinc-500: #64748B;
+    --zinc-600: #475569;
+    --zinc-700: #334155;
+    --zinc-800: #1E293B;
+    --zinc-900: #0F172A;
+    --zinc-accent: #3B82F6;
+    --success-color: #059669;
+    --warning-color: #D97706;
+    --danger-color: #DC2626;
+}
+
+/* Main Container */
+.community-zinc-container {
+    background-color: var(--zinc-50);
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Community Header */
+.community-header-zinc {
+    position: relative;
+    background: white;
+    border-bottom: 1px solid var(--zinc-200);
+    margin-bottom: 2rem;
+}
+
+.community-banner-zinc {
+    height: 160px;
+    background: linear-gradient(135deg, var(--zinc-700) 0%, var(--zinc-accent) 100%);
+    position: relative;
+}
+
+.community-banner-zinc::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.9) 100%);
+}
+
+.community-content-zinc {
+    position: relative;
+    padding: 2rem;
+    margin-top: -80px;
+}
+
+.community-main-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Community Avatar */
+.community-avatar-section {
+    flex-shrink: 0;
+}
+
+.community-avatar-large-zinc {
+    width: 100px;
+    height: 100px;
+    border-radius: 20px;
+    background: var(--zinc-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    border: 4px solid white;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+/* Community Details */
+.community-details-section {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.community-title-zinc {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--zinc-900);
+    margin: 0 0 0.5rem 0;
+}
+
+.community-creator-info {
+    margin-bottom: 1rem;
+}
+
+.creator-label {
+    color: var(--zinc-500);
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+}
+
+.creator-link-zinc {
+    color: var(--zinc-accent);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.creator-link-zinc:hover {
+    color: var(--zinc-700);
+    text-decoration: underline;
+}
+
+.community-description-zinc {
+    color: var(--zinc-600);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 600px;
+}
+
+/* Community Actions */
+.community-actions-zinc {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.owner-actions,
+.member-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.member-status-zinc {
+    display: flex;
+    align-items: center;
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--success-color);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.auth-prompt-zinc {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--zinc-100);
+    border-radius: 12px;
+}
+
+.auth-message {
+    color: var(--zinc-600);
+    margin-bottom: 1rem;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+/* Buttons */
+.btn-zinc-primary {
+    background: var(--zinc-700);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-zinc-primary:hover {
+    background: var(--zinc-800);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
+    color: white;
+}
+
+.btn-zinc-secondary {
+    background: white;
+    color: var(--zinc-700);
+    border: 1.5px solid var(--zinc-300);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.btn-zinc-secondary:hover {
+    background: var(--zinc-100);
+    border-color: var(--zinc-400);
+    color: var(--zinc-700);
+    transform: translateY(-1px);
+}
+
+.btn-zinc-success {
+    background: var(--success-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-zinc-success:hover {
+    background: #047857;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.btn-zinc-warning {
+    background: var(--warning-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.btn-zinc-warning:hover {
+    background: #B45309;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-zinc-danger {
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.btn-zinc-danger:hover {
+    background: #B91C1C;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Community Statistics */
+.community-stats-zinc {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat-card-zinc {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--zinc-200);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+.stat-card-zinc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--zinc-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--zinc-600);
+    font-size: 1.25rem;
+}
+
+.stat-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--zinc-800);
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--zinc-500);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+/* Main Content */
+.community-main-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.section-title-zinc {
+    color: var(--zinc-800);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Post Creator */
+.post-creator-zinc {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--zinc-200);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.form-group-zinc {
+    margin-bottom: 1.5rem;
+}
+
+.form-input-zinc,
+.form-textarea-zinc {
+    width: 100%;
+    border: 1.5px solid var(--zinc-300);
+    border-radius: 8px;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.form-input-zinc:focus,
+.form-textarea-zinc:focus {
+    outline: none;
+    border-color: var(--zinc-accent);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+}
+
+.title-input {
+    font-size: 1.125rem;
+    font-weight: 500;
+}
+
+.form-textarea-zinc {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+}
+
+.form-actions-zinc {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Guest Prompt */
+.guest-prompt-zinc {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--zinc-200);
+    text-align: center;
+}
+
+.prompt-icon {
+    font-size: 3rem;
+    color: var(--zinc-400);
+    margin-bottom: 1rem;
+}
+
+.guest-prompt-zinc h3 {
+    color: var(--zinc-800);
+    margin-bottom: 0.75rem;
+}
+
+.guest-prompt-zinc p {
+    color: var(--zinc-600);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.prompt-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+/* Posts Section */
+.posts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.posts-count-badge {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Post Cards */
+.posts-feed-zinc {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.post-card-zinc {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid var(--zinc-200);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.post-card-zinc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.post-author-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.author-avatar-zinc {
+    flex-shrink: 0;
+}
+
+.author-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--zinc-200);
+}
+
+.author-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--zinc-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--zinc-600);
+    font-weight: 600;
+    border: 2px solid var(--zinc-200);
+}
+
+.author-info {
+    flex: 1;
+}
+
+.author-name {
+    color: var(--zinc-800);
+    font-weight: 600;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.author-name:hover {
+    color: var(--zinc-accent);
+}
+
+.author-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.author-username {
+    color: var(--zinc-500);
+}
+
+.post-date {
+    color: var(--zinc-400);
+}
+
+/* Post Actions Dropdown */
+.post-actions-dropdown {
+    position: relative;
+}
+
+.dropdown-toggle-zinc {
+    background: none;
+    border: none;
+    color: var(--zinc-400);
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dropdown-toggle-zinc:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-600);
+}
+
+.dropdown-menu-zinc {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--zinc-200);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    padding: 0.5rem 0;
+    min-width: 150px;
+    display: none;
+    z-index: 10;
+}
+
+.dropdown-menu-zinc.show {
+    display: block;
+}
+
+.dropdown-item-zinc {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--zinc-700);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item-zinc:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-800);
+}
+
+.dropdown-item-zinc.danger {
+    color: var(--danger-color);
+}
+
+.dropdown-item-zinc.danger:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--danger-color);
+}
+
+/* Post Content */
+.post-content-section {
+    margin-bottom: 1rem;
+}
+
+.post-title-zinc {
+    color: var(--zinc-800);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.4;
+}
+
+.post-text-zinc {
+    color: var(--zinc-600);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Post Engagement */
+.post-engagement-section {
+    border-top: 1px solid var(--zinc-200);
+    padding-top: 1rem;
+}
+
+.engagement-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.engagement-btn-zinc {
+    background: none;
+    border: none;
+    color: var(--zinc-500);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.engagement-btn-zinc:hover {
+    background: var(--zinc-100);
+    color: var(--zinc-700);
+}
+
+.engagement-btn-zinc:active {
+    transform: scale(0.95);
+}
+
+/* Empty State */
+.empty-posts-zinc {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    border: 1px solid var(--zinc-200);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: var(--zinc-400);
+    margin-bottom: 1rem;
+}
+
+.empty-posts-zinc h3 {
+    color: var(--zinc-800);
+    margin-bottom: 0.75rem;
+}
+
+.empty-posts-zinc p {
+    color: var(--zinc-600);
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .community-stats-zinc {
+        flex-wrap: wrap;
+    }
+    
+    .community-main-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .community-details-section {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .community-content-zinc {
+        padding: 1rem;
+        margin-top: -60px;
+    }
+    
+    .community-avatar-large-zinc {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+    
+    .community-title-zinc {
+        font-size: 1.5rem;
+    }
+    
+    .community-stats-zinc {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .community-main-content {
+        padding: 0 1rem;
+    }
+    
+    .post-creator-zinc {
+        padding: 1.5rem;
+    }
+    
+    .auth-buttons,
+    .prompt-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .owner-actions,
+    .member-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .engagement-actions {
+        justify-content: space-around;
+    }
+}
+
+/* Smooth scrolling */
+.scroll-to-creator {
+    cursor: pointer;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+</style>
+
+<!-- Enhanced JavaScript for Community Features -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dropdown menu functionality
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle-zinc');
+    
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.dropdown-menu-zinc').forEach(menu => {
+                if (menu.id !== `dropdown-${this.getAttribute('data-post-id')}`) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // Toggle current dropdown
+            const dropdown = document.getElementById(`dropdown-${this.getAttribute('data-post-id')}`);
+            dropdown.classList.toggle('show');
+        });
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.dropdown-menu-zinc').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    });
+    
+    // Scroll to post creator
+    const scrollButton = document.querySelector('.scroll-to-creator');
+    if (scrollButton) {
+        scrollButton.addEventListener('click', function() {
+            document.querySelector('.post-creator-zinc').scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        });
+    }
+    
+    // Form enhancement
+    const postForm = document.querySelector('.post-form-zinc');
+    const titleInput = document.querySelector('.title-input');
+    const contentTextarea = document.querySelector('.form-textarea-zinc');
+    
+    if (postForm && titleInput && contentTextarea) {
+        // Auto-resize textarea
+        contentTextarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+        
+        // Form submission enhancement
+        postForm.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2 spin"></i>Publishing...';
+            submitBtn.disabled = true;
+            
+            // If there's an error, restore the button
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 5000);
+        });
+    }
+    
+    // Engagement button interactions
+    const engagementBtns = document.querySelectorAll('.engagement-btn-zinc');
+    engagementBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Add visual feedback
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+            
+            // Here you would typically make an AJAX request
+            // to handle the like/comment/share action
+        });
+    });
+    
+    // Join community button enhancement
+    const joinForm = document.querySelector('.join-form-zinc');
+    if (joinForm) {
+        joinForm.addEventListener('submit', function(e) {
+            const joinBtn = this.querySelector('button');
+            const originalText = joinBtn.innerHTML;
+            
+            joinBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2 spin"></i>Joining...';
+            joinBtn.disabled = true;
+        });
+    }
+    
+    // Add spinning animation for loading states
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin { animation: spin 1s linear infinite; }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

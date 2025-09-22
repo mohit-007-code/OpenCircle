@@ -1,0 +1,6 @@
+{% if user == post.user or user == post.community.creator %}
+<form method="POST" action="{% url 'delete-post' post.id %}">
+    {% csrf_token %}
+    <button type="submit">Delete</button>
+</form>
+{% endif %}
