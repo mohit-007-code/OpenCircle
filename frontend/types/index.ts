@@ -1,48 +1,40 @@
 // types/index.ts
-export interface User {
+// Add/Update these
+
+export interface Post {
   id: number;
-  email: string;
-  username: string;
-  first_name: string;
-  last_name: string;
-  bio: string;
-  profile_picture: string | null;
-  cover_image: string | null;
-  date_joined: string;
+  content: string;
+  image: string | null;
+  author: {
+    id: number;
+    username: string;
+    email: string;
+    profile_picture: string | null;
+    first_name: string;
+    last_name: string;
+  };
+  community_name: string;
+  community_slug: string;
+  created_at: string;
+  updated_at: string;
+  likes_count: number;
+  comments_count: number;
+  can_edit: boolean;
+  can_delete: boolean;
+  is_liked: boolean;
+  comments: Comment[];
 }
 
-export interface AuthTokens {
-  access: string;
-  refresh: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  access: string;
-  refresh: string;
-  message: string;
-  created?: boolean;
-}
-
-export interface RegisterData {
-  email: string;
-  username: string;
-  password: string;
-  password2: string;
-  first_name: string;
-  last_name: string;
-}
-
-export interface LoginData {
-  email: string;
-  password: string;
-}
-
-export interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (userData: User, tokens: AuthTokens) => void;
-  logout: () => Promise<void>;
-  updateProfile: (updatedUser: User) => void;
-  checkAuth: () => Promise<void>;
+export interface Comment {
+  id: number;
+  content: string;
+  author: {
+    id: number;
+    username: string;
+    profile_picture: string | null;
+  };
+  created_at: string;
+  updated_at: string;
+  can_edit: boolean;
+  can_delete: boolean;
 }
