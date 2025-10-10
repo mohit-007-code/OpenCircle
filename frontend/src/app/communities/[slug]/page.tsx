@@ -22,7 +22,6 @@ import {
   ArrowBigDown,
   MessageSquare,
   Share2,
-  MoreHorizontal,
   Shield,
   Crown,
   UserCog,
@@ -217,7 +216,6 @@ export default function CommunityDetailPage() {
     }
 
     try {
-      // Both up and down use the same like toggle endpoint
       const response = await api.post(`/posts/${postId}/like/`);
       
       setPosts(posts.map(post => 
@@ -235,7 +233,18 @@ export default function CommunityDetailPage() {
     }
   };
 
-  const getImageUrl = (imageUrl: string | null) => {
+  const handleShare = async (postId: number) => {
+    const postUrl = `${window.location.origin}/posts/${postId}`;
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      showToast('Link copied to clipboard!', 'success');
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      showToast('Failed to copy link', 'error');
+    }
+  };
+
+  const getImageUrl = (imageUrl: string | null | undefined) => {
     if (!imageUrl) return null;
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
@@ -287,7 +296,7 @@ export default function CommunityDetailPage() {
       <div className="min-h-screen bg-[#0b0f14]">
         <Navbar />
         <div className="flex justify-center items-center h-96">
-          <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -301,7 +310,7 @@ export default function CommunityDetailPage() {
           <h2 className="text-3xl font-bold mb-4">Community not found</h2>
           <button
             onClick={() => router.push('/communities')}
-            className="px-6 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors"
+            className="px-6 py-2 bg-[#d93900] hover:bg-[#c13300] text-white font-semibold rounded-full transition-colors"
           >
             Browse Communities
           </button>
@@ -314,7 +323,6 @@ export default function CommunityDetailPage() {
     <div className="min-h-screen bg-[#0b0f14]">
       <Navbar />
       
-      {/* Toast Notification */}
       {toast && (
         <Toast
           message={toast.message}
@@ -323,7 +331,6 @@ export default function CommunityDetailPage() {
         />
       )}
 
-      {/* Delete Post Modal */}
       <Modal
         isOpen={postToDelete !== null}
         onClose={() => setPostToDelete(null)}
@@ -336,8 +343,14 @@ export default function CommunityDetailPage() {
         loading={deleting}
       />
 
-      {/* Cover Banner */}
-      <div className="h-32 bg-gradient-to-r from-[#ff4500] to-[#ff6a00] relative">
+      {/* Banner respects sidebar - inside container */}
+     <div className="max-w-[1400px] mx-auto flex gap-3 px-3 py-5">
+  <Sidebar />
+  
+  <div className="flex-1 min-w-0">
+    {/* Banner with DP */}
+    <div className="relative -mt-1 -mx-3 mb-4 mr-1">
+      <div className="h-48 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative rounded-lg overflow-hidden">
         {getImageUrl(community.cover_image) && (
           <Image
             src={getImageUrl(community.cover_image)!}
@@ -348,94 +361,90 @@ export default function CommunityDetailPage() {
         )}
       </div>
 
-      <div className="max-w-7xl mx-auto flex gap-6 px-4">
-        <Sidebar />
 
-        {/* Main Content */}
-        <main className="flex-1 -mt-5">
-          {/* Community Header */}
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4">
-            <div className="p-4">
-              <div className="flex items-start gap-4">
-                {/* Display Picture */}
-                <div className="w-20 h-20 -mt-8 rounded-full border-4 border-[#0b0f14] bg-[#272729] overflow-hidden flex-shrink-0">
+            {/* Community Header with DP overlapping banner */}
+            <div className="px-3">
+              <div className="relative">
+                <div className="absolute -top-16 left-0 w-28 h-28 rounded-full border-4 border-[#0b0f14] bg-[#272729] overflow-hidden flex-shrink-0 shadow-xl z-10">
                   {getImageUrl(community.display_picture) ? (
                     <Image
                       src={getImageUrl(community.display_picture)!}
                       alt={community.name}
-                      width={80}
-                      height={80}
-                      className="object-cover"
+                      width={112}
+                      height={112}
+                      className="object-cover w-full h-full"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-[#ff4500]">
+                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-[#d93900]">
                       {community.name[0].toUpperCase()}
                     </div>
                   )}
                 </div>
 
-                <div className="flex-1">
-                  <h1 className="text-2xl font-bold mb-1">c/{community.name}</h1>
-                  <p className="text-sm text-[#818384]">{community.description}</p>
+                <div className="pt-4 pb-0 pl-36 flex items-center justify-between">
+                  <div className="flex-1">
+                    <h1 className="text-2xl font-bold mb-1">c/{community.name}</h1>
+                    <p className="text-sm text-[#818384]">{community.description}</p>
+                  </div>
+
+                  {community.is_creator ? (
+                    <button
+                      onClick={() => router.push(`/communities/${slug}/edit`)}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
+                    >
+                      <Settings size={18} />
+                      <span className="hidden sm:inline">Manage</span>
+                    </button>
+                  ) : community.is_member ? (
+                    <button
+                      onClick={handleLeave}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
+                    >
+                      <UserMinus size={18} />
+                      <span className="hidden sm:inline">Exit</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleJoin}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#d93900] hover:bg-[#c13300] text-white rounded-full font-semibold transition-colors"
+                    >
+                      <UserPlus size={18} />
+                      <span className="hidden sm:inline">Join</span>
+                    </button>
+                  )}
                 </div>
-
-                {/* Action Button */}
-                {community.is_creator ? (
-                  <button
-                    onClick={() => router.push(`/communities/${slug}/edit`)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
-                  >
-                    <Settings size={18} />
-                    <span className="hidden sm:inline">Manage</span>
-                  </button>
-                ) : community.is_member ? (
-                  <button
-                    onClick={handleLeave}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
-                  >
-                    <UserMinus size={18} />
-                    <span className="hidden sm:inline">Joined</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleJoin}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full font-semibold transition-colors"
-                  >
-                    <UserPlus size={18} />
-                    <span className="hidden sm:inline">Join</span>
-                  </button>
-                )}
               </div>
+            </div>
+          </div>
 
-              {/* Tabs */}
-              <div className="flex items-center gap-6 mt-4 pt-4 border-t border-[#343536]">
-                <button
-                  onClick={() => setActiveTab('posts')}
-                  className={`text-sm font-semibold pb-2 border-b-2 transition-colors ${
-                    activeTab === 'posts'
-                      ? 'border-white text-white'
-                      : 'border-transparent text-[#818384] hover:text-white'
-                  }`}
-                >
-                  Posts
-                </button>
-                <button
-                  onClick={() => setActiveTab('members')}
-                  className={`text-sm font-semibold pb-2 border-b-2 transition-colors ${
-                    activeTab === 'members'
-                      ? 'border-white text-white'
-                      : 'border-transparent text-[#818384] hover:text-white'
-                  }`}
-                >
-                  Members ({community.member_count})
-                </button>
-              </div>
+          {/* Tabs */}
+          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4 p-4">
+            <div className="flex items-center gap-6">
+              <button
+                onClick={() => setActiveTab('posts')}
+                className={`text-sm font-semibold pb-2 border-b-2 transition-colors ${
+                  activeTab === 'posts'
+                    ? 'border-white text-white'
+                    : 'border-transparent text-[#818384] hover:text-white'
+                }`}
+              >
+                Posts
+              </button>
+              <button
+                onClick={() => setActiveTab('members')}
+                className={`text-sm font-semibold pb-2 border-b-2 transition-colors ${
+                  activeTab === 'members'
+                    ? 'border-white text-white'
+                    : 'border-transparent text-[#818384] hover:text-white'
+                }`}
+              >
+                Members ({community.member_count})
+              </button>
             </div>
           </div>
 
           {activeTab === 'posts' ? (
             <div className="space-y-3">
-              {/* Create Post */}
               {community.is_member && (
                 <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-3">
                   {!showCreatePost ? (
@@ -443,14 +452,25 @@ export default function CommunityDetailPage() {
                       onClick={() => setShowCreatePost(true)}
                       className="w-full flex items-center gap-3 px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded border border-[#343536] text-left text-[#818384] transition-colors"
                     >
-                      <div className="w-8 h-8 rounded-full bg-[#ff4500] flex items-center justify-center text-white font-semibold">
-                        {user?.username[0].toUpperCase()}
-                      </div>
+                      {user?.profile_picture ? (
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                          <Image
+                            src={getImageUrl(user.profile_picture)!}
+                            alt={user.username}
+                            width={32}
+                            height={32}
+                            className="object-cover w-full h-full"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[#d93900] flex items-center justify-center text-white font-semibold">
+                          {user?.username[0].toUpperCase()}
+                        </div>
+                      )}
                       <span>Create Post</span>
                     </button>
                   ) : (
                     <form onSubmit={handleCreatePost}>
-                      {/* Title Input */}
                       <input
                         type="text"
                         value={postTitle}
@@ -460,7 +480,6 @@ export default function CommunityDetailPage() {
                         required
                       />
 
-                      {/* Content Textarea */}
                       <textarea
                         value={postContent}
                         onChange={(e) => setPostContent(e.target.value)}
@@ -521,7 +540,7 @@ export default function CommunityDetailPage() {
                           <button
                             type="submit"
                             disabled={posting || !postTitle.trim() || !postContent.trim()}
-                            className="px-4 py-1.5 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="px-4 py-1.5 bg-[#d93900] hover:bg-[#c13300] text-white rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {posting ? 'Posting...' : 'Post'}
                           </button>
@@ -532,7 +551,6 @@ export default function CommunityDetailPage() {
                 </div>
               )}
 
-              {/* Posts Feed */}
               {posts.length === 0 ? (
                 <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
                   <MessageSquare size={48} className="mx-auto mb-4 text-[#818384]" />
@@ -546,32 +564,39 @@ export default function CommunityDetailPage() {
                     className="bg-[#1a1a1b] border border-[#343536] rounded-lg hover:border-[#474748] transition-colors overflow-hidden"
                   >
                     <div className="flex">
-                      {/* Vote Section */}
                       <div className="flex flex-col items-center gap-1 bg-[#161617] px-3 py-3">
                         <button
                           onClick={() => handleVote(post.id, 'up')}
                           className={`p-1 rounded hover:bg-[#272729] transition-colors ${
-                            post.is_liked ? 'text-[#ff4500]' : 'text-[#818384]'
+                            post.is_liked ? 'text-[#d93900]' : 'text-[#818384]'
                           }`}
                         >
                           <ArrowBigUp size={24} fill={post.is_liked ? 'currentColor' : 'none'} />
                         </button>
-                        <span className={`text-xs font-bold ${post.is_liked ? 'text-[#ff4500]' : 'text-[#d7dadc]'}`}>
+                        <span className={`text-xs font-bold ${post.is_liked ? 'text-[#d93900]' : 'text-[#d7dadc]'}`}>
                           {post.likes_count}
                         </span>
                         <button
                           onClick={() => handleVote(post.id, 'down')}
-                          className="p-1 rounded hover:bg-[#272729] transition-colors text-[#818384]"
+                          className="p-1 rounded hover:bg-[#272729] transition-colors text-[#818384] hover:text-blue-500"
                         >
                           <ArrowBigDown size={24} />
                         </button>
                       </div>
 
-                      {/* Content */}
                       <div className="flex-1 p-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 text-xs text-[#818384]">
-                            <span>Posted by u/{post.author.username}</span>
+                            <span>Posted by</span>
+                            <span 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/users/${post.author.id}`);
+                              }}
+                              className="hover:underline cursor-pointer text-white font-semibold"
+                            >
+                              u/{post.author.username}
+                            </span>
                             <span>•</span>
                             <span>{formatTime(post.created_at)}</span>
                           </div>
@@ -586,7 +611,10 @@ export default function CommunityDetailPage() {
                           )}
                         </div>
 
-                        <h2 className="text-lg font-semibold text-[#d7dadc] mb-2">
+                        <h2 
+                          onClick={() => router.push(`/posts/${post.id}`)}
+                          className="text-lg font-semibold text-[#d7dadc] mb-2 cursor-pointer hover:underline"
+                        >
                           {post.title || post.content}
                         </h2>
 
@@ -595,7 +623,10 @@ export default function CommunityDetailPage() {
                         )}
 
                         {getImageUrl(post.image) && (
-                          <div className="mb-3 rounded overflow-hidden">
+                          <div 
+                            onClick={() => router.push(`/posts/${post.id}`)}
+                            className="mb-3 rounded overflow-hidden cursor-pointer"
+                          >
                             <Image
                               src={getImageUrl(post.image)!}
                               alt="Post"
@@ -614,7 +645,10 @@ export default function CommunityDetailPage() {
                             <MessageSquare size={18} />
                             <span>{post.comments_count} Comments</span>
                           </button>
-                          <button className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-[#272729] transition-colors text-xs font-bold text-[#818384]">
+                          <button 
+                            onClick={() => handleShare(post.id)}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-[#272729] transition-colors text-xs font-bold text-[#818384]"
+                          >
                             <Share2 size={18} />
                             <span>Share</span>
                           </button>
@@ -626,7 +660,6 @@ export default function CommunityDetailPage() {
               )}
             </div>
           ) : (
-            // Members Tab
             <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
               <h3 className="font-semibold mb-4">Members ({members.length})</h3>
               
@@ -643,12 +676,15 @@ export default function CommunityDetailPage() {
 
                     return (
                       <div key={member.id} className="flex items-center justify-between p-3 bg-[#272729] rounded hover:bg-[#343536] transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#ff4500] flex items-center justify-center text-white font-semibold">
+                        <div 
+                          className="flex items-center gap-3 cursor-pointer flex-1"
+                          onClick={() => router.push(`/users/${member.user.id}`)}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-semibold">
                             {member.user.username[0].toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold">u/{member.user.username}</p>
+                            <p className="font-semibold hover:underline">u/{member.user.username}</p>
                             <div className="flex items-center gap-2">
                               {getRoleBadge(member.role, isCreator)}
                               <span className="text-xs text-[#818384]">
@@ -661,14 +697,17 @@ export default function CommunityDetailPage() {
                         {canManage && (
                           <div className="relative">
                             <button
-                              onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedMember(selectedMember?.id === member.id ? null : member);
+                              }}
                               className="p-2 hover:bg-[#474748] rounded transition-colors"
                             >
-                              <MoreHorizontal size={18} />
+                              <Shield size={18} />
                             </button>
 
                             {selectedMember?.id === member.id && (
-                              <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1b] border border-[#343536] rounded-lg shadow-xl z-10 animate-slideDown">
+                              <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1b] border border-[#343536] rounded-lg shadow-xl z-10">
                                 {member.role === 'member' && (
                                   <button
                                     onClick={() => handlePromoteMember(member.user.id)}
@@ -707,28 +746,44 @@ export default function CommunityDetailPage() {
               )}
             </div>
           )}
-        </main>
+        </div>
 
-        {/* Right Sidebar */}
-        <aside className="hidden xl:block w-80">
-          <div className="sticky top-14">
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
-              <h3 className="font-semibold mb-3">About Community</h3>
-              <p className="text-sm text-[#818384] mb-4">{community.description}</p>
-              
-              <div className="flex items-center gap-2 text-sm mb-2">
-                <Users size={16} className="text-[#818384]" />
-                <span className="font-semibold">{community.member_count}</span>
-                <span className="text-[#818384]">Members</span>
-              </div>
+                {/* Right Sidebar */}
+<aside className="hidden xl:block w-80 flex-shrink-0">
+  <div className="sticky top-16 pt-2">
+    <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
+      <h3 className="font-semibold mb-3">About Community</h3>
+      <p className="text-sm text-[#818384] mb-4">{community.description}</p>
+      
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm">
+          <Users size={16} className="text-[#818384]" />
+          <span className="font-semibold">{community.member_count}</span>
+          <span className="text-[#818384]">Members</span>
+        </div>
 
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar size={16} className="text-[#818384]" />
-                <span className="text-[#818384]">Created {formatTime(community.created_at)}</span>
-              </div>
-            </div>
-          </div>
-        </aside>
+        <div className="flex items-center gap-2 text-sm">
+          <Crown size={16} className="text-yellow-500" />
+          <span className="text-[#818384]">Created by</span>
+          <span 
+            onClick={() => router.push(`/users/${community.creator_id}`)}
+            className="font-semibold text-[#d93900] hover:underline cursor-pointer"
+          >
+            u/{members.find(m => m.user.id === community.creator_id)?.user.username || 'Creator'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm">
+          <Calendar size={16} className="text-[#818384]" />
+          <span className="text-[#818384]">Created {formatTime(community.created_at)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+
+
       </div>
     </div>
   );

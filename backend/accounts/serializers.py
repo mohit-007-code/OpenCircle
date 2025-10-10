@@ -1,8 +1,10 @@
+# backend/accounts/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -34,12 +36,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
+
 class UserProfileSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(source='date_joined', read_only=True)
+    
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'first_name', 'last_name', 
-                  'bio', 'profile_picture', 'cover_image', 'date_joined')
-        read_only_fields = ('id', 'email', 'date_joined')
+                  'bio', 'profile_picture', 'cover_image', 'date_joined', 'created_at')
+        read_only_fields = ('id', 'email', 'date_joined', 'created_at')
+
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:

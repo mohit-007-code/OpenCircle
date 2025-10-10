@@ -4,8 +4,16 @@ export interface User {
   username: string;
   email: string;
   profile_picture?: string;
+  cover_image?: string;
   first_name?: string;
   last_name?: string;
+  bio?: string;
+  date_joined?: string;
+  created_at?: string;
+  followers_count?: number;
+  following_count?: number;
+  is_following?: boolean;
+  is_own_profile?: boolean;
 }
 
 export interface Community {
@@ -62,4 +70,14 @@ export interface CommunityMember {
   community: number;
   role: 'member' | 'moderator' | 'admin';
   joined_at: string;
+}
+
+export interface FollowUser {
+  id: number;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  profile_picture?: string;
+  is_following: boolean;
+  followed_at: string;
 }
