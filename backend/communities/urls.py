@@ -7,7 +7,10 @@ from .views import (
     JoinCommunityView,
     LeaveCommunityView,
     MyCommunitiesView,
-    CommunityMembersView
+    CommunityMembersView,
+    PromoteMemberView,      # Add this
+    DemoteMemberView,       # Add this
+    KickMemberView,         # Add this
 )
 
 app_name = 'communities'
@@ -23,4 +26,9 @@ urlpatterns = [
     path('<slug:slug>/join/', JoinCommunityView.as_view(), name='join-community'),
     path('<slug:slug>/leave/', LeaveCommunityView.as_view(), name='leave-community'),
     path('<slug:slug>/members/', CommunityMembersView.as_view(), name='community-members'),
+    
+    # Member Management - Add these
+    path('<slug:slug>/members/<int:user_id>/promote/', PromoteMemberView.as_view(), name='promote-member'),
+    path('<slug:slug>/members/<int:user_id>/demote/', DemoteMemberView.as_view(), name='demote-member'),
+    path('<slug:slug>/members/<int:user_id>/kick/', KickMemberView.as_view(), name='kick-member'),
 ]

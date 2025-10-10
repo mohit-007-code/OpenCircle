@@ -1,267 +1,191 @@
-// app/communities/create/page.tsx
+// app/login/page.tsx
 'use client';
-import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
-import Image from 'next/image';
-import Navbar from '@/components/Navbar';
-import { Upload, X, ArrowLeft } from 'lucide-react';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import Link from 'next/link';
+import { LoginData, AuthResponse } from '@/types';
+import { Mail, Lock } from 'lucide-react';
 
-export default function CreateCommunityPage() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+export default function LoginPage() {
+  const [formData, setFormData] = useState<LoginData>({
+    email: '',
+    password: '',
   });
-  const [displayPicture, setDisplayPicture] = useState<File | null>(null);
-  const [coverImage, setCoverImage] = useState<File | null>(null);
-  const [dpPreview, setDpPreview] = useState<string | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
+  const { login } = useAuth();
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center w-full">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  // Don't render if no user
-  if (!user) {
-    return null;
-  }
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>, type: 'dp' | 'cover') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === 'dp') {
-          setDisplayPicture(file);
-          setDpPreview(reader.result as string);
-        } else {
-          setCoverImage(file);
-          setCoverPreview(reader.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = (type: 'dp' | 'cover') => {
-    if (type === 'dp') {
-      setDisplayPicture(null);
-      setDpPreview(null);
-    } else {
-      setCoverImage(null);
-      setCoverPreview(null);
-    }
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const formDataToSend = new FormData();
-    formDataToSend.append('name', formData.name);
-    formDataToSend.append('description', formData.description);
-    if (displayPicture) formDataToSend.append('display_picture', displayPicture);
-    if (coverImage) formDataToSend.append('cover_image', coverImage);
-
     try {
-      await api.post('/communities/', formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await api.post<AuthResponse>('/auth/login/', formData);
+      login(response.data.user, {
+        access: response.data.access,
+        refresh: response.data.refresh,
       });
-      router.push('/communities');
+      router.push('/');
     } catch (err: any) {
-      setError(err.response?.data?.name?.[0] || 'Failed to create community');
+      const errorMessage =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Login failed. Please check your credentials.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse): Promise<void> => {
+    if (!credentialResponse.credential) {
+      setError('Google authentication failed');
+      return;
+    }
+
+    try {
+      const response = await api.post<AuthResponse>('/auth/google/', {
+        token: credentialResponse.credential,
+      });
+
+      login(response.data.user, {
+        access: response.data.access,
+        refresh: response.data.refresh,
+      });
+
+      router.push('/');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Google authentication failed');
+    }
+  };
+
+  const handleGoogleError = (): void => {
+    setError('Google Sign-In failed. Please try again.');
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-white w-full">
-      <Navbar />
+    <div className="min-h-screen bg-[#0b0f14] flex">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[#ff4500] to-[#ff6a00] p-12 items-center justify-center">
+        <div className="max-w-md">
+          <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mb-6">
+            <span className="text-4xl font-bold text-[#ff4500]">O</span>
+          </div>
+          <h1 className="text-5xl font-bold text-white mb-4">OpenCircle</h1>
+          <p className="text-xl text-white/90">Connect with communities around the world</p>
+        </div>
+      </div>
 
-      <div className="w-full">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Header */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span>Back</span>
-          </button>
-
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Create Community</h1>
-            <p className="text-zinc-400">Start your own community and invite others to join</p>
+      {/* Right Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          {/* Logo for mobile */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-[#ff4500] flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">O</span>
+              </div>
+              <span className="text-2xl font-bold text-white">OpenCircle</span>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-8">
+            <h2 className="text-2xl font-bold mb-6">Log In</h2>
+
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400">
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500 rounded text-red-500 text-sm">
                 {error}
               </div>
             )}
 
-            {/* Cover Image */}
-            <div>
-              <label className="block text-sm font-medium mb-3">Cover Image</label>
-              <div className="relative h-56 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl overflow-hidden group">
-                {coverPreview && (
-                  <>
-                    <Image src={coverPreview} alt="Cover" fill className="object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage('cover')}
-                      className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-all z-10"
-                    >
-                      <X size={20} />
-                    </button>
-                  </>
-                )}
-                <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-black/30 hover:bg-black/40 transition-all">
-                  <Upload size={40} className="text-white mb-3" />
-                  <span className="text-white font-medium text-lg">
-                    {coverPreview ? 'Change Cover Image' : 'Upload Cover Image'}
-                  </span>
-                  <span className="text-zinc-300 text-sm mt-1">Recommended: 1200x400px</span>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 text-[#d7dadc]">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={20} />
                   <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleFileChange(e, 'cover')}
+                    name="email"
+                    type="email"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
                   />
-                </label>
-              </div>
-            </div>
-
-            {/* Display Picture */}
-            <div>
-              <label className="block text-sm font-medium mb-3">Display Picture</label>
-              <div className="flex items-center gap-6">
-                <div className="relative w-32 h-32 rounded-2xl bg-zinc-900 overflow-hidden group">
-                  {dpPreview ? (
-                    <>
-                      <Image src={dpPreview} alt="DP" fill className="object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeImage('dp')}
-                        className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg transition-all z-10"
-                      >
-                        <X size={16} />
-                      </button>
-                    </>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-zinc-700">
-                      ?
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-6 py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl transition-all">
-                    <Upload size={18} />
-                    <span className="font-medium">Upload Image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleFileChange(e, 'dp')}
-                    />
-                  </label>
-                  <p className="text-sm text-zinc-500 mt-2">Recommended: 400x400px</p>
                 </div>
               </div>
-            </div>
 
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium mb-3">
-                Community Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                required
-                maxLength={100}
-                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-zinc-500"
-                placeholder="e.g., Web Developers"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-[#d7dadc]">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={20} />
+                  <input
+                    name="password"
+                    type="password"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium mb-3">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                name="description"
-                required
-                maxLength={500}
-                rows={5}
-                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-zinc-500 resize-none"
-                placeholder="Describe your community..."
-                value={formData.description}
-                onChange={handleChange}
-              />
-              <p className="text-sm text-zinc-500 mt-2">
-                {formData.description.length}/500 characters
-              </p>
-            </div>
-
-            {/* Buttons */}
-            <div className="flex gap-4 pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105"
+                className="w-full py-3 bg-[#ff4500] hover:bg-[#ff5414] text-white font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Creating...
+                    Logging in...
                   </span>
                 ) : (
-                  'Create Community'
+                  'Log In'
                 )}
               </button>
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-8 py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl font-semibold transition-all"
-              >
-                Cancel
-              </button>
+            </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#343536]"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-[#1a1a1b] text-[#818384]">OR</span>
+              </div>
             </div>
-          </form>
+
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="filled_black"
+                size="large"
+                text="signin_with"
+                width="350"
+              />
+            </div>
+
+            <p className="text-center text-sm text-[#818384] mt-6">
+              New to OpenCircle?{' '}
+              <Link href="/register" className="text-[#ff4500] hover:text-[#ff5414] font-semibold">
+                Sign Up
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

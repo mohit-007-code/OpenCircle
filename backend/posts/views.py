@@ -5,24 +5,18 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from .models import Post, PostLike, Comment
+from .models import Post, PostLike, Comment, CommentLike
 from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer
 from communities.models import Community, CommunityMembership
 
 
-# backend/posts/views.py
-# Add this at the end
-
 class FeedPostsView(generics.ListAPIView):
-    """
-    GET: Get all posts from all communities (feed)
-    """
+    """GET: Get all posts from all communities (feed)"""
     serializer_class = PostSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
     
     def get_queryset(self):
-        # Get all posts ordered by latest
         return Post.objects.all().select_related('author', 'community').order_by('-created_at')
     
     def get_serializer_context(self):
@@ -54,11 +48,15 @@ class CommunityPostListCreateView(generics.ListCreateAPIView):
         community = get_object_or_404(Community, slug=slug)
         return Post.objects.filter(community=community).select_related('author', 'community')
     
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+    
     def perform_create(self, serializer):
         slug = self.kwargs.get('slug')
         community = get_object_or_404(Community, slug=slug)
         
-        # Check if user is a member
         if not CommunityMembership.objects.filter(
             user=self.request.user,
             community=community
@@ -85,6 +83,11 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
             id=self.kwargs.get('pk')
         )
     
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+    
     def update(self, request, *args, **kwargs):
         post = self.get_object()
         if post.author != request.user:
@@ -99,9 +102,7 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class PostLikeToggleView(APIView):
-    """
-    POST: Toggle like on a post
-    """
+    """POST: Toggle like on a post"""
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request, pk):
@@ -113,13 +114,11 @@ class PostLikeToggleView(APIView):
         )
         
         if not created:
-            # Unlike
             like.delete()
             post.likes_count = max(0, post.likes_count - 1)
             post.save(update_fields=['likes_count'])
             return Response({'liked': False, 'likes_count': post.likes_count})
         else:
-            # Like
             post.likes_count += 1
             post.save(update_fields=['likes_count'])
             return Response({'liked': True, 'likes_count': post.likes_count})
@@ -132,10 +131,16 @@ class PostCommentListCreateView(generics.ListCreateAPIView):
     """
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = None
     
     def get_queryset(self):
         post_id = self.kwargs.get('pk')
         return Comment.objects.filter(post_id=post_id).select_related('author')
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
     
     def perform_create(self, serializer):
         post = get_object_or_404(Post, id=self.kwargs.get('pk'))
@@ -156,6 +161,11 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+    
     def update(self, request, *args, **kwargs):
         comment = self.get_object()
         if comment.author != request.user:
@@ -169,7 +179,6 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
             comment.post.community.creator != request.user):
             raise PermissionDenied('You do not have permission to delete this comment')
         
-        # Update comment count
         post = comment.post
         self.perform_destroy(comment)
         post.comments_count = max(0, post.comments.count())
@@ -178,13 +187,56 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class CommentLikeToggleView(APIView):
+    """POST: Toggle like on a comment"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, pk):
+        comment = get_object_or_404(Comment, id=pk)
+        
+        like, created = CommentLike.objects.get_or_create(
+            comment=comment,
+            user=request.user
+        )
+        
+        if not created:
+            like.delete()
+            comment.likes_count = max(0, comment.likes_count - 1)
+            comment.save(update_fields=['likes_count'])
+            return Response({'liked': False, 'likes_count': comment.likes_count})
+        else:
+            comment.likes_count += 1
+            comment.save(update_fields=['likes_count'])
+            return Response({'liked': True, 'likes_count': comment.likes_count})
+
+
+class CommentRepliesView(generics.ListAPIView):
+    """GET: List replies to a comment"""
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = None
+    
+    def get_queryset(self):
+        comment_id = self.kwargs.get('pk')
+        return Comment.objects.filter(parent_id=comment_id).select_related('author')
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+
 class UserPostsView(generics.ListAPIView):
-    """
-    GET: List all posts by a user
-    """
+    """GET: List all posts by a user"""
     serializer_class = PostSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
     
     def get_queryset(self):
         user_id = self.kwargs.get('user_id')
         return Post.objects.filter(author_id=user_id).select_related('author', 'community')
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context

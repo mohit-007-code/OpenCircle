@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
+import Sidebar from '@/components/Sidebar';
 import { Upload, X, ArrowLeft } from 'lucide-react';
 
 export default function CreateCommunityPage() {
@@ -23,23 +24,20 @@ export default function CreateCommunityPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
-  // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#0b0f14] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  // Don't render if no user
   if (!user) {
     return null;
   }
@@ -104,157 +102,169 @@ export default function CreateCommunityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-[#0b0f14]">
       <Navbar />
+      
+      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-5">
+        <Sidebar />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span>Back</span>
-        </button>
+        <main className="flex-1 max-w-3xl">
+          {/* Header */}
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-[#818384] hover:text-white mb-4 transition-colors"
+          >
+            <ArrowLeft size={20} />
+            <span>Back</span>
+          </button>
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Create Community</h1>
-          <p className="text-zinc-400">Start your own community and invite others to join</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium mb-3">Cover Image</label>
-            <div className="relative h-56 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl overflow-hidden group">
-              {coverPreview && (
-                <>
-                  <Image src={coverPreview} alt="Cover" fill className="object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage('cover')}
-                    className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-all z-10"
-                  >
-                    <X size={20} />
-                  </button>
-                </>
-              )}
-              <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-black/30 hover:bg-black/40 transition-all">
-                <Upload size={40} className="text-white mb-3" />
-                <span className="text-white font-medium text-lg">
-                  {coverPreview ? 'Change Cover Image' : 'Upload Cover Image'}
-                </span>
-                <span className="text-zinc-300 text-sm mt-1">Recommended: 1200x400px</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleFileChange(e, 'cover')}
-                />
-              </label>
-            </div>
+          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
+            <h1 className="text-2xl font-bold mb-2">Create a Community</h1>
+            <p className="text-[#818384]">Build and grow a community about something you care about</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-3">Display Picture</label>
-            <div className="flex items-center gap-6">
-              <div className="relative w-32 h-32 rounded-2xl bg-zinc-900 overflow-hidden">
-                {dpPreview ? (
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
+                {error}
+              </div>
+            )}
+
+            {/* Cover Image */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
+              <label className="block text-sm font-semibold mb-3">Cover Image</label>
+              <div className="relative h-40 bg-gradient-to-r from-[#ff4500] to-[#ff6a00] rounded-lg overflow-hidden group">
+                {coverPreview && (
                   <>
-                    <Image src={dpPreview} alt="DP" fill className="object-cover" />
+                    <Image src={coverPreview} alt="Cover" fill className="object-cover" />
                     <button
                       type="button"
-                      onClick={() => removeImage('dp')}
-                      className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg transition-all z-10"
+                      onClick={() => removeImage('cover')}
+                      className="absolute top-3 right-3 p-2 bg-black/70 hover:bg-black rounded-lg transition-all z-10"
                     >
-                      <X size={16} />
+                      <X size={18} />
                     </button>
                   </>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-zinc-700">
-                    ?
-                  </div>
                 )}
-              </div>
-              <div>
-                <label className="cursor-pointer inline-flex items-center gap-2 px-6 py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl transition-all">
-                  <Upload size={18} />
-                  <span className="font-medium">Upload Image</span>
+                <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-black/20 hover:bg-black/30 transition-all">
+                  <Upload size={32} className="text-white mb-2" />
+                  <span className="text-white text-sm font-medium">
+                    {coverPreview ? 'Change Cover' : 'Upload Cover'}
+                  </span>
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => handleFileChange(e, 'dp')}
+                    onChange={(e) => handleFileChange(e, 'cover')}
                   />
                 </label>
-                <p className="text-sm text-zinc-500 mt-2">Recommended: 400x400px</p>
               </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-3">
-              Community Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              maxLength={100}
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-zinc-500"
-              placeholder="e.g., Web Developers"
-              value={formData.name}
-              onChange={handleChange}
-            />
-          </div>
+            {/* Display Picture */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
+              <label className="block text-sm font-semibold mb-3">Community Icon</label>
+              <div className="flex items-center gap-4">
+                <div className="relative w-20 h-20 rounded-full bg-[#272729] overflow-hidden">
+                  {dpPreview ? (
+                    <>
+                      <Image src={dpPreview} alt="DP" fill className="object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage('dp')}
+                        className="absolute top-1 right-1 p-1 bg-black/70 hover:bg-black rounded-full transition-all z-10"
+                      >
+                        <X size={14} />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-[#818384]">
+                      ?
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-[#272729] hover:bg-[#343536] border border-[#343536] rounded-full text-sm font-medium transition-colors">
+                    <Upload size={16} />
+                    <span>Upload Icon</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleFileChange(e, 'dp')}
+                    />
+                  </label>
+                  <p className="text-xs text-[#818384] mt-2">Recommended size: 256x256px</p>
+                </div>
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-3">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              name="description"
-              required
-              maxLength={500}
-              rows={5}
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-zinc-500 resize-none"
-              placeholder="Describe your community..."
-              value={formData.description}
-              onChange={handleChange}
-            />
-            <p className="text-sm text-zinc-500 mt-2">
-              {formData.description.length}/500 characters
-            </p>
-          </div>
+            {/* Community Name */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
+              <label className="block text-sm font-semibold mb-2">
+                Name <span className="text-[#ff4500]">*</span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                required
+                maxLength={100}
+                className="w-full px-4 py-2.5 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                placeholder="Community name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+              <p className="text-xs text-[#818384] mt-2">
+                Community names cannot be changed
+              </p>
+            </div>
 
-          <div className="flex gap-4 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating...
-                </span>
-              ) : (
-                'Create Community'
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="px-8 py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl font-semibold transition-all"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+            {/* Description */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
+              <label className="block text-sm font-semibold mb-2">
+                Description <span className="text-[#ff4500]">*</span>
+              </label>
+              <textarea
+                name="description"
+                required
+                maxLength={500}
+                rows={4}
+                className="w-full px-4 py-2.5 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384] resize-none"
+                placeholder="What is your community about?"
+                value={formData.description}
+                onChange={handleChange}
+              />
+              <p className="text-xs text-[#818384] mt-2">
+                {formData.description.length}/500 characters
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="flex-1 py-3 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 py-3 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Creating...
+                  </span>
+                ) : (
+                  'Create Community'
+                )}
+              </button>
+            </div>
+          </form>
+        </main>
       </div>
     </div>
   );

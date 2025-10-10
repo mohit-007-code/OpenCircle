@@ -8,7 +8,8 @@ import api from '@/lib/api';
 import { Community } from '@/types';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
-import { Users, Plus, Search } from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
+import { Users, TrendingUp, Plus, Search } from 'lucide-react';
 
 export default function CommunitiesPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -66,102 +67,85 @@ export default function CommunitiesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white w-full">
+    <div className="min-h-screen bg-[#0b0f14]">
       <Navbar />
+      
+      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-5">
+        <Sidebar />
 
-      <div className="w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <main className="flex-1">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Communities</h1>
-              <p className="text-zinc-400">Discover and join amazing communities</p>
+          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Communities</h1>
+                <p className="text-[#818384]">Discover and join amazing communities</p>
+              </div>
+              {user && (
+                <Link
+                  href="/communities/create"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors"
+                >
+                  <Plus size={20} />
+                  Create
+                </Link>
+              )}
             </div>
-            {user && (
-              <Link
-                href="/communities/create"
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition-all hover:scale-105"
-              >
-                <Plus size={20} />
-                Create Community
-              </Link>
-            )}
-          </div>
 
-          {/* Search & Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={20} />
               <input
                 type="text"
                 placeholder="Search communities..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#272729] border border-[#343536] rounded-lg text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
               />
             </div>
-            
-            {user && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setFilter('all')}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all ${
-                    filter === 'all'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setFilter('my')}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all ${
-                    filter === 'my'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
-                  }`}
-                >
-                  My Communities
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-20">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loading && filteredCommunities.length === 0 && (
-            <div className="text-center py-20">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-900 flex items-center justify-center">
-                <Users size={40} className="text-zinc-600" />
-              </div>
-              <h3 className="text-2xl font-semibold mb-2">No communities found</h3>
-              <p className="text-zinc-400 mb-6">
-                {searchQuery
-                  ? 'Try adjusting your search'
-                  : filter === 'my'
-                  ? "You haven't joined any communities yet"
-                  : 'Be the first to create one!'}
-              </p>
-              {user && filter === 'my' && (
-                <button
-                  onClick={() => setFilter('all')}
-                  className="text-blue-500 hover:text-blue-400 font-medium"
-                >
-                  Explore All Communities →
-                </button>
-              )}
+          {/* Filters */}
+          {user && (
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                  filter === 'all'
+                    ? 'bg-[#ff4500] text-white'
+                    : 'bg-[#272729] text-[#818384] hover:bg-[#343536]'
+                }`}
+              >
+                All Communities
+              </button>
+              <button
+                onClick={() => setFilter('my')}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                  filter === 'my'
+                    ? 'bg-[#ff4500] text-white'
+                    : 'bg-[#272729] text-[#818384] hover:bg-[#343536]'
+                }`}
+              >
+                My Communities
+              </button>
             </div>
           )}
 
           {/* Communities Grid */}
-          {!loading && filteredCommunities.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : filteredCommunities.length === 0 ? (
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
+              <Users size={48} className="mx-auto mb-4 text-[#818384]" />
+              <h3 className="text-xl font-semibold mb-2">No communities found</h3>
+              <p className="text-[#818384]">
+                {searchQuery ? 'Try a different search' : 'Be the first to create one!'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCommunities.map((community) => {
                 const coverUrl = getImageUrl(community.cover_image);
                 const dpUrl = getImageUrl(community.display_picture);
@@ -169,35 +153,35 @@ export default function CommunitiesPage() {
                 return (
                   <div
                     key={community.id}
-                    className="group bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-zinc-700 overflow-hidden transition-all hover:scale-[1.02]"
+                    className="bg-[#1a1a1b] border border-[#343536] rounded-lg overflow-hidden hover:border-[#474748] transition-colors"
                   >
-                    {/* Cover Image */}
-                    <div className="h-40 bg-gradient-to-br from-blue-600 to-purple-600 relative overflow-hidden">
+                    {/* Cover */}
+                    <div className="h-24 bg-gradient-to-r from-[#ff4500] to-[#ff6a00] relative">
                       {coverUrl && (
                         <Image
                           src={coverUrl}
                           alt={community.name}
                           fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-300"
+                          className="object-cover"
                         />
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className="p-6">
+                    <div className="p-4">
                       {/* Display Picture */}
-                      <div className="relative -mt-16 mb-4">
-                        <div className="w-20 h-20 rounded-xl border-4 border-zinc-900 bg-zinc-800 overflow-hidden">
+                      <div className="relative -mt-10 mb-3">
+                        <div className="w-16 h-16 rounded-full border-4 border-[#1a1a1b] bg-[#272729] overflow-hidden">
                           {dpUrl ? (
                             <Image
                               src={dpUrl}
                               alt={community.name}
-                              width={80}
-                              height={80}
+                              width={64}
+                              height={64}
                               className="object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-zinc-600">
+                            <div className="w-full h-full flex items-center justify-center text-xl font-bold text-[#ff4500]">
                               {community.name[0].toUpperCase()}
                             </div>
                           )}
@@ -205,33 +189,31 @@ export default function CommunitiesPage() {
                       </div>
 
                       <Link href={`/communities/${community.slug}`}>
-                        <h3 className="text-xl font-bold mb-2 hover:text-blue-500 transition-colors line-clamp-1">
-                          {community.name}
+                        <h3 className="font-bold text-lg mb-2 hover:underline line-clamp-1">
+                          c/{community.name}
                         </h3>
                       </Link>
-                      <p className="text-zinc-400 text-sm mb-4 line-clamp-2 min-h-[40px]">
+                      <p className="text-sm text-[#818384] mb-3 line-clamp-2">
                         {community.description}
                       </p>
 
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
-                        <div className="flex items-center gap-2 text-sm text-zinc-500">
+                      <div className="flex items-center justify-between pt-3 border-t border-[#343536]">
+                        <div className="flex items-center gap-1 text-sm text-[#818384]">
                           <Users size={16} />
-                          <span className="font-medium">{community.member_count}</span>
-                          <span>members</span>
+                          <span>{community.member_count}</span>
                         </div>
                         
                         {community.is_member ? (
                           <Link
                             href={`/communities/${community.slug}`}
-                            className="text-blue-500 hover:text-blue-400 text-sm font-medium"
+                            className="px-4 py-1.5 bg-[#272729] hover:bg-[#343536] text-sm font-semibold rounded-full transition-colors"
                           >
-                            View →
+                            View
                           </Link>
                         ) : (
                           <button
                             onClick={() => handleJoinCommunity(community.slug)}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-all"
+                            className="px-4 py-1.5 bg-[#ff4500] hover:bg-[#ff5414] text-white text-sm font-semibold rounded-full transition-colors"
                           >
                             Join
                           </button>
@@ -243,7 +225,7 @@ export default function CommunitiesPage() {
               })}
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

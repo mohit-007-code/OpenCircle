@@ -5,16 +5,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import Sidebar from '@/components/Sidebar';
 import api from '@/lib/api';
 import { Post } from '@/types';
 import Image from 'next/image';
-import { Users, Shield, Zap, MessageSquare, Heart, User as UserIcon, Calendar } from 'lucide-react';
+import { ArrowBigUp, ArrowBigDown, MessageSquare, Share2, Bookmark, MoreHorizontal, TrendingUp, Users, Sparkles } from 'lucide-react';
 
 export default function HomePage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'best' | 'new' | 'top'>('best');
 
   useEffect(() => {
     fetchFeed();
@@ -32,7 +34,7 @@ export default function HomePage() {
     }
   };
 
-  const handleLikePost = async (postId: number) => {
+  const handleVote = async (postId: number, voteType: 'up' | 'down') => {
     if (!user) {
       router.push('/login');
       return;
@@ -46,7 +48,7 @@ export default function HomePage() {
           : post
       ));
     } catch (error) {
-      console.error('Failed to like post:', error);
+      console.error('Failed to vote:', error);
     }
   };
 
@@ -58,242 +60,221 @@ export default function HomePage() {
     return `http://localhost:8000${imageUrl}`;
   };
 
-  const formatDate = (dateString: string) => {
+  const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 60) return 'just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-[#0b0f14]">
       <Navbar />
+      
+      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-5">
+        {/* Sidebar */}
+        <Sidebar />
 
-      {/* Hero Section */}
-      <div className="relative overflow-hidden border-b border-zinc-800">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.1)_0%,transparent_65%)]"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 leading-tight">
-            {user ? (
-              <>
-                Welcome back,{' '}
-                <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                  {user.username}
-                </span>
-              </>
-            ) : (
-              <>
-                Welcome to{' '}
-                <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                  OpenCircle
-                </span>
-              </>
-            )}
-          </h1>
-          
-          <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-8">
-            Discover posts from communities around the world
-          </p>
+        {/* Main Content */}
+        <main className="flex-1 max-w-3xl">
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-3 mb-4 bg-[#1a1a1b] border border-[#343536] rounded-lg p-2">
+            <button
+              onClick={() => setFilter('best')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                filter === 'best'
+                  ? 'bg-[#272729] text-white'
+                  : 'text-[#818384] hover:bg-[#272729]'
+              }`}
+            >
+              <Sparkles size={16} />
+              Best
+            </button>
+            <button
+              onClick={() => setFilter('new')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                filter === 'new'
+                  ? 'bg-[#272729] text-white'
+                  : 'text-[#818384] hover:bg-[#272729]'
+              }`}
+            >
+              New
+            </button>
+            <button
+              onClick={() => setFilter('top')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                filter === 'top'
+                  ? 'bg-[#272729] text-white'
+                  : 'text-[#818384] hover:bg-[#272729]'
+              }`}
+            >
+              <TrendingUp size={16} />
+              Top
+            </button>
+          </div>
 
-          {!user && (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {/* Posts */}
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#272729] flex items-center justify-center">
+                <MessageSquare size={32} className="text-[#818384]" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
+              <p className="text-[#818384] mb-6">Be the first to share something!</p>
               <Link
-                href="/register"
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition-all hover:scale-105"
+                href="/communities"
+                className="inline-block px-6 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors"
               >
-                Get Started
+                Explore Communities
               </Link>
-              <Link
-                href="/login"
-                className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-semibold transition-all hover:scale-105"
-              >
-                Sign In
-              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {posts.map((post) => (
+                <article
+                  key={post.id}
+                  className="bg-[#1a1a1b] border border-[#343536] rounded-lg hover:border-[#474748] transition-colors overflow-hidden"
+                >
+                  <div className="flex">
+                    {/* Vote Section */}
+                    <div className="flex flex-col items-center gap-1 bg-[#161617] px-3 py-3">
+                      <button
+                        onClick={() => handleVote(post.id, 'up')}
+                        className={`p-1 rounded hover:bg-[#272729] transition-colors ${
+                          post.is_liked ? 'text-[#ff4500]' : 'text-[#818384]'
+                        }`}
+                      >
+                        <ArrowBigUp size={24} fill={post.is_liked ? 'currentColor' : 'none'} />
+                      </button>
+                      <span className={`text-xs font-bold ${post.is_liked ? 'text-[#ff4500]' : 'text-[#d7dadc]'}`}>
+                        {post.likes_count}
+                      </span>
+                      <button
+                        onClick={() => handleVote(post.id, 'down')}
+                        className="p-1 rounded hover:bg-[#272729] transition-colors text-[#818384]"
+                      >
+                        <ArrowBigDown size={24} />
+                      </button>
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="flex-1 p-3">
+                      {/* Post Header */}
+                      <div className="flex items-center gap-2 text-xs text-[#818384] mb-2">
+                        <Link
+                          href={`/communities/${post.community_slug}`}
+                          className="flex items-center gap-1 hover:underline"
+                        >
+                          <div className="w-5 h-5 rounded-full bg-[#ff4500] flex items-center justify-center text-white text-[10px] font-bold">
+                            {post.community_name[0].toUpperCase()}
+                          </div>
+                          <span className="font-bold text-[#d7dadc]">c/{post.community_name}</span>
+                        </Link>
+                        <span>•</span>
+                        <span>Posted by u/{post.author.username}</span>
+                        <span>•</span>
+                        <span>{formatTime(post.created_at)}</span>
+                      </div>
+
+                      {/* Post Content */}
+                      <h2 className="text-lg font-semibold text-[#d7dadc] mb-2 hover:underline cursor-pointer">
+                        {post.content}
+                      </h2>
+
+                      {/* Post Image */}
+                      {getImageUrl(post.image) && (
+                        <div className="mb-3 rounded-lg overflow-hidden">
+                          <Image
+                            src={getImageUrl(post.image)!}
+                            alt="Post"
+                            width={600}
+                            height={400}
+                            className="w-full max-h-[500px] object-cover"
+                          />
+                        </div>
+                      )}
+
+                      {/* Post Actions */}
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/communities/${post.community_slug}`}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-[#272729] transition-colors text-xs font-bold text-[#818384]"
+                        >
+                          <MessageSquare size={18} />
+                          <span>{post.comments_count} Comments</span>
+                        </Link>
+
+                        <button className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-[#272729] transition-colors text-xs font-bold text-[#818384]">
+                          <Share2 size={18} />
+                          <span>Share</span>
+                        </button>
+
+                        <button className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-[#272729] transition-colors text-xs font-bold text-[#818384]">
+                          <Bookmark size={18} />
+                          <span>Save</span>
+                        </button>
+
+                        <button className="ml-auto p-1.5 rounded hover:bg-[#272729] transition-colors text-[#818384]">
+                          <MoreHorizontal size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
-        </div>
-      </div>
+        </main>
 
-      {/* Feed Section */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold">Latest Posts</h2>
-          <Link
-            href="/communities"
-            className="text-blue-500 hover:text-blue-400 font-medium transition-colors"
-          >
-            Browse Communities →
-          </Link>
-        </div>
-
-        {/* Posts Feed */}
-        {posts.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-900 rounded-2xl border border-zinc-800">
-            <MessageSquare size={64} className="mx-auto text-zinc-600 mb-4" />
-            <h3 className="text-2xl font-bold mb-2">No posts yet</h3>
-            <p className="text-zinc-400 mb-6">Be the first to create a post!</p>
-            <Link
-              href="/communities"
-              className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition-all"
-            >
-              Explore Communities
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {posts.map((post) => (
-              <div key={post.id} className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden hover:border-zinc-700 transition-all">
-                {/* Post Header */}
-                <div className="p-6">
-                  <div className="flex items-start gap-3 mb-4">
-                    {/* Author Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-semibold flex-shrink-0">
-                      {post.author.username[0].toUpperCase()}
-                    </div>
-
-                    {/* Author & Community Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold">{post.author.username}</p>
-                        <span className="text-zinc-600">•</span>
-                        <Link 
-                          href={`/communities/${post.community_slug}`}
-                          className="text-blue-500 hover:text-blue-400 font-medium transition-colors"
-                        >
-                          {post.community_name}
-                        </Link>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-zinc-400 mt-1">
-                        <Calendar size={14} />
-                        <span>{formatDate(post.created_at)}</span>
-                      </div>
-                    </div>
-
-                    {/* Join Community Button */}
-                    <Link
-                      href={`/communities/${post.community_slug}`}
-                      className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-medium transition-all"
-                    >
-                      View Community
-                    </Link>
+        {/* Right Sidebar */}
+        <aside className="hidden xl:block w-80">
+          <div className="sticky top-14 space-y-4">
+            {/* Home Card */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg overflow-hidden">
+              <div className="h-12 bg-gradient-to-r from-[#ff4500] to-[#ff6a00]"></div>
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-[#ff4500] flex items-center justify-center text-white font-bold">
+                    O
                   </div>
-
-                  {/* Post Content */}
-                  <p className="text-zinc-100 text-lg mb-4 whitespace-pre-wrap">{post.content}</p>
-
-                  {/* Post Image */}
-                  {getImageUrl(post.image) && (
-                    <div className="rounded-xl overflow-hidden mb-4">
-                      <Image
-                        src={getImageUrl(post.image)!}
-                        alt="Post image"
-                        width={800}
-                        height={500}
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-
-                  {/* Post Actions */}
-                  <div className="flex items-center gap-6 pt-4 border-t border-zinc-800">
-                    <button
-                      onClick={() => handleLikePost(post.id)}
-                      className={`flex items-center gap-2 transition-colors ${
-                        post.is_liked ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'
-                      }`}
-                    >
-                      <Heart size={22} fill={post.is_liked ? 'currentColor' : 'none'} />
-                      <span className="font-medium">{post.likes_count}</span>
-                    </button>
-
-                    <Link
-                      href={`/communities/${post.community_slug}`}
-                      className="flex items-center gap-2 text-zinc-400 hover:text-blue-500 transition-colors"
-                    >
-                      <MessageSquare size={22} />
-                      <span className="font-medium">{post.comments_count}</span>
-                    </Link>
-
-                    <Link
-                      href={`/communities/${post.community_slug}`}
-                      className="flex items-center gap-2 text-zinc-400 hover:text-purple-500 transition-colors ml-auto"
-                    >
-                      <Users size={20} />
-                      <span className="text-sm">Join Community</span>
-                    </Link>
-                  </div>
+                  <h3 className="font-semibold">Home</h3>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Features Section - Only for non-logged in users */}
-      {!user && (
-        <div className="border-t border-zinc-800 bg-zinc-900/50 mt-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <h2 className="text-3xl font-bold text-center mb-12">Why OpenCircle?</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="p-6 bg-zinc-900 rounded-xl border border-zinc-800">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4">
-                  <Users size={24} className="text-white" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Global Community</h3>
-                <p className="text-zinc-400 text-sm">Connect with people worldwide</p>
-              </div>
-
-              <div className="p-6 bg-zinc-900 rounded-xl border border-zinc-800">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-4">
-                  <Shield size={24} className="text-white" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Secure & Private</h3>
-                <p className="text-zinc-400 text-sm">Your data is protected</p>
-              </div>
-
-              <div className="p-6 bg-zinc-900 rounded-xl border border-zinc-800">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center mb-4">
-                  <Zap size={24} className="text-white" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Lightning Fast</h3>
-                <p className="text-zinc-400 text-sm">Optimized performance</p>
-              </div>
-
-              <div className="p-6 bg-zinc-900 rounded-xl border border-zinc-800">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4">
-                  <MessageSquare size={24} className="text-white" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Easy Communication</h3>
-                <p className="text-zinc-400 text-sm">Simple and intuitive</p>
+                <p className="text-sm text-[#818384] mb-4">
+                  Your personal OpenCircle frontpage. Come here to check in with your favorite communities.
+                </p>
+                <Link
+                  href="/communities/create"
+                  className="block w-full py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white text-center font-semibold rounded-full transition-colors"
+                >
+                  Create Community
+                </Link>
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-800 bg-zinc-950 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-zinc-500">
-          <p>&copy; 2025 OpenCircle. All rights reserved.</p>
-        </div>
-      </footer>
+            {/* Popular Communities */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <TrendingUp size={18} className="text-[#ff4500]" />
+                Popular Communities
+              </h3>
+              <Link
+                href="/communities"
+                className="text-sm text-[#818384] hover:text-white transition-colors"
+              >
+                View all →
+              </Link>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

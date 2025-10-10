@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import Link from 'next/link';
 import { RegisterData, AuthResponse } from '@/types';
-import { Mail, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User as UserIcon } from 'lucide-react';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState<RegisterData>({
@@ -80,163 +80,173 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4 w-full">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/">
-            <div className="inline-flex items-center gap-2 mb-6 group cursor-pointer">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white text-xl group-hover:scale-110 transition-transform">
-                O
+    <div className="min-h-screen bg-[#0b0f14] flex">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[#ff4500] to-[#ff6a00] p-12 items-center justify-center">
+        <div className="max-w-md">
+          <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mb-6">
+            <span className="text-4xl font-bold text-[#ff4500]">O</span>
+          </div>
+          <h1 className="text-5xl font-bold text-white mb-4">Join OpenCircle</h1>
+          <p className="text-xl text-white/90">Discover communities and connect with people who share your interests</p>
+        </div>
+      </div>
+
+      {/* Right Side - Register Form */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          {/* Logo for mobile */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-[#ff4500] flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">O</span>
               </div>
               <span className="text-2xl font-bold text-white">OpenCircle</span>
             </div>
-          </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Join OpenCircle</h1>
-          <p className="text-zinc-400">Create your account and start connecting</p>
-        </div>
+          </div>
 
-        <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-8">
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-8">
+            <h2 className="text-2xl font-bold mb-6">Sign Up</h2>
+
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400 text-sm">
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500 rounded text-red-500 text-sm">
                 {error}
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Email *</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Username *</label>
-              <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                <input
-                  name="username"
-                  type="text"
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="johndoe"
-                  value={formData.username}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">First Name</label>
-                <input
-                  name="first_name"
-                  type="text"
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="John"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                />
+                <label className="block text-sm font-medium mb-2 text-[#d7dadc]">Email *</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={20} />
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">Last Name</label>
-                <input
-                  name="last_name"
-                  type="text"
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Doe"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                />
+                <label className="block text-sm font-medium mb-2 text-[#d7dadc]">Username *</label>
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={20} />
+                  <input
+                    name="username"
+                    type="text"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                    placeholder="johndoe"
+                    value={formData.username}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-[#d7dadc]">First Name</label>
+                  <input
+                    name="first_name"
+                    type="text"
+                    className="w-full px-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                    placeholder="John"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-[#d7dadc]">Last Name</label>
+                  <input
+                    name="last_name"
+                    type="text"
+                    className="w-full px-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                    placeholder="Doe"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-[#d7dadc]">Password *</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={20} />
+                  <input
+                    name="password"
+                    type="password"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-[#d7dadc]">Confirm Password *</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={20} />
+                  <input
+                    name="password2"
+                    type="password"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                    placeholder="••••••••"
+                    value={formData.password2}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-[#ff4500] hover:bg-[#ff5414] text-white font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Creating account...
+                  </span>
+                ) : (
+                  'Sign Up'
+                )}
+              </button>
+            </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#343536]"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-[#1a1a1b] text-[#818384]">OR</span>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Password *</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="filled_black"
+                size="large"
+                text="signup_with"
+                width="350"
+              />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Confirm Password *</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                <input
-                  name="password2"
-                  type="password"
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
-                  value={formData.password2}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 flex items-center justify-center gap-2 group"
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating account...
-                </>
-              ) : (
-                <>
-                  Create Account
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-zinc-900 text-zinc-500 font-medium">Or continue with</span>
-            </div>
+            <p className="text-center text-sm text-[#818384] mt-6">
+              Already a member?{' '}
+              <Link href="/login" className="text-[#ff4500] hover:text-[#ff5414] font-semibold">
+                Log In
+              </Link>
+            </p>
           </div>
-
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              theme="filled_black"
-              size="large"
-              text="signup_with"
-            />
-          </div>
-
-          <p className="text-center text-sm text-zinc-400 mt-6">
-            Already have an account?{' '}
-            <Link href="/login" className="text-blue-500 hover:text-blue-400 font-semibold transition-colors">
-              Sign in
-            </Link>
-          </p>
         </div>
       </div>
     </div>

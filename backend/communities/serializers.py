@@ -5,7 +5,6 @@ from .models import Community, CommunityMembership
 
 User = get_user_model()
 
-
 class CommunityCreatorSerializer(serializers.ModelSerializer):
     """Serializer for community creator information"""
     class Meta:
@@ -40,18 +39,21 @@ class CommunityListSerializer(serializers.ModelSerializer):
 
 class CommunityDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for single community"""
+    creator_id = serializers.IntegerField(source='creator.id', read_only=True)
     creator = CommunityCreatorSerializer(read_only=True)
     is_member = serializers.SerializerMethodField()
     is_creator = serializers.SerializerMethodField()
     user_role = serializers.SerializerMethodField()
+    can_manage_members = serializers.SerializerMethodField()
     
     class Meta:
         model = Community
         fields = [
             'id', 'name', 'slug', 'description',
             'display_picture', 'cover_image',
-            'creator', 'member_count', 'created_at', 'updated_at',
-            'is_member', 'is_creator', 'user_role'
+            'creator_id', 'creator', 'member_count',
+            'created_at', 'updated_at',
+            'is_member', 'is_creator', 'user_role', 'can_manage_members'
         ]
     
     def get_is_member(self, obj):
@@ -78,6 +80,19 @@ class CommunityDetailSerializer(serializers.ModelSerializer):
             ).first()
             return membership.role if membership else None
         return None
+    
+    def get_can_manage_members(self, obj):
+        """Check if user can manage members (moderator, admin, or creator)"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if obj.creator == request.user:
+                return True
+            membership = CommunityMembership.objects.filter(
+                user=request.user,
+                community=obj
+            ).first()
+            return membership and membership.role in ['admin', 'moderator']
+        return False
 
 
 class CommunityCreateUpdateSerializer(serializers.ModelSerializer):

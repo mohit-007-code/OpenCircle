@@ -1,49 +1,31 @@
 @import "tailwindcss";
 
-@theme {
-  --color-zinc-850: #1a1a1a;
-  --color-zinc-950: #0a0a0a;
+/* Add to the end of globals.css */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
 }
 
-html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  margin: 0;
-  padding: 0;
-  width: 100%;
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-body {
-  background: #09090b;
-  color: #fafafa;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-#__next {
-  width: 100%;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #18181b;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
 }

@@ -5,8 +5,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export const metadata: Metadata = {
-  title: 'OpenCircle - Community Platform',
-  description: 'Connect with communities around the world',
+  title: 'OpenCircle - Connect with Communities',
+  description: 'Reddit-style community platform',
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-zinc-950 m-0 p-0">
+      <body className="bg-[#0b0f14] m-0 p-0">
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
           <AuthProvider>
             {children}
