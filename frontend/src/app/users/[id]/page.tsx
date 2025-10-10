@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
-import { Post, Comment } from '@/types';
+import { Post, Comment, FollowUser } from '@/types';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import Toast from '@/components/Toast';
+import Modal from '@/components/Modal';
 import { 
   User as UserIcon,
   Calendar,
@@ -17,6 +18,8 @@ import {
   TrendingUp,  
   ArrowBigUp,
   Users,
+  UserPlus,
+  UserMinus,
 } from 'lucide-react';
 
 interface ToastMessage {
@@ -71,6 +74,11 @@ export default function PublicUserProfilePage() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [following, setFollowing] = useState(false);
 
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [followers, setFollowers] = useState<FollowUser[]>([]);
+  const [followingList, setFollowingList] = useState<FollowUser[]>([]);
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     setToast({ message, type });
   };
@@ -89,7 +97,6 @@ export default function PublicUserProfilePage() {
       setProfileUser(response.data);
       setFollowing(response.data.is_following);
       
-      // If it's own profile, redirect to /profile
       if (response.data.is_own_profile) {
         router.push('/profile');
       }
@@ -111,7 +118,6 @@ export default function PublicUserProfilePage() {
       setPosts(postsRes.data);
       setComments(commentsRes.data);
 
-      // Calculate stats from posts
       const communitiesMap = new Map();
       postsRes.data.forEach((post: Post) => {
         if (!communitiesMap.has(post.community_slug)) {
@@ -135,27 +141,60 @@ export default function PublicUserProfilePage() {
     }
   };
 
-  const handleFollowToggle = async () => {
+  const fetchFollowers = async () => {
+    try {
+      const response = await api.get(`/auth/users/${userId}/followers/`);
+      setFollowers(response.data);
+    } catch (error) {
+      showToast('Failed to load followers', 'error');
+    }
+  };
+
+  const fetchFollowing = async () => {
+    try {
+      const response = await api.get(`/auth/users/${userId}/following/`);
+      setFollowingList(response.data);
+    } catch (error) {
+      showToast('Failed to load following', 'error');
+    }
+  };
+
+  const handleFollowToggle = async (targetUserId?: number) => {
     if (!currentUser) {
       router.push('/login');
       return;
     }
 
+    const userToFollow = targetUserId || profileUser?.id;
+    if (!userToFollow) return;
+
     try {
-      await api.post(`/auth/users/${userId}/follow/`);
-      setFollowing(!following);
+      await api.post(`/auth/users/${userToFollow}/follow/`);
       
-      // Update follower count
-      if (profileUser) {
+      if (!targetUserId && profileUser) {
+        setFollowing(!following);
         setProfileUser({
           ...profileUser,
           followers_count: following 
             ? profileUser.followers_count - 1 
-            : profileUser.followers_count + 1
+            : profileUser.followers_count + 1,
+          is_following: !following
         });
       }
       
-      showToast(following ? 'Unfollowed' : 'Followed', 'success');
+      setFollowers(prev => prev.map(f => 
+        f.id === userToFollow ? { ...f, is_following: !f.is_following } : f
+      ));
+      setFollowingList(prev => prev.map(f => 
+        f.id === userToFollow ? { ...f, is_following: !f.is_following } : f
+      ));
+      
+      showToast(
+        targetUserId 
+          ? (followers.find(f => f.id === targetUserId)?.is_following || followingList.find(f => f.id === targetUserId)?.is_following ? 'Unfollowed' : 'Followed')
+          : (following ? 'Unfollowed' : 'Followed'),
+        'success'
+      );
     } catch (error) {
       showToast('Failed to update follow', 'error');
     }
@@ -187,7 +226,7 @@ export default function PublicUserProfilePage() {
       <div className="min-h-screen bg-[#0b0f14]">
         <Navbar />
         <div className="flex justify-center items-center h-96">
-          <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -205,91 +244,208 @@ export default function PublicUserProfilePage() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-6">
+      <Modal
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        title={`Followers (${profileUser.followers_count})`}
+        showActions={false}
+      >
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {followers.map((follower) => (
+            <div key={follower.id} className="flex items-center justify-between p-3 bg-[#272729] rounded">
+              <div 
+                className="flex items-center gap-3 cursor-pointer flex-1"
+                onClick={() => {
+                  setShowFollowersModal(false);
+                  router.push(`/users/${follower.id}`);
+                }}
+              >
+                <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold overflow-hidden">
+                  {follower.profile_picture ? (
+                    <Image src={getImageUrl(follower.profile_picture)!} alt={follower.username} width={40} height={40} className="object-cover w-full h-full" />
+                  ) : (
+                    follower.username[0].toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold">u/{follower.username}</p>
+                  {(follower.first_name || follower.last_name) && (
+                    <p className="text-sm text-[#818384]">{follower.first_name} {follower.last_name}</p>
+                  )}
+                </div>
+              </div>
+              {currentUser && follower.id !== currentUser.id && (
+                <button
+                  onClick={() => handleFollowToggle(follower.id)}
+                  className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors ${
+                    follower.is_following
+                      ? 'bg-[#272729] hover:bg-[#343536]'
+                      : 'bg-[#d93900] hover:bg-[#c13300] text-white'
+                  }`}
+                >
+                  {follower.is_following ? 'Following' : 'Follow'}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showFollowingModal}
+        onClose={() => setShowFollowingModal(false)}
+        title={`Following (${profileUser.following_count})`}
+        showActions={false}
+      >
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {followingList.map((followingUser) => (
+            <div key={followingUser.id} className="flex items-center justify-between p-3 bg-[#272729] rounded">
+              <div 
+                className="flex items-center gap-3 cursor-pointer flex-1"
+                onClick={() => {
+                  setShowFollowingModal(false);
+                  router.push(`/users/${followingUser.id}`);
+                }}
+              >
+                <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold overflow-hidden">
+                  {followingUser.profile_picture ? (
+                    <Image src={getImageUrl(followingUser.profile_picture)!} alt={followingUser.username} width={40} height={40} className="object-cover w-full h-full" />
+                  ) : (
+                    followingUser.username[0].toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold">u/{followingUser.username}</p>
+                  {(followingUser.first_name || followingUser.last_name) && (
+                    <p className="text-sm text-[#818384]">{followingUser.first_name} {followingUser.last_name}</p>
+                  )}
+                </div>
+              </div>
+              {currentUser && followingUser.id !== currentUser.id && (
+                <button
+                  onClick={() => handleFollowToggle(followingUser.id)}
+                  className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors ${
+                    followingUser.is_following
+                      ? 'bg-[#272729] hover:bg-[#343536]'
+                      : 'bg-[#d93900] hover:bg-[#c13300] text-white'
+                  }`}
+                >
+                  {followingUser.is_following ? 'Following' : 'Follow'}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-20 pb-5">
         <Sidebar />
 
-        <main className="flex-1">
-          {/* Profile Header */}
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4">
+        <main className="flex-1 min-w-0">
+          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4 overflow-hidden">
             {/* Cover Image */}
-            <div className="h-32 bg-gradient-to-r from-[#ff4500] to-[#ff6a00] rounded-t-lg relative">
-              {profileUser.cover_image && (
-                <Image 
-                  src={getImageUrl(profileUser.cover_image)!} 
-                  alt="Cover" 
-                  fill 
-                  className="object-cover rounded-t-lg" 
-                />
-              )}
+            <div className="relative">
+              <div className="h-48 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative">
+                {profileUser.cover_image && (
+                  <Image 
+                    src={getImageUrl(profileUser.cover_image)!} 
+                    alt="Cover" 
+                    fill 
+                    className="object-cover" 
+                  />
+                )}
+              </div>
             </div>
             
             <div className="px-6 pb-4">
-              <div className="flex items-start justify-between -mt-12">
-                {/* Profile Picture */}
-                <div className="w-24 h-24 rounded-full border-4 border-[#1a1a1b] bg-[#ff4500] flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+              {/* Profile Picture - Overlapping Banner */}
+              <div className="-mt-16 mb-4">
+                <div className="w-28 h-28 rounded-full border-4 border-[#1a1a1b] bg-[#d93900] flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-xl">
                   {profileUser.profile_picture ? (
                     <Image 
                       src={getImageUrl(profileUser.profile_picture)!} 
                       alt={profileUser.username} 
-                      width={96} 
-                      height={96} 
-                      className="object-cover" 
+                      width={112} 
+                      height={112} 
+                      className="object-cover w-full h-full" 
                     />
                   ) : (
                     profileUser.username[0].toUpperCase()
                   )}
                 </div>
+              </div>
 
-                {/* Follow Button */}
+              {/* Username and Follow Button */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold">u/{profileUser.username}</h1>
+                  {(profileUser.first_name || profileUser.last_name) && (
+                    <p className="text-[#818384]">{profileUser.first_name} {profileUser.last_name}</p>
+                  )}
+                  {profileUser.bio && <p className="text-sm text-[#818384] mt-1">{profileUser.bio}</p>}
+                </div>
+
                 {currentUser && currentUser.id !== profileUser.id && (
                   <button
-                    onClick={handleFollowToggle}
-                    className={`mt-16 px-6 py-2 rounded-full font-semibold transition-colors ${
+                    onClick={() => handleFollowToggle()}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-colors ${
                       following
                         ? 'bg-[#272729] hover:bg-[#343536]'
-                        : 'bg-[#ff4500] hover:bg-[#ff5414] text-white'
+                        : 'bg-[#d93900] hover:bg-[#c13300] text-white'
                     }`}
                   >
-                    {following ? 'Following' : 'Follow'}
+                    {following ? (
+                      <>
+                        <UserMinus size={18} />
+                        <span>Unfollow</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={18} />
+                        <span>Follow</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>
 
-              <div className="mt-4">
-                <h1 className="text-2xl font-bold">u/{profileUser.username}</h1>
-                {(profileUser.first_name || profileUser.last_name) && (
-                  <p className="text-[#818384]">{profileUser.first_name} {profileUser.last_name}</p>
-                )}
-                {profileUser.bio && <p className="text-sm text-[#818384] mt-1">{profileUser.bio}</p>}
-              </div>
-
-              {/* Stats */}
               <div className="flex gap-6 mt-4 pt-4 border-t border-[#343536]">
                 <div>
                   <p className="text-2xl font-bold">{stats?.total_posts || 0}</p>
                   <p className="text-sm text-[#818384]">Posts</p>
                 </div>
-                <div>
+                <button
+                  onClick={() => {
+                    setShowFollowersModal(true);
+                    fetchFollowers();
+                  }}
+                  className="hover:opacity-80 transition-opacity"
+                >
                   <p className="text-2xl font-bold">{profileUser.followers_count}</p>
                   <p className="text-sm text-[#818384]">Followers</p>
-                </div>
-                <div>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowFollowingModal(true);
+                    fetchFollowing();
+                  }}
+                  className="hover:opacity-80 transition-opacity"
+                >
                   <p className="text-2xl font-bold">{profileUser.following_count}</p>
                   <p className="text-sm text-[#818384]">Following</p>
-                </div>
+                </button>
                 <div>
                   <p className="text-2xl font-bold">{stats?.member_of || 0}</p>
                   <p className="text-sm text-[#818384]">Communities</p>
                 </div>
               </div>
 
-              {/* Tabs */}
               <div className="flex gap-6 mt-4 pt-4 border-t border-[#343536]">
                 <button
                   onClick={() => setActiveTab('overview')}
                   className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
                     activeTab === 'overview'
-                      ? 'border-[#ff4500] text-white'
+                      ? 'border-[#d93900] text-white'
                       : 'border-transparent text-[#818384] hover:text-white'
                   }`}
                 >
@@ -300,7 +456,7 @@ export default function PublicUserProfilePage() {
                   onClick={() => setActiveTab('posts')}
                   className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
                     activeTab === 'posts'
-                      ? 'border-[#ff4500] text-white'
+                      ? 'border-[#d93900] text-white'
                       : 'border-transparent text-[#818384] hover:text-white'
                   }`}
                 >
@@ -311,7 +467,7 @@ export default function PublicUserProfilePage() {
                   onClick={() => setActiveTab('comments')}
                   className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
                     activeTab === 'comments'
-                      ? 'border-[#ff4500] text-white'
+                      ? 'border-[#d93900] text-white'
                       : 'border-transparent text-[#818384] hover:text-white'
                   }`}
                 >
@@ -322,7 +478,6 @@ export default function PublicUserProfilePage() {
             </div>
           </div>
 
-          {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="space-y-4">
               <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
@@ -336,7 +491,7 @@ export default function PublicUserProfilePage() {
                         className="w-full flex items-center justify-between p-3 bg-[#272729] hover:bg-[#343536] rounded transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#ff4500] flex items-center justify-center text-white font-bold">
+                          <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold">
                             {community.name[0].toUpperCase()}
                           </div>
                           <div className="text-left">
@@ -463,9 +618,8 @@ export default function PublicUserProfilePage() {
           )}
         </main>
 
-        {/* Right Sidebar */}
-        <aside className="hidden xl:block w-80">
-          <div className="sticky top-14 space-y-4">
+        <aside className="hidden xl:block w-80 flex-shrink-0">
+          <div className="sticky top-16 pt-2 space-y-4">
             <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
               <h3 className="font-semibold mb-4">About</h3>
               <div className="space-y-3 text-sm">

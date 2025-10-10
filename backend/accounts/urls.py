@@ -13,6 +13,7 @@ from .views import (
     user_followers,
     user_following,
     public_user_profile,
+    remove_follower
 )
 
 app_name = 'accounts'
@@ -32,4 +33,5 @@ urlpatterns = [
     path('users/<int:user_id>/followers/', user_followers, name='user-followers'),
     path('users/<int:user_id>/following/', user_following, name='user-following'),
     path('users/<int:user_id>/', public_user_profile, name='public-user-profile'),
+      path('users/<int:user_id>/remove-follower/', remove_follower, name='remove_follower'),
 ]

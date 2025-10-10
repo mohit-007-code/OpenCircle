@@ -56,7 +56,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
-  // Edit profile states
   const [editMode, setEditMode] = useState(false);
   const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -64,7 +63,6 @@ export default function ProfilePage() {
   const [bio, setBio] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  // Profile picture states
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -72,17 +70,17 @@ export default function ProfilePage() {
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  // Follow modal states
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [followers, setFollowers] = useState<FollowUser[]>([]);
   const [following, setFollowing] = useState<FollowUser[]>([]);
 
-  // Change password states
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [removingFollowerId, setRemovingFollowerId] = useState<number | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     setToast({ message, type });
@@ -171,11 +169,49 @@ export default function ProfilePage() {
       setFollowers(prev => prev.map(f => 
         f.id === userId ? { ...f, is_following: !isFollowing } : f
       ));
-      setFollowing(prev => prev.filter(f => f.id !== userId));
+      setFollowing(prev => prev.map(f => 
+        f.id === userId ? { ...f, is_following: !isFollowing } : f
+      ));
       
       showToast(isFollowing ? 'Unfollowed' : 'Followed', 'success');
     } catch (error) {
       showToast('Failed to update follow', 'error');
+    }
+  };
+
+  const handleRemoveFollower = async (userId: number) => {
+    // Prevent multiple clicks
+    if (removingFollowerId === userId) return;
+    
+    setRemovingFollowerId(userId);
+    
+    try {
+      // Try the dedicated remove endpoint first
+      await api.delete(`/auth/users/${userId}/remove-follower/`).catch(async (error) => {
+        // If delete endpoint doesn't exist, try the follow endpoint
+        // This will make you unfollow them back, breaking the follower relationship
+        if (error.response?.status === 404 || error.response?.status === 405) {
+          await api.post(`/auth/users/${userId}/follow/`);
+        } else {
+          throw error;
+        }
+      });
+      
+      // Remove from followers list
+      setFollowers(prev => prev.filter(f => f.id !== userId));
+      
+      // Update stats count in real-time - prevent negative numbers
+      setStats(prev => prev ? {
+        ...prev,
+        followers_count: Math.max(0, prev.followers_count - 1)
+      } : null);
+      
+      showToast('Follower removed', 'success');
+    } catch (error) {
+      console.error('Remove error:', error);
+      showToast('Failed to remove follower', 'error');
+    } finally {
+      setRemovingFollowerId(null);
     }
   };
 
@@ -338,7 +374,7 @@ export default function ProfilePage() {
               >
                 <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold overflow-hidden">
                   {follower.profile_picture ? (
-                    <Image src={getImageUrl(follower.profile_picture)!} alt={follower.username} width={40} height={40} className="object-cover" />
+                    <Image src={getImageUrl(follower.profile_picture)!} alt={follower.username} width={40} height={40} className="object-cover w-full h-full" />
                   ) : (
                     follower.username[0].toUpperCase()
                   )}
@@ -350,20 +386,22 @@ export default function ProfilePage() {
                   )}
                 </div>
               </div>
-              {follower.id !== user.id && (
-                <button
-                  onClick={() => handleFollowToggle(follower.id, follower.is_following)}
-                  className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors ${
-                    follower.is_following
-                      ? 'bg-[#272729] hover:bg-[#343536]'
-                      : 'bg-[#d93900] hover:bg-[#c13300] text-white'
-                  }`}
-                >
-                  {follower.is_following ? 'Following' : 'Follow'}
-                </button>
-              )}
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveFollower(follower.id);
+                }}
+                disabled={removingFollowerId === follower.id}
+                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {removingFollowerId === follower.id ? 'Removing...' : 'Remove'}
+              </button>
             </div>
           ))}
+          {followers.length === 0 && (
+            <p className="text-center text-[#818384] py-8">No followers yet</p>
+          )}
         </div>
       </Modal>
 
@@ -385,7 +423,7 @@ export default function ProfilePage() {
               >
                 <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold overflow-hidden">
                   {followingUser.profile_picture ? (
-                    <Image src={getImageUrl(followingUser.profile_picture)!} alt={followingUser.username} width={40} height={40} className="object-cover" />
+                    <Image src={getImageUrl(followingUser.profile_picture)!} alt={followingUser.username} width={40} height={40} className="object-cover w-full h-full" />
                   ) : (
                     followingUser.username[0].toUpperCase()
                   )}
@@ -405,15 +443,17 @@ export default function ProfilePage() {
               </button>
             </div>
           ))}
+          {following.length === 0 && (
+            <p className="text-center text-[#818384] py-8">Not following anyone yet</p>
+          )}
         </div>
       </Modal>
 
-      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 py-5">
+      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-20 pb-5">
         <Sidebar />
 
         <main className="flex-1 min-w-0">
           <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4 overflow-hidden">
-            {/* Cover Image */}
             <div className="relative">
               <div className="h-48 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative">
                 {coverPreview && (

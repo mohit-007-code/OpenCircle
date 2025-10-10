@@ -378,3 +378,30 @@ def public_user_profile(request, user_id):
     
     return Response(data)
 
+@api_view(['DELETE', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def remove_follower(request, user_id):
+    """Remove a user from your followers - they were following you"""
+    from .models import Follow
+    
+    try:
+        follower_user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Find the Follow relationship where THEY follow YOU
+    try:
+        follow = Follow.objects.get(
+            follower=follower_user,   # They are the follower
+            following=request.user     # You are the one being followed
+        )
+        follow.delete()
+        
+        return Response({
+            'message': 'Follower removed successfully'
+        }, status=status.HTTP_200_OK)
+        
+    except Follow.DoesNotExist:
+        return Response({
+            'error': 'This user is not following you'
+        }, status=status.HTTP_400_BAD_REQUEST)
