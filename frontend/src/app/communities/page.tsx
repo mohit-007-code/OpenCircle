@@ -70,7 +70,7 @@ export default function CommunitiesPage() {
     <div className="min-h-screen bg-[#0b0f14]">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-5">
+      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-4 pb-5">
         <Sidebar />
 
         <main className="flex-1">
@@ -84,7 +84,7 @@ export default function CommunitiesPage() {
               {user && (
                 <Link
                   href="/communities/create"
-                  className="flex items-center gap-2 px-4 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#d93900] hover:bg-[#c13300] text-white font-semibold rounded-full transition-colors"
                 >
                   <Plus size={20} />
                   Create
@@ -112,7 +112,7 @@ export default function CommunitiesPage() {
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
                   filter === 'all'
-                    ? 'bg-[#ff4500] text-white'
+                    ? 'bg-[#d93900] text-white'
                     : 'bg-[#272729] text-[#818384] hover:bg-[#343536]'
                 }`}
               >
@@ -122,7 +122,7 @@ export default function CommunitiesPage() {
                 onClick={() => setFilter('my')}
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
                   filter === 'my'
-                    ? 'bg-[#ff4500] text-white'
+                    ? 'bg-[#d93900] text-white'
                     : 'bg-[#272729] text-[#818384] hover:bg-[#343536]'
                 }`}
               >
@@ -134,7 +134,7 @@ export default function CommunitiesPage() {
           {/* Communities Grid */}
           {loading ? (
             <div className="flex justify-center py-20">
-              <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : filteredCommunities.length === 0 ? (
             <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
@@ -156,7 +156,7 @@ export default function CommunitiesPage() {
                     className="bg-[#1a1a1b] border border-[#343536] rounded-lg overflow-hidden hover:border-[#474748] transition-colors"
                   >
                     {/* Cover */}
-                    <div className="h-24 bg-gradient-to-r from-[#ff4500] to-[#ff6a00] relative">
+                    <div className="h-24 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative">
                       {coverUrl && (
                         <Image
                           src={coverUrl}
@@ -181,7 +181,7 @@ export default function CommunitiesPage() {
                               className="object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xl font-bold text-[#ff4500]">
+                            <div className="w-full h-full flex items-center justify-center text-xl font-bold text-[#d93900]">
                               {community.name[0].toUpperCase()}
                             </div>
                           )}
@@ -213,7 +213,7 @@ export default function CommunitiesPage() {
                         ) : (
                           <button
                             onClick={() => handleJoinCommunity(community.slug)}
-                            className="px-4 py-1.5 bg-[#ff4500] hover:bg-[#ff5414] text-white text-sm font-semibold rounded-full transition-colors"
+                            className="px-4 py-1.5 bg-[#d93900] hover:bg-[#c13300] text-white text-sm font-semibold rounded-full transition-colors"
                           >
                             Join
                           </button>

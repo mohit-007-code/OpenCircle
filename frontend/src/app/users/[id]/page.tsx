@@ -338,7 +338,7 @@ export default function PublicUserProfilePage() {
         </div>
       </Modal>
 
-      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-20 pb-5">
+      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-4 pb-5">
         <Sidebar />
 
         <main className="flex-1 min-w-0">
@@ -358,8 +358,8 @@ export default function PublicUserProfilePage() {
             </div>
             
             <div className="px-6 pb-4">
-              {/* Profile Picture - Overlapping Banner */}
-              <div className="-mt-16 mb-4">
+              {/* Profile Picture - Overlapping Banner (FIXED) */}
+              <div className="-mt-20 mb-4">
                 <div className="w-28 h-28 rounded-full border-4 border-[#1a1a1b] bg-[#d93900] flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-xl">
                   {profileUser.profile_picture ? (
                     <Image 
@@ -375,7 +375,7 @@ export default function PublicUserProfilePage() {
                 </div>
               </div>
 
-              {/* Username and Follow Button */}
+              {/* Username and Follow Button (BELOW DP) */}
               <div className="flex items-start justify-between">
                 <div>
                   <h1 className="text-2xl font-bold">u/{profileUser.username}</h1>

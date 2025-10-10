@@ -180,16 +180,12 @@ export default function ProfilePage() {
   };
 
   const handleRemoveFollower = async (userId: number) => {
-    // Prevent multiple clicks
     if (removingFollowerId === userId) return;
     
     setRemovingFollowerId(userId);
     
     try {
-      // Try the dedicated remove endpoint first
       await api.delete(`/auth/users/${userId}/remove-follower/`).catch(async (error) => {
-        // If delete endpoint doesn't exist, try the follow endpoint
-        // This will make you unfollow them back, breaking the follower relationship
         if (error.response?.status === 404 || error.response?.status === 405) {
           await api.post(`/auth/users/${userId}/follow/`);
         } else {
@@ -197,10 +193,8 @@ export default function ProfilePage() {
         }
       });
       
-      // Remove from followers list
       setFollowers(prev => prev.filter(f => f.id !== userId));
       
-      // Update stats count in real-time - prevent negative numbers
       setStats(prev => prev ? {
         ...prev,
         followers_count: Math.max(0, prev.followers_count - 1)
@@ -449,11 +443,12 @@ export default function ProfilePage() {
         </div>
       </Modal>
 
-      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-20 pb-5">
+      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-4 pb-5">
         <Sidebar />
 
         <main className="flex-1 min-w-0">
           <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4 overflow-hidden">
+            {/* Cover Image */}
             <div className="relative">
               <div className="h-48 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative">
                 {coverPreview && (
@@ -478,39 +473,39 @@ export default function ProfilePage() {
             </div>
             
             <div className="px-6 pb-4">
-              <div className="flex items-start gap-4 -mt-16">
-                <div className="relative group">
-                  <div className="w-28 h-28 rounded-full border-4 border-[#1a1a1b] bg-[#d93900] flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-xl">
-                    {profilePreview ? (
-                      <Image src={profilePreview} alt={user.username} width={112} height={112} className="object-cover w-full h-full" />
-                    ) : (
-                      user.username[0].toUpperCase()
-                    )}
-                  </div>
-                  {editMode && (
-                    <button
-                      onClick={() => profileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors z-10"
-                    >
-                      <Camera size={16} />
-                    </button>
+              {/* Profile Picture - Overlapping Banner (COMMUNITY STYLE) */}
+              <div className="-mt-16 mb-4 relative">
+                <div className="w-28 h-28 rounded-full border-4 border-[#1a1a1b] bg-[#d93900] flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-xl">
+                  {profilePreview ? (
+                    <Image src={profilePreview} alt={user.username} width={112} height={112} className="object-cover w-full h-full" />
+                  ) : (
+                    user.username[0].toUpperCase()
                   )}
-                  <input
-                    ref={profileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleProfilePictureChange}
-                  />
                 </div>
+                {editMode && (
+                  <button
+                    onClick={() => profileInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors z-10"
+                  >
+                    <Camera size={16} />
+                  </button>
+                )}
+                <input
+                  ref={profileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleProfilePictureChange}
+                />
+              </div>
 
-                <div className="flex-1 mt-16">
-                  <h1 className="text-2xl font-bold">u/{user.username}</h1>
-                  {(user.first_name || user.last_name) && (
-                    <p className="text-[#818384]">{user.first_name} {user.last_name}</p>
-                  )}
-                  {user.bio && <p className="text-sm text-[#818384] mt-1">{user.bio}</p>}
-                </div>
+              {/* Username and Details (BELOW DP) */}
+              <div>
+                <h1 className="text-2xl font-bold">u/{user.username}</h1>
+                {(user.first_name || user.last_name) && (
+                  <p className="text-[#818384]">{user.first_name} {user.last_name}</p>
+                )}
+                {user.bio && <p className="text-sm text-[#818384] mt-1">{user.bio}</p>}
               </div>
 
               <div className="flex gap-6 mt-4 pt-4 border-t border-[#343536]">

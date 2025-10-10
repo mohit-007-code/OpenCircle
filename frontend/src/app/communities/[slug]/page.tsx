@@ -55,6 +55,8 @@ export default function CommunityDetailPage() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [memberToKick, setMemberToKick] = useState<{ id: number; username: string } | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     setToast({ message, type });
@@ -104,14 +106,14 @@ export default function CommunityDetailPage() {
   };
 
   const handleLeave = async () => {
-    if (confirm('Are you sure you want to leave this community?')) {
-      try {
-        await api.post(`/communities/${slug}/leave/`);
-        fetchCommunityData();
-        showToast('Left the community', 'info');
-      } catch (error: any) {
-        showToast(error.response?.data?.error || 'Failed to leave community', 'error');
-      }
+    try {
+      await api.post(`/communities/${slug}/leave/`);
+      fetchCommunityData();
+      setShowLeaveModal(false);
+      showToast('Left the community', 'info');
+    } catch (error: any) {
+      showToast(error.response?.data?.error || 'Failed to leave community', 'error');
+      setShowLeaveModal(false);
     }
   };
 
@@ -137,16 +139,18 @@ export default function CommunityDetailPage() {
     }
   };
 
-  const handleKickMember = async (userId: number, username: string) => {
-    if (confirm(`Are you sure you want to remove ${username} from this community?`)) {
-      try {
-        await api.post(`/communities/${slug}/members/${userId}/kick/`);
-        fetchCommunityData();
-        setSelectedMember(null);
-        showToast(`${username} has been removed`, 'warning');
-      } catch (error: any) {
-        showToast(error.response?.data?.error || 'Failed to remove member', 'error');
-      }
+  const handleKickMember = async () => {
+    if (!memberToKick) return;
+    
+    try {
+      await api.post(`/communities/${slug}/members/${memberToKick.id}/kick/`);
+      fetchCommunityData();
+      setSelectedMember(null);
+      setMemberToKick(null);
+      showToast(`${memberToKick.username} has been removed`, 'warning');
+    } catch (error: any) {
+      showToast(error.response?.data?.error || 'Failed to remove member', 'error');
+      setMemberToKick(null);
     }
   };
 
@@ -343,24 +347,44 @@ export default function CommunityDetailPage() {
         loading={deleting}
       />
 
-      {/* Banner respects sidebar - inside container */}
-     <div className="max-w-[1400px] mx-auto flex gap-3 px-3 py-5">
-  <Sidebar />
-  
-  <div className="flex-1 min-w-0">
-    {/* Banner with DP */}
-    <div className="relative -mt-1 -mx-3 mb-4 mr-1">
-      <div className="h-48 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative rounded-lg overflow-hidden">
-        {getImageUrl(community.cover_image) && (
-          <Image
-            src={getImageUrl(community.cover_image)!}
-            alt={community.name}
-            fill
-            className="object-cover"
-          />
-        )}
-      </div>
+      <Modal
+        isOpen={showLeaveModal}
+        onClose={() => setShowLeaveModal(false)}
+        onConfirm={handleLeave}
+        title="Leave Community"
+        message={`Are you sure you want to leave "${community?.name}"?`}
+        confirmText="Leave"
+        cancelText="Cancel"
+        type="warning"
+      />
 
+      <Modal
+        isOpen={memberToKick !== null}
+        onClose={() => setMemberToKick(null)}
+        onConfirm={handleKickMember}
+        title="Remove Member"
+        message={`Are you sure you want to remove ${memberToKick?.username} from this community?`}
+        confirmText="Remove"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-20 pb-5">
+        <Sidebar />
+        
+        <div className="flex-1 min-w-0">
+          {/* Banner with DP */}
+          <div className="relative -mt-1 -mx-3 mb-4 mr-1">
+            <div className="h-48 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative rounded-lg overflow-hidden">
+              {getImageUrl(community.cover_image) && (
+                <Image
+                  src={getImageUrl(community.cover_image)!}
+                  alt={community.name}
+                  fill
+                  className="object-cover"
+                />
+              )}
+            </div>
 
             {/* Community Header with DP overlapping banner */}
             <div className="px-3">
@@ -397,7 +421,7 @@ export default function CommunityDetailPage() {
                     </button>
                   ) : community.is_member ? (
                     <button
-                      onClick={handleLeave}
+                      onClick={() => setShowLeaveModal(true)}
                       className="flex items-center gap-2 px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
                     >
                       <UserMinus size={18} />
@@ -729,7 +753,7 @@ export default function CommunityDetailPage() {
                                 )}
 
                                 <button
-                                  onClick={() => handleKickMember(member.user.id, member.user.username)}
+                                  onClick={() => setMemberToKick({ id: member.user.id, username: member.user.username })}
                                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#272729] transition-colors text-sm text-red-500"
                                 >
                                   <Trash2 size={16} />
@@ -748,42 +772,39 @@ export default function CommunityDetailPage() {
           )}
         </div>
 
-                {/* Right Sidebar */}
-<aside className="hidden xl:block w-80 flex-shrink-0">
-  <div className="sticky top-16 pt-2">
-    <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
-      <h3 className="font-semibold mb-3">About Community</h3>
-      <p className="text-sm text-[#818384] mb-4">{community.description}</p>
-      
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm">
-          <Users size={16} className="text-[#818384]" />
-          <span className="font-semibold">{community.member_count}</span>
-          <span className="text-[#818384]">Members</span>
-        </div>
+        {/* Right Sidebar */}
+        <aside className="hidden xl:block w-80 flex-shrink-0">
+          <div className="sticky top-20 pt-2">
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
+              <h3 className="font-semibold mb-3">About Community</h3>
+              <p className="text-sm text-[#818384] mb-4">{community.description}</p>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Users size={16} className="text-[#818384]" />
+                  <span className="font-semibold">{community.member_count}</span>
+                  <span className="text-[#818384]">Members</span>
+                </div>
 
-        <div className="flex items-center gap-2 text-sm">
-          <Crown size={16} className="text-yellow-500" />
-          <span className="text-[#818384]">Created by</span>
-          <span 
-            onClick={() => router.push(`/users/${community.creator_id}`)}
-            className="font-semibold text-[#d93900] hover:underline cursor-pointer"
-          >
-            u/{members.find(m => m.user.id === community.creator_id)?.user.username || 'Creator'}
-          </span>
-        </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Crown size={16} className="text-yellow-500" />
+                  <span className="text-[#818384]">Created by</span>
+                  <span 
+                    onClick={() => router.push(`/users/${community.creator_id}`)}
+                    className="font-semibold text-[#d93900] hover:underline cursor-pointer"
+                  >
+                    u/{members.find(m => m.user.id === community.creator_id)?.user.username || 'Creator'}
+                  </span>
+                </div>
 
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar size={16} className="text-[#818384]" />
-          <span className="text-[#818384]">Created {formatTime(community.created_at)}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</aside>
-
-
-
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar size={16} className="text-[#818384]" />
+                  <span className="text-[#818384]">Created {formatTime(community.created_at)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

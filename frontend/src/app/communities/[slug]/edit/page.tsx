@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import { Community } from '@/types';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
+import Sidebar from '@/components/Sidebar';
 import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
 import { ArrowLeft, Upload, X, Trash2 } from 'lucide-react';
@@ -147,7 +148,7 @@ export default function EditCommunityPage() {
       <div className="min-h-screen bg-[#0b0f14]">
         <Navbar />
         <div className="flex justify-center items-center h-96">
-          <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -179,149 +180,142 @@ export default function EditCommunityPage() {
         loading={deleting}
       />
 
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => router.push(`/communities/${slug}`)}
-            className="p-2 hover:bg-[#272729] rounded-full transition-colors"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold">Edit Community</h1>
-            <p className="text-sm text-[#818384]">Update your community information</p>
-          </div>
-        </div>
+      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-4 pb-5">
+        <Sidebar />
 
-        {/* Form */}
-        <form onSubmit={handleUpdate} className="space-y-6">
-          {/* Cover Image */}
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-            <h3 className="font-semibold mb-4">Cover Image</h3>
-            <div className="relative h-32 bg-gradient-to-r from-[#ff4500] to-[#ff6a00] rounded-lg overflow-hidden">
-              {coverPreview && (
-                <Image src={coverPreview} alt="Cover" fill className="object-cover" />
-              )}
-              <label className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 cursor-pointer transition-colors">
-                <div className="flex flex-col items-center gap-2">
-                  <Upload size={32} />
-                  <span className="text-sm">Change Cover</span>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleCoverSelect}
-                />
-              </label>
-              {coverPreview && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCoverImage(null);
-                    setCoverPreview(null);
-                  }}
-                  className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-          </div>
+        <main className="flex-1">
+          {/* Header */}
+       
 
-          {/* Display Picture */}
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-            <h3 className="font-semibold mb-4">Display Picture</h3>
-            <div className="flex items-center gap-4">
-              <div className="relative w-24 h-24 rounded-full bg-[#272729] overflow-hidden">
-                {dpPreview ? (
-                  <Image src={dpPreview} alt="Display" fill className="object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-[#ff4500]">
-                    {name[0]?.toUpperCase() || 'C'}
-                  </div>
+          {/* Form */}
+          <form onSubmit={handleUpdate} className="space-y-6">
+            {/* Cover Image */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
+              <h3 className="font-semibold mb-4">Cover Image</h3>
+              <div className="relative h-32 bg-gradient-to-r from-[#d93900] to-[#a62d00] rounded-lg overflow-hidden">
+                {coverPreview && (
+                  <Image src={coverPreview} alt="Cover" fill className="object-cover" />
                 )}
                 <label className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 cursor-pointer transition-colors">
-                  <Upload size={20} />
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload size={32} />
+                    <span className="text-sm">Change Cover</span>
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleDpSelect}
+                    onChange={handleCoverSelect}
                   />
                 </label>
+                {coverPreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCoverImage(null);
+                      setCoverPreview(null);
+                    }}
+                    className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
-              {dpPreview && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDisplayPicture(null);
-                    setDpPreview(null);
-                  }}
-                  className="px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded text-sm transition-colors"
-                >
-                  Remove
-                </button>
-              )}
             </div>
-          </div>
 
-          {/* Name */}
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-            <label className="block font-semibold mb-2">Community Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
-              placeholder="Enter community name"
-              required
-            />
-          </div>
+            {/* Display Picture */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
+              <h3 className="font-semibold mb-4">Display Picture</h3>
+              <div className="flex items-center gap-4">
+                <div className="relative w-24 h-24 rounded-full bg-[#272729] overflow-hidden">
+                  {dpPreview ? (
+                    <Image src={dpPreview} alt="Display" fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-[#d93900]">
+                      {name[0]?.toUpperCase() || 'C'}
+                    </div>
+                  )}
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 cursor-pointer transition-colors">
+                    <Upload size={20} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleDpSelect}
+                    />
+                  </label>
+                </div>
+                {dpPreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDisplayPicture(null);
+                      setDpPreview(null);
+                    }}
+                    className="px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded text-sm transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
 
-          {/* Description */}
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-            <label className="block font-semibold mb-2">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384] resize-none"
-              rows={4}
-              placeholder="Describe your community"
-              required
-            />
-          </div>
+            {/* Name */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
+              <label className="block font-semibold mb-2">Community Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                placeholder="Enter community name"
+                required
+              />
+            </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setShowDeleteModal(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full font-semibold transition-colors"
-            >
-              <Trash2 size={18} />
-              Delete Community
-            </button>
+            {/* Description */}
+            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
+              <label className="block font-semibold mb-2">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384] resize-none"
+                rows={4}
+                placeholder="Describe your community"
+                required
+              />
+            </div>
 
-            <div className="flex gap-3">
+            {/* Actions */}
+            <div className="flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => router.push(`/communities/${slug}`)}
-                className="px-6 py-3 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full font-semibold transition-colors"
               >
-                Cancel
+                <Trash2 size={18} />
+                Delete Community
               </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-6 py-3 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full font-semibold transition-colors disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push(`/communities/${slug}`)}
+                  className="px-6 py-3 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-6 py-3 bg-[#d93900] hover:bg-[#c13300] text-white rounded-full font-semibold transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </main>
       </div>
     </div>
   );

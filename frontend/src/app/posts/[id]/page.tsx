@@ -237,7 +237,7 @@ export default function PostDetailPage() {
       <div className="min-h-screen bg-[#0b0f14]">
         <Navbar />
         <div className="flex justify-center items-center h-96">
-          <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -251,7 +251,7 @@ export default function PostDetailPage() {
           <h2 className="text-3xl font-bold mb-4">Post not found</h2>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors"
+            className="px-6 py-2 bg-[#d93900] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors"
           >
             Go Home
           </button>
@@ -286,33 +286,26 @@ export default function PostDetailPage() {
         loading={deleting}
       />
 
-      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-6">
+      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-4 pb-5">
         <Sidebar />
 
         <main className="flex-1">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 mb-4 px-4 py-2 hover:bg-[#272729] rounded-full transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span>Back</span>
-          </button>
+         
 
           {/* Post */}
-          <article className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4 overflow-hidden">
+          <article className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4  overflow-hidden">
             <div className="flex">
               {/* Vote Section */}
               <div className="flex flex-col items-center gap-1 bg-[#161617] px-4 py-4">
                 <button
                   onClick={handleVotePost}
                   className={`p-1 rounded hover:bg-[#272729] transition-colors ${
-                    post.is_liked ? 'text-[#ff4500]' : 'text-[#818384]'
+                    post.is_liked ? 'text-[#d93900]' : 'text-[#818384]'
                   }`}
                 >
                   <ArrowBigUp size={28} fill={post.is_liked ? 'currentColor' : 'none'} />
                 </button>
-                <span className={`text-sm font-bold ${post.is_liked ? 'text-[#ff4500]' : 'text-[#d7dadc]'}`}>
+                <span className={`text-sm font-bold ${post.is_liked ? 'text-[#d93900]' : 'text-[#d7dadc]'}`}>
                   {post.likes_count}
                 </span>
                 <button
@@ -385,7 +378,7 @@ export default function PostDetailPage() {
                 <button
                   type="submit"
                   disabled={posting || !commentContent.trim()}
-                  className="px-6 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full font-semibold disabled:opacity-50 transition-colors"
+                  className="px-6 py-2 bg-[#d93900] hover:bg-[#ff5414] text-white rounded-full font-semibold disabled:opacity-50 transition-colors"
                 >
                   {posting ? 'Commenting...' : 'Comment'}
                 </button>
@@ -396,7 +389,7 @@ export default function PostDetailPage() {
               <p className="mb-3">Log in to leave a comment</p>
               <button
                 onClick={() => router.push('/login')}
-                className="px-6 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full font-semibold transition-colors"
+                className="px-6 py-2 bg-[#d93900] hover:bg-[#ff5414] text-white rounded-full font-semibold transition-colors"
               >
                 Log In
               </button>
@@ -420,12 +413,12 @@ export default function PostDetailPage() {
                       <button
                         onClick={() => handleVoteComment(comment.id)}
                         className={`p-1 rounded hover:bg-[#272729] transition-colors ${
-                          comment.is_liked ? 'text-[#ff4500]' : 'text-[#818384]'
+                          comment.is_liked ? 'text-[#d93900]' : 'text-[#818384]'
                         }`}
                       >
                         <ArrowBigUp size={20} fill={comment.is_liked ? 'currentColor' : 'none'} />
                       </button>
-                      <span className={`text-xs font-bold ${comment.is_liked ? 'text-[#ff4500]' : 'text-[#d7dadc]'}`}>
+                      <span className={`text-xs font-bold ${comment.is_liked ? 'text-[#d93900]' : 'text-[#d7dadc]'}`}>
                         {comment.likes_count}
                       </span>
                       <button
@@ -503,7 +496,7 @@ export default function PostDetailPage() {
                               type="button"
                               onClick={() => handleCreateReply(comment.id)}
                               disabled={posting || !replyContent.trim()}
-                              className="px-4 py-1.5 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full text-sm font-semibold disabled:opacity-50 transition-colors"
+                              className="px-4 py-1.5 bg-[#d93900] hover:bg-[#ff5414] text-white rounded-full text-sm font-semibold disabled:opacity-50 transition-colors"
                             >
                               {posting ? 'Replying...' : 'Reply'}
                             </button>
@@ -521,12 +514,12 @@ export default function PostDetailPage() {
                                 <button
                                   onClick={() => handleVoteComment(reply.id)}
                                   className={`p-1 rounded hover:bg-[#272729] transition-colors ${
-                                    reply.is_liked ? 'text-[#ff4500]' : 'text-[#818384]'
+                                    reply.is_liked ? 'text-[#d93900]' : 'text-[#818384]'
                                   }`}
                                 >
                                   <ArrowBigUp size={16} fill={reply.is_liked ? 'currentColor' : 'none'} />
                                 </button>
-                                <span className={`text-xs font-bold ${reply.is_liked ? 'text-[#ff4500]' : 'text-[#d7dadc]'}`}>
+                                <span className={`text-xs font-bold ${reply.is_liked ? 'text-[#d93900]' : 'text-[#d7dadc]'}`}>
                                   {reply.likes_count}
                                 </span>
                                 <button
@@ -572,14 +565,14 @@ export default function PostDetailPage() {
 
         {/* Right Sidebar */}
         <aside className="hidden xl:block w-80">
-          <div className="sticky top-14">
+          <div className="sticky top-20">
             <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
               <h3 className="font-semibold mb-3">About</h3>
               <button
                 onClick={() => router.push(`/communities/${post.community_slug}`)}
                 className="w-full text-left px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded transition-colors"
               >
-                <p className="font-semibold text-[#ff4500]">c/{post.community_name}</p>
+                <p className="font-semibold text-[#d93900]">c/{post.community_name}</p>
                 <p className="text-sm text-[#818384] mt-1">View Community</p>
               </button>
             </div>
