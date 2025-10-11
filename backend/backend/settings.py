@@ -171,3 +171,11 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'https://tarsha-cladocarpous-waldo.ngrok-free.dev ']
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    'https://localhost:3000',
+    "https://tarsha-cladocarpous-waldo.ngrok-free.dev",
+]

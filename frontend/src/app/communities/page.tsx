@@ -9,7 +9,7 @@ import { Community } from '@/types';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { Users, Plus, Search, ArrowLeft } from 'lucide-react'; // Added ArrowLeft
+import { Users, Plus, Search, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -68,7 +68,6 @@ export default function CommunitiesPage() {
     community.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Loading Skeleton Component
   const CommunitySkeleton = () => (
     <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl overflow-hidden">
       <Skeleton className="h-24 w-full" />
@@ -88,19 +87,19 @@ export default function CommunitiesPage() {
       <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
 
-        <main className="flex-1">
-          {/* ✨ NEW: Back Button */}
+        <main className="flex-1 min-w-0">
+          {/* Back Button */}
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 mb-5 transition-colors group"
+            className="flex items-center gap-2 text-zinc-400 hover:text-white mb-5 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back</span>
           </motion.button>
 
-          {/* Header */}
+          {/* ✨ WHITE THEME HEADER */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -109,13 +108,13 @@ export default function CommunitiesPage() {
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold mb-2 gradient-text">Communities</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Communities</h1>
                 <p className="text-zinc-400 text-sm sm:text-base">Discover and join amazing communities</p>
               </div>
               {user && (
                 <Link
                   href="/communities/create"
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
                 >
                   <Plus size={20} />
                   <span className="hidden sm:inline">Create</span>
@@ -131,12 +130,12 @@ export default function CommunitiesPage() {
                 placeholder="Search communities..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300"
+                className="w-full pl-12 pr-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 transition-all duration-300"
               />
             </div>
           </motion.div>
 
-          {/* Filters */}
+          {/* ✨ WHITE THEME FILTERS */}
           {user && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -148,7 +147,7 @@ export default function CommunitiesPage() {
                 onClick={() => setFilter('all')}
                 className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   filter === 'all'
-                    ? 'bg-gradient-to-r from-cyan-500 to-violet-600 text-white shadow-lg shadow-cyan-500/30'
+                    ? 'bg-white text-zinc-950 shadow-lg shadow-white/20'
                     : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
                 }`}
               >
@@ -158,7 +157,7 @@ export default function CommunitiesPage() {
                 onClick={() => setFilter('my')}
                 className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   filter === 'my'
-                    ? 'bg-gradient-to-r from-cyan-500 to-violet-600 text-white shadow-lg shadow-cyan-500/30'
+                    ? 'bg-white text-zinc-950 shadow-lg shadow-white/20'
                     : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
                 }`}
               >
@@ -180,17 +179,17 @@ export default function CommunitiesPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-3xl p-8 sm:p-12 text-center"
             >
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
-                <Users size={40} className="text-cyan-400" />
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/10 flex items-center justify-center">
+                <Users size={40} className="text-white" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 gradient-text">No communities found</h3>
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 text-white">No communities found</h3>
               <p className="text-zinc-400 mb-8 max-w-md mx-auto">
                 {searchQuery ? 'Try a different search term' : 'Be the first to create one!'}
               </p>
               {!searchQuery && (
                 <Link
                   href="/communities/create"
-                  className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
                 >
                   <Plus size={20} />
                   Create Community
@@ -211,10 +210,10 @@ export default function CommunitiesPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ delay: index * 0.05 }}
-                      className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300 group"
+                      className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl overflow-hidden hover:border-white/30 transition-all duration-300 group"
                     >
-                      {/* Cover */}
-                      <div className="h-24 bg-gradient-to-r from-cyan-500 to-violet-600 relative overflow-hidden">
+                      {/* ✨ WHITE COVER (if no image) */}
+                      <div className="h-24 bg-white relative overflow-hidden">
                         {coverUrl && (
                           <Image
                             src={coverUrl}
@@ -228,9 +227,9 @@ export default function CommunitiesPage() {
 
                       {/* Content */}
                       <div className="p-4">
-                        {/* Display Picture */}
+                        {/* ✨ WHITE DISPLAY PICTURE */}
                         <div className="relative -mt-10 mb-3">
-                          <div className="w-16 h-16 rounded-2xl border-4 border-zinc-900 bg-gradient-to-br from-cyan-500 to-violet-600 overflow-hidden shadow-lg group-hover:shadow-cyan-500/30 transition-all duration-300 group-hover:scale-110">
+                          <div className="w-16 h-16 rounded-2xl border-4 border-zinc-900 bg-white overflow-hidden shadow-lg group-hover:shadow-white/30 transition-all duration-300 group-hover:scale-110">
                             {dpUrl ? (
                               <Image
                                 src={dpUrl}
@@ -240,7 +239,7 @@ export default function CommunitiesPage() {
                                 className="object-cover w-full h-full"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-xl font-bold text-white">
+                              <div className="w-full h-full flex items-center justify-center text-xl font-bold text-zinc-950">
                                 {community.name[0].toUpperCase()}
                               </div>
                             )}
@@ -248,7 +247,7 @@ export default function CommunitiesPage() {
                         </div>
 
                         <Link href={`/communities/${community.slug}`}>
-                          <h3 className="font-bold text-lg mb-2 hover:text-cyan-400 transition-colors line-clamp-1">
+                          <h3 className="font-bold text-lg mb-2 text-white hover:text-zinc-300 transition-colors line-clamp-1">
                             c/{community.name}
                           </h3>
                         </Link>
@@ -258,21 +257,21 @@ export default function CommunitiesPage() {
 
                         <div className="flex items-center justify-between pt-3 border-t border-zinc-800/50">
                           <div className="flex items-center gap-1.5 text-sm text-zinc-500">
-                            <Users size={16} className="text-cyan-400" />
+                            <Users size={16} className="text-white" />
                             <span className="font-medium text-zinc-300">{community.member_count.toLocaleString()}</span>
                           </div>
                           
                           {community.is_member ? (
                             <Link
                               href={`/communities/${community.slug}`}
-                              className="px-4 py-1.5 bg-zinc-800/50 hover:bg-zinc-800 text-sm font-semibold rounded-lg transition-all duration-300 hover:scale-105"
+                              className="px-4 py-1.5  bg-white hover:bg-zinc-800 text-sm font-semibold rounded-lg transition-all duration-300 hover:scale-105"
                             >
                               View
                             </Link>
                           ) : (
                             <button
                               onClick={() => handleJoinCommunity(community.slug)}
-                              className="px-4 py-1.5 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105"
+                              className="px-4 py-1.5 bg-white text-zinc-950 hover:bg-zinc-100 text-sm font-semibold rounded-lg transition-all duration-300 shadow-md shadow-white/20 hover:shadow-white/30 hover:scale-105"
                             >
                               Join
                             </button>

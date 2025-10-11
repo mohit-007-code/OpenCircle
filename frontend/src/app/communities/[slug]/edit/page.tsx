@@ -10,7 +10,8 @@ import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
-import { ArrowLeft, Upload, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Upload, X, Trash2, Save } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ToastMessage {
   message: string;
@@ -104,14 +105,13 @@ export default function EditCommunityPage() {
 
   const handleUpdate = async (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !description.trim()) {
-      showToast('Name and description are required', 'error');
+    if (!description.trim()) {
+      showToast('Description is required', 'error');
       return;
     }
 
     setSaving(true);
     const formData = new FormData();
-    formData.append('name', name);
     formData.append('description', description);
     if (displayPicture) formData.append('display_picture', displayPicture);
     if (coverImage) formData.append('cover_image', coverImage);
@@ -123,7 +123,7 @@ export default function EditCommunityPage() {
       showToast('Community updated successfully!', 'success');
       setTimeout(() => router.push(`/communities/${slug}`), 1500);
     } catch (error: any) {
-      showToast(error.response?.data?.name?.[0] || 'Failed to update community', 'error');
+      showToast(error.response?.data?.detail || 'Failed to update community', 'error');
     } finally {
       setSaving(false);
     }
@@ -145,20 +145,19 @@ export default function EditCommunityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f14]">
+      <div className="min-h-screen bg-zinc-950">
         <Navbar />
         <div className="flex justify-center items-center h-96">
-          <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f14]">
+    <div className="min-h-screen bg-zinc-950">
       <Navbar />
 
-      {/* Toast Notification */}
       {toast && (
         <Toast
           message={toast.message}
@@ -167,7 +166,6 @@ export default function EditCommunityPage() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -180,26 +178,51 @@ export default function EditCommunityPage() {
         loading={deleting}
       />
 
-      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-4 pb-5">
+      <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6 pb-32 sm:pb-6">
         <Sidebar />
 
-        <main className="flex-1">
+        <main className="flex-1 min-w-0">
           {/* Header */}
-       
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors group"
+          >
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back to Community</span>
+          </motion.button>
+
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Edit Community</h1>
+            <p className="text-sm sm:text-base text-zinc-400">Update your community's appearance and description</p>
+          </motion.div>
 
           {/* Form */}
-          <form onSubmit={handleUpdate} className="space-y-6">
+          <form onSubmit={handleUpdate} className="space-y-5">
             {/* Cover Image */}
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-              <h3 className="font-semibold mb-4">Cover Image</h3>
-              <div className="relative h-32 bg-gradient-to-r from-[#d93900] to-[#a62d00] rounded-lg overflow-hidden">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 sm:p-6"
+            >
+              <h3 className="font-semibold text-white mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <Upload size={18} />
+                Cover Image
+              </h3>
+              <div className="relative h-32 sm:h-40 md:h-48 bg-gradient-to-r from-white/10 to-white/5 rounded-xl overflow-hidden">
                 {coverPreview && (
                   <Image src={coverPreview} alt="Cover" fill className="object-cover" />
                 )}
-                <label className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 cursor-pointer transition-colors">
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload size={32} />
-                    <span className="text-sm">Change Cover</span>
+                <label className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 cursor-pointer transition-colors group">
+                  <div className="flex flex-col items-center gap-2 text-white">
+                    <Upload size={28} className="sm:w-8 sm:h-8 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs sm:text-sm font-semibold">Change Cover</span>
                   </div>
                   <input
                     type="file"
@@ -215,28 +238,36 @@ export default function EditCommunityPage() {
                       setCoverImage(null);
                       setCoverPreview(null);
                     }}
-                    className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded transition-colors"
+                    className="absolute top-2 right-2 p-1.5 sm:p-2 bg-black/70 hover:bg-black/90 rounded-lg sm:rounded-xl transition-all"
                   >
-                    <X size={16} />
+                    <X size={14} className="sm:w-4 sm:h-4" />
                   </button>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Display Picture */}
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-              <h3 className="font-semibold mb-4">Display Picture</h3>
-              <div className="flex items-center gap-4">
-                <div className="relative w-24 h-24 rounded-full bg-[#272729] overflow-hidden">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 sm:p-6"
+            >
+              <h3 className="font-semibold text-white mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <Upload size={18} />
+                Display Picture
+              </h3>
+              <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-xl sm:rounded-2xl bg-white overflow-hidden shadow-lg shadow-white/10 flex-shrink-0">
                   {dpPreview ? (
                     <Image src={dpPreview} alt="Display" fill className="object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-[#d93900]">
+                    <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-950">
                       {name[0]?.toUpperCase() || 'C'}
                     </div>
                   )}
-                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 cursor-pointer transition-colors">
-                    <Upload size={20} />
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 cursor-pointer transition-colors group">
+                    <Upload size={20} className="sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
                     <input
                       type="file"
                       accept="image/*"
@@ -252,68 +283,83 @@ export default function EditCommunityPage() {
                       setDisplayPicture(null);
                       setDpPreview(null);
                     }}
-                    className="px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded text-sm transition-colors"
+                    className="px-3 sm:px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-colors"
                   >
-                    Remove
+                    Remove Picture
                   </button>
                 )}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Name */}
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-              <label className="block font-semibold mb-2">Community Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
-                placeholder="Enter community name"
-                required
-              />
-            </div>
+            {/* Community Name (Read-only) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 sm:p-6"
+            >
+              <label className="block font-semibold text-white mb-3 text-sm sm:text-base">Community Name</label>
+              <div className="px-3 sm:px-4 py-2.5 sm:py-3 bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-400 cursor-not-allowed text-sm sm:text-base">
+                c/{name}
+              </div>
+              <p className="text-xs text-zinc-500 mt-2">Community name cannot be changed</p>
+            </motion.div>
 
             {/* Description */}
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-              <label className="block font-semibold mb-2">Description</label>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 sm:p-6"
+            >
+              <label className="block font-semibold text-white mb-3 text-sm sm:text-base">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-3 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384] resize-none"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 transition-all duration-300 resize-none text-sm sm:text-base"
                 rows={4}
                 placeholder="Describe your community"
                 required
               />
-            </div>
+              <p className="text-xs text-zinc-500 mt-2">{description.length} characters</p>
+            </motion.div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-between">
+            {/* Mobile Sticky Actions */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="space-y-3"
+            >
+              {/* Delete Button - Full Width on Mobile */}
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full font-semibold transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 rounded-xl font-semibold transition-all duration-300 hover:scale-105 text-sm sm:text-base"
               >
                 <Trash2 size={18} />
                 Delete Community
               </button>
 
+              {/* Cancel & Save Buttons */}
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => router.push(`/communities/${slug}`)}
-                  className="px-6 py-3 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
+                  className="flex-1 px-4 sm:px-6 py-3 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl font-semibold transition-all duration-300 hover:scale-105 text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-3 bg-[#d93900] hover:bg-[#c13300] text-white rounded-full font-semibold transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-white text-zinc-950 hover:bg-zinc-100 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 text-sm sm:text-base"
                 >
+                  <Save size={18} />
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
-            </div>
+            </motion.div>
           </form>
         </main>
       </div>

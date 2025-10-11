@@ -18,8 +18,7 @@ import {
   UserMinus, 
   Image as ImageIcon,
   X,
-  ArrowBigUp,
-  ArrowBigDown,
+  Heart,
   MessageSquare,
   Share2,
   Shield,
@@ -27,7 +26,7 @@ import {
   UserCog,
   Trash2,
   Sparkles,
-  ArrowLeft, // Added ArrowLeft for back button
+  ArrowLeft,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -57,13 +56,12 @@ export default function CommunityDetailPage() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedMember, setSelectedMember] = useState<CommunityMember | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [postToDelete, setPostToDelete] = useState<number | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [memberToKick, setMemberToKick] = useState<{ id: number; username: string } | null>(null);
-
-  // ... (keep all existing functions: showToast, useEffect, fetchCommunityData, handleJoin, handleLeave, etc.)
-  // I'm not repeating them to save space - they remain exactly the same
+  const [copiedPostId, setCopiedPostId] = useState<number | null>(null);
+  
+  // Confirmation dropdown states
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     setToast({ message, type });
@@ -116,11 +114,11 @@ export default function CommunityDetailPage() {
     try {
       await api.post(`/communities/${slug}/leave/`);
       fetchCommunityData();
-      setShowLeaveModal(false);
+      setShowLeaveConfirm(false);
       showToast('Left the community', 'info');
     } catch (error: any) {
       showToast(error.response?.data?.error || 'Failed to leave community', 'error');
-      setShowLeaveModal(false);
+      setShowLeaveConfirm(false);
     }
   };
 
@@ -161,19 +159,14 @@ export default function CommunityDetailPage() {
     }
   };
 
-  const handleDeletePostConfirm = async () => {
-    if (!postToDelete) return;
-    
-    setDeleting(true);
+  const handleDeletePost = async (postId: number) => {
     try {
-      await api.delete(`/posts/${postToDelete}/`);
+      await api.delete(`/posts/${postId}/`);
       fetchCommunityData();
-      setPostToDelete(null);
+      setShowDeleteConfirm(null);
       showToast('Post deleted successfully', 'success');
     } catch (error) {
       showToast('Failed to delete post', 'error');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -220,7 +213,7 @@ export default function CommunityDetailPage() {
     }
   };
 
-  const handleVote = async (postId: number, voteType: 'up' | 'down') => {
+  const handleVote = async (postId: number) => {
     if (!user) {
       router.push('/login');
       return;
@@ -248,10 +241,10 @@ export default function CommunityDetailPage() {
     const postUrl = `${window.location.origin}/posts/${postId}`;
     try {
       await navigator.clipboard.writeText(postUrl);
-      showToast('Link copied to clipboard!', 'success');
+      setCopiedPostId(postId);
+      setTimeout(() => setCopiedPostId(null), 2000);
     } catch (error) {
       console.error('Failed to copy link:', error);
-      showToast('Failed to copy link', 'error');
     }
   };
 
@@ -302,7 +295,6 @@ export default function CommunityDetailPage() {
     return null;
   };
 
-  // Loading Skeleton
   const PostSkeleton = () => (
     <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
       <Skeleton className="h-6 w-3/4" />
@@ -315,7 +307,7 @@ export default function CommunityDetailPage() {
     return (
       <div className="min-h-screen bg-zinc-950">
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 py-20">
+        <div className="max-w-[1400px] mx-auto px-4 py-20">
           <div className="space-y-4">
             <Skeleton className="h-48 w-full rounded-2xl" />
             <Skeleton className="h-32 w-full rounded-2xl" />
@@ -338,14 +330,14 @@ export default function CommunityDetailPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center"
           >
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
-              <Users size={40} className="text-cyan-400" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/10 flex items-center justify-center">
+              <Users size={40} className="text-white" />
             </div>
-            <h2 className="text-3xl font-bold mb-4 gradient-text">Community not found</h2>
+            <h2 className="text-3xl font-bold mb-4 text-white">Community not found</h2>
             <p className="text-zinc-400 mb-8">This community doesn't exist or has been removed</p>
             <button
               onClick={() => router.push('/communities')}
-              className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
+              className="px-8 py-3 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
             >
               Browse Communities
             </button>
@@ -368,29 +360,6 @@ export default function CommunityDetailPage() {
       )}
 
       <Modal
-        isOpen={postToDelete !== null}
-        onClose={() => setPostToDelete(null)}
-        onConfirm={handleDeletePostConfirm}
-        title="Delete Post"
-        message="Are you sure you want to delete this post? This action cannot be undone."
-        confirmText="Delete Post"
-        cancelText="Cancel"
-        type="danger"
-        loading={deleting}
-      />
-
-      <Modal
-        isOpen={showLeaveModal}
-        onClose={() => setShowLeaveModal(false)}
-        onConfirm={handleLeave}
-        title="Leave Community"
-        message={`Are you sure you want to leave "${community?.name}"?`}
-        confirmText="Leave"
-        cancelText="Cancel"
-        type="warning"
-      />
-
-      <Modal
         isOpen={memberToKick !== null}
         onClose={() => setMemberToKick(null)}
         onConfirm={handleKickMember}
@@ -405,24 +374,24 @@ export default function CommunityDetailPage() {
         <Sidebar />
         
         <div className="flex-1 min-w-0">
-          {/* ✨ NEW: Back Button */}
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 mb-5 transition-colors group"
+            className="flex items-center gap-2 text-zinc-400 hover:text-white mb-5 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back</span>
           </motion.button>
 
-          {/* Banner with DP */}
+          {/* ✨ MOBILE RESPONSIVE BANNER */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="relative mb-6 rounded-2xl overflow-hidden"
           >
-            <div className="h-40 sm:h-48 bg-gradient-to-r from-cyan-500 to-violet-600 relative">
+            {/* Cover Image */}
+            <div className="h-32 sm:h-40 md:h-48 bg-white relative">
               {getImageUrl(community.cover_image) && (
                 <Image
                   src={getImageUrl(community.cover_image)!}
@@ -434,11 +403,11 @@ export default function CommunityDetailPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
             </div>
 
-            {/* Community Header */}
-            <div className="px-4 sm:px-6">
+            {/* Content Section */}
+            <div className="px-3 sm:px-4 md:px-6">
               <div className="relative">
                 {/* Display Picture */}
-                <div className="absolute -top-12 sm:-top-16 left-0 w-20 h-20 sm:w-28 sm:h-28 rounded-2xl border-4 border-zinc-950 bg-gradient-to-br from-cyan-500 to-violet-600 overflow-hidden shadow-2xl shadow-cyan-500/30">
+                <div className="absolute -top-10 sm:-top-12 md:-top-16 left-0 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl border-3 sm:border-4 border-zinc-950 bg-white overflow-hidden shadow-2xl shadow-white/20">
                   {getImageUrl(community.display_picture) ? (
                     <Image
                       src={getImageUrl(community.display_picture)!}
@@ -447,53 +416,78 @@ export default function CommunityDetailPage() {
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl sm:text-4xl font-bold text-white">
+                    <div className="w-full h-full flex items-center justify-center text-xl sm:text-2xl md:text-4xl font-bold text-zinc-950">
                       {community.name[0].toUpperCase()}
                     </div>
                   )}
                 </div>
 
-                {/* Community Info */}
-                <div className="pt-3 sm:pt-4 pb-4 pl-24 sm:pl-36 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h1 className="text-xl sm:text-2xl font-bold mb-1 gradient-text">c/{community.name}</h1>
-                    <p className="text-sm text-zinc-400 line-clamp-2">{community.description}</p>
-                  </div>
+                {/* Community Info and Buttons */}
+                <div className="pt-2 sm:pt-3 md:pt-4 pb-4 pl-20 sm:pl-24 md:pl-36">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    {/* Community Name and Description */}
+                    <div className="flex-1 min-w-0 pr-2">
+                      <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 text-white truncate">
+                        c/{community.name}
+                      </h1>
+                      <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2">{community.description}</p>
+                    </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    {community.is_creator ? (
-                      <button
-                        onClick={() => router.push(`/communities/${slug}/edit`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
-                      >
-                        <Settings size={18} />
-                        <span className="hidden sm:inline">Manage</span>
-                      </button>
-                    ) : community.is_member ? (
-                      <button
-                        onClick={() => setShowLeaveModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
-                      >
-                        <UserMinus size={18} />
-                        <span className="hidden sm:inline">Leave</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handleJoin}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
-                      >
-                        <UserPlus size={18} />
-                        <span className="hidden sm:inline">Join</span>
-                      </button>
-                    )}
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 flex-shrink-0">
+                      {community.is_creator ? (
+                        <button
+                          onClick={() => router.push(`/communities/${slug}/edit`)}
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg sm:rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105"
+                        >
+                          <Settings size={16} className="sm:w-[18px] text-white sm:h-[18px]" />
+                          <span className="hidden sm:inline text-white">Manage</span>
+                        </button>
+                      ) : community.is_member ? (
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowLeaveConfirm(!showLeaveConfirm);
+                            }}
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 text-red-400 hover:text-red-300 rounded-lg sm:rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 whitespace-nowrap"
+                          >
+                            <UserMinus size={16} className="sm:w-[18px] sm:h-[18px]" />
+                            <span>Leave</span>
+                          </button>
+
+                          {/* LEAVE CONFIRMATION DROPDOWN */}
+                          {showLeaveConfirm && (
+                            <div className="absolute right-0 mt-2 w-44 sm:w-48 glass-effect bg-zinc-900 backdrop-blur-xl border border-zinc-800/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleLeave();
+                                }}
+                                className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-3 hover:bg-zinc-800/50 transition-all text-sm text-red-400 hover:text-red-300 font-semibold"
+                              >
+                                <Trash2 size={16} />
+                                <span>Sure? Leave</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleJoin}
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-100 rounded-lg sm:rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105 whitespace-nowrap"
+                        >
+                          <UserPlus size={16} className="sm:w-[18px] sm:h-[18px]" />
+                          <span>Join</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Tabs */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -513,7 +507,7 @@ export default function CommunityDetailPage() {
                 {activeTab === 'posts' && (
                   <motion.div
                     layoutId="activeTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 to-violet-600 rounded-full"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -530,7 +524,7 @@ export default function CommunityDetailPage() {
                 {activeTab === 'members' && (
                   <motion.div
                     layoutId="activeTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 to-violet-600 rounded-full"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -538,7 +532,6 @@ export default function CommunityDetailPage() {
             </div>
           </motion.div>
 
-          {/* Content based on active tab */}
           <AnimatePresence mode="wait">
             {activeTab === 'posts' ? (
               <motion.div
@@ -547,9 +540,8 @@ export default function CommunityDetailPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3 }}
-                className="space-y-4"
+                className="space-y-4 pb-24 lg:pb-0"
               >
-                {/* Create Post - Only for members */}
                 {community.is_member && (
                   <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4">
                     {!showCreatePost ? (
@@ -568,7 +560,7 @@ export default function CommunityDetailPage() {
                             />
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-semibold">
+                          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-zinc-950 font-semibold">
                             {user?.username[0].toUpperCase()}
                           </div>
                         )}
@@ -581,7 +573,7 @@ export default function CommunityDetailPage() {
                           value={postTitle}
                           onChange={(e) => setPostTitle(e.target.value)}
                           placeholder="Post Title"
-                          className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300"
+                          className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 transition-all duration-300"
                           required
                         />
 
@@ -589,7 +581,7 @@ export default function CommunityDetailPage() {
                           value={postContent}
                           onChange={(e) => setPostContent(e.target.value)}
                           placeholder="What's on your mind?"
-                          className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300 resize-none"
+                          className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 transition-all duration-300 resize-none"
                           rows={4}
                           required
                         />
@@ -617,7 +609,7 @@ export default function CommunityDetailPage() {
                         )}
 
                         <div className="flex items-center justify-between">
-                          <label className="cursor-pointer flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all text-sm text-zinc-400 hover:text-cyan-400">
+                          <label className="cursor-pointer flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all text-sm text-zinc-400 hover:text-white">
                             <ImageIcon size={18} />
                             <span>Add Image</span>
                             <input
@@ -645,7 +637,7 @@ export default function CommunityDetailPage() {
                             <button
                               type="submit"
                               disabled={posting || !postTitle.trim() || !postContent.trim()}
-                              className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40"
+                              className="px-6 py-2 bg-white text-zinc-950 hover:bg-zinc-100 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30"
                             >
                               {posting ? 'Posting...' : 'Post'}
                             </button>
@@ -656,17 +648,16 @@ export default function CommunityDetailPage() {
                   </div>
                 )}
 
-                {/* Posts List */}
                 {posts.length === 0 ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-3xl p-12 text-center"
                   >
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
-                      <MessageSquare size={40} className="text-cyan-400" />
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/10 flex items-center justify-center">
+                      <MessageSquare size={40} className="text-white" />
                     </div>
-                    <h3 className="text-xl font-bold mb-2 gradient-text">No posts yet</h3>
+                    <h3 className="text-xl font-bold mb-2 text-white">No posts yet</h3>
                     <p className="text-zinc-400">Be the first to post in this community!</p>
                   </motion.div>
                 ) : (
@@ -676,120 +667,136 @@ export default function CommunityDetailPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:border-cyan-500/50 transition-all duration-300 overflow-hidden group"
+                      onClick={() => router.push(`/posts/${post.id}`)}
+                      className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:border-white/30 transition-all duration-300 overflow-hidden cursor-pointer group"
                     >
-                      <div className="flex flex-col sm:flex-row">
-                        {/* Vote Section */}
-                        <div className="flex sm:flex-col items-center gap-2 sm:gap-1 bg-zinc-900/80 px-4 py-3 sm:px-3 border-b sm:border-b-0 sm:border-r border-zinc-800/50">
-                          <button
-                            onClick={() => handleVote(post.id, 'up')}
-                            className={`p-1.5 rounded-xl hover:bg-zinc-800/50 transition-all ${
-                              post.is_liked ? 'text-cyan-400' : 'text-zinc-500 hover:text-cyan-400'
-                            }`}
-                          >
-                            <ArrowBigUp size={20} fill={post.is_liked ? 'currentColor' : 'none'} />
-                          </button>
-                          <span className={`text-sm font-bold min-w-[2rem] text-center ${
-                            post.is_liked ? 'text-cyan-400' : 'text-zinc-300'
-                          }`}>
-                            {post.likes_count}
-                          </span>
-                          <button
-                            onClick={() => handleVote(post.id, 'down')}
-                            className="p-1.5 rounded-xl hover:bg-zinc-800/50 transition-all text-zinc-500 hover:text-violet-400"
-                          >
-                            <ArrowBigDown size={20} />
-                          </button>
-                        </div>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+                            {post.author.profile_picture ? (
+                              <div className="w-6 h-6 rounded-lg overflow-hidden flex-shrink-0">
+                                <Image
+                                  src={getImageUrl(post.author.profile_picture)!}
+                                  alt={post.author.username}
+                                  width={24}
+                                  height={24}
+                                  className="object-cover w-full h-full"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center text-zinc-950 text-[10px] font-bold">
+                                {post.author.username[0].toUpperCase()}
+                              </div>
+                            )}
+                            <span>Posted by</span>
+                            <span 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/users/${post.author.id}`);
+                              }}
+                              className="hover:text-white cursor-pointer font-semibold transition-colors"
+                            >
+                              u/{post.author.username}
+                            </span>
+                            <span>•</span>
+                            <span>{formatTime(post.created_at)}</span>
+                          </div>
 
-                        {/* Content */}
-                        <div className="flex-1 p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            {/* ✨ UPDATED: Author Info with Display Picture */}
-                            <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
-                              {/* Author Display Picture */}
-                              {post.author.profile_picture ? (
-                                <div className="w-6 h-6 rounded-lg overflow-hidden flex-shrink-0">
-                                  <Image
-                                    src={getImageUrl(post.author.profile_picture)!}
-                                    alt={post.author.username}
-                                    width={24}
-                                    height={24}
-                                    className="object-cover w-full h-full"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-[10px] font-bold">
-                                  {post.author.username[0].toUpperCase()}
-                                </div>
-                              )}
-                              <span>Posted by</span>
-                              <span 
+                          {/* DELETE BUTTON WITH CONFIRMATION DROPDOWN */}
+                          {post.can_delete && (
+                            <div className="relative">
+                              <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  router.push(`/users/${post.author.id}`);
+                                  setShowDeleteConfirm(showDeleteConfirm === post.id ? null : post.id);
                                 }}
-                                className="hover:text-cyan-400 cursor-pointer font-semibold transition-colors"
-                              >
-                                u/{post.author.username}
-                              </span>
-                              <span>•</span>
-                              <span>{formatTime(post.created_at)}</span>
-                            </div>
-
-                            {post.can_delete && (
-                              <button
-                                onClick={() => setPostToDelete(post.id)}
                                 className="p-2 hover:bg-zinc-800/50 rounded-xl text-zinc-500 hover:text-red-500 transition-all"
                               >
                                 <Trash2 size={18} />
                               </button>
-                            )}
-                          </div>
 
-                          <h2 
-                            onClick={() => router.push(`/posts/${post.id}`)}
-                            className="text-base sm:text-lg font-semibold text-zinc-100 mb-2 cursor-pointer hover:text-cyan-400 transition-colors line-clamp-2"
-                          >
-                            {post.title || post.content}
-                          </h2>
-
-                          {post.title && (
-                            <p className="text-sm text-zinc-400 mb-3 line-clamp-3">{post.content}</p>
-                          )}
-
-                          {getImageUrl(post.image) && (
-                            <div 
-                              onClick={() => router.push(`/posts/${post.id}`)}
-                              className="mb-4 rounded-xl overflow-hidden cursor-pointer group/image"
-                            >
-                              <Image
-                                src={getImageUrl(post.image)!}
-                                alt="Post"
-                                width={600}
-                                height={400}
-                                className="w-full max-h-[400px] object-cover transition-transform duration-300 group-hover/image:scale-105"
-                              />
+                              {/* DELETE CONFIRMATION DROPDOWN */}
+                              {showDeleteConfirm === post.id && (
+                                <div className="absolute right-0 mt-2 w-40 glass-effect bg-zinc-900 backdrop-blur-xl border border-zinc-800/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeletePost(post.id);
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 hover:bg-zinc-800/50 transition-all text-sm text-red-400 hover:text-red-300 font-semibold"
+                                  >
+                                    <Trash2 size={16} />
+                                    <span>Sure? Delete</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
+                        </div>
 
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <button 
-                              onClick={() => router.push(`/posts/${post.id}`)}
-                              className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all text-sm font-medium text-zinc-500 hover:text-cyan-400 group/comment"
-                            >
-                              <MessageSquare size={18} className="group-hover/comment:scale-110 transition-transform" />
-                              <span>{post.comments_count}</span>
-                              <span className="hidden sm:inline">Comments</span>
-                            </button>
-                            <button 
-                              onClick={() => handleShare(post.id)}
-                              className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all text-sm font-medium text-zinc-500 hover:text-cyan-400 group/share"
-                            >
-                              <Share2 size={18} className="group-hover/share:scale-110 transition-transform" />
-                              <span className="hidden sm:inline">Share</span>
-                            </button>
+                        <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-2 hover:text-white transition-colors line-clamp-2">
+                          {post.title || post.content}
+                        </h2>
+
+                        {post.title && (
+                          <p className="text-sm text-zinc-400 mb-3 line-clamp-3">{post.content}</p>
+                        )}
+
+                        {getImageUrl(post.image) && (
+                          <div className="mb-4 rounded-xl overflow-hidden group/image">
+                            <Image
+                              src={getImageUrl(post.image)!}
+                              alt="Post"
+                              width={600}
+                              height={400}
+                              className="w-full max-h-[400px] object-cover transition-transform duration-300 group-hover/image:scale-105"
+                            />
                           </div>
+                        )}
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleVote(post.id);
+                            }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium group/like ${
+                              post.is_liked ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'
+                            }`}
+                          >
+                            <Heart 
+                              size={18} 
+                              fill={post.is_liked ? 'currentColor' : 'none'}
+                              className="group-hover/like:scale-110 transition-transform" 
+                            />
+                            <span>{post.likes_count}</span>
+                          </button>
+
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/posts/${post.id}`);
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium text-zinc-400 hover:text-white group/comment"
+                          >
+                            <MessageSquare size={18} className="group-hover/comment:scale-110 transition-transform" />
+                            <span>{post.comments_count}</span>
+                          </button>
+
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShare(post.id);
+                            }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium group/share ${
+                              copiedPostId === post.id ? 'text-green-500' : 'text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            <Share2 size={18} className="group-hover/share:scale-110 transition-transform" />
+                            <span className="hidden sm:inline">
+                              {copiedPostId === post.id ? 'Copied!' : 'Share'}
+                            </span>
+                          </button>
                         </div>
                       </div>
                     </motion.article>
@@ -797,7 +804,6 @@ export default function CommunityDetailPage() {
                 )}
               </motion.div>
             ) : (
-              // Members tab stays the same
               <motion.div
                 key="members"
                 initial={{ opacity: 0, x: 20 }}
@@ -806,15 +812,15 @@ export default function CommunityDetailPage() {
                 transition={{ duration: 0.3 }}
                 className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 sm:p-6"
               >
-                <h3 className="font-bold text-lg mb-5 flex items-center gap-2">
-                  <Users size={20} className="text-cyan-400" />
+                <h3 className="font-bold text-lg mb-5 flex items-center gap-2 text-white">
+                  <Users size={20} className="text-white" />
                   Members ({members.length})
                 </h3>
                 
                 {members.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
-                      <Users size={32} className="text-cyan-400" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 flex items-center justify-center">
+                      <Users size={32} className="text-white" />
                     </div>
                     <p className="text-zinc-400">No members found</p>
                   </div>
@@ -836,11 +842,23 @@ export default function CommunityDetailPage() {
                             className="flex items-center gap-3 cursor-pointer flex-1"
                             onClick={() => router.push(`/users/${member.user.id}`)}
                           >
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-semibold shadow-lg">
-                              {member.user.username[0].toUpperCase()}
-                            </div>
+                            {member.user.profile_picture ? (
+                              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
+                                <Image
+                                  src={getImageUrl(member.user.profile_picture)!}
+                                  alt={member.user.username}
+                                  width={48}
+                                  height={48}
+                                  className="object-cover w-full h-full"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-zinc-950 font-semibold shadow-lg">
+                                {member.user.username[0].toUpperCase()}
+                              </div>
+                            )}
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold hover:text-cyan-400 transition-colors truncate">
+                              <p className="font-semibold text-white hover:text-zinc-300 transition-colors truncate">
                                 u/{member.user.username}
                               </p>
                               <div className="flex items-center gap-2 flex-wrap">
@@ -907,7 +925,6 @@ export default function CommunityDetailPage() {
           </AnimatePresence>
         </div>
 
-        {/* Right Sidebar - Desktop Only */}
         <aside className="hidden xl:block w-80 flex-shrink-0">
           <div className="sticky top-20">
             <motion.div
@@ -916,17 +933,17 @@ export default function CommunityDetailPage() {
               transition={{ delay: 0.2 }}
               className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5"
             >
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Sparkles size={18} className="text-cyan-400" />
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
+                <Sparkles size={18} className="text-white" />
                 About Community
               </h3>
               <p className="text-sm text-zinc-400 mb-5 leading-relaxed">{community.description}</p>
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm p-3 bg-zinc-800/30 rounded-xl">
-                  <Users size={18} className="text-cyan-400" />
+                  <Users size={18} className="text-white" />
                   <span className="font-semibold text-zinc-100">{community.member_count.toLocaleString()}</span>
-                  <span className="text-zinc-500">Members</span>
+                  <span className="text-white">Members</span>
                 </div>
 
                 <div className="flex items-center gap-3 text-sm p-3 bg-zinc-800/30 rounded-xl">
@@ -934,14 +951,14 @@ export default function CommunityDetailPage() {
                   <span className="text-zinc-500">Created by</span>
                   <span 
                     onClick={() => router.push(`/users/${community.creator_id}`)}
-                    className="font-semibold text-cyan-400 hover:text-cyan-300 cursor-pointer transition-colors"
+                    className="font-semibold text-white hover:text-zinc-300 cursor-pointer transition-colors"
                   >
                     u/{members.find(m => m.user.id === community.creator_id)?.user.username || 'Creator'}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3 text-sm p-3 bg-zinc-800/30 rounded-xl">
-                  <Calendar size={18} className="text-violet-400" />
+                  <Calendar size={18} className="text-zinc-400" />
                   <span className="text-zinc-500">Created {formatTime(community.created_at)}</span>
                 </div>
               </div>

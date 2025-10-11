@@ -7,7 +7,7 @@ import Sidebar from '@/components/Sidebar';
 import api from '@/lib/api';
 import { Community } from '@/types';
 import Image from 'next/image';
-import { TrendingUp, Users, Calendar, Award, Crown, Flame, Plus, ArrowLeft } from 'lucide-react'; // Added ArrowLeft
+import { TrendingUp, Users, Calendar, Award, Crown, Flame, Plus, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -29,10 +29,7 @@ export default function PopularPage() {
         allCommunities = [];
       }
       
-      // Sort by member count
       allCommunities.sort((a, b) => b.member_count - a.member_count);
-      
-      // Take top 5
       const top5 = allCommunities.slice(0, 5);
       
       setCommunities(top5);
@@ -64,7 +61,6 @@ export default function PopularPage() {
     return `${Math.floor(diffInSeconds / 31536000)}y ago`;
   };
 
-  // ✨ UPDATED: Rank Badge Component
   const getRankBadge = (index: number) => {
     if (index === 0) {
       return <Crown size={28} className="text-yellow-500 flex-shrink-0" />;
@@ -80,7 +76,6 @@ export default function PopularPage() {
     );
   };
 
-  // Loading Skeleton Component
   const CommunitySkeleton = () => (
     <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
       <div className="flex items-center gap-4">
@@ -98,22 +93,24 @@ export default function PopularPage() {
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
+      {/* ✨ FIXED LAYOUT - Proper container */}
+      <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
 
-        <main className="flex-1 max-w-4xl mx-auto">
-          {/* ✨ NEW: Back Button */}
+        {/* ✨ MAIN CONTENT - Proper flex-1 */}
+        <main className="flex-1 min-w-0">
+          {/* Back Button */}
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 mb-5 transition-colors group"
+            className="flex items-center gap-2 text-zinc-400 hover:text-white mb-5 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back</span>
           </motion.button>
 
-          {/* ✨ UPDATED: Header - Removed Emoji */}
+          {/* ✨ WHITE THEME HEADER */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -121,10 +118,11 @@ export default function PopularPage() {
             className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 sm:p-6 mb-6"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <Flame size={28} className="text-white" />
+              {/* ✨ WHITE ICON */}
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-white/20">
+                <Flame size={28} className="text-zinc-950" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Top 5 Communities</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Top 5 Communities</h1>
             </div>
             <p className="text-zinc-400 text-sm sm:text-base">
               The hottest communities with the most members on OpenCircle
@@ -144,16 +142,16 @@ export default function PopularPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-3xl p-8 sm:p-12 text-center"
             >
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
-                <Users size={40} className="text-cyan-400" />
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/10 flex items-center justify-center">
+                <Users size={40} className="text-white" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 gradient-text">No communities yet</h3>
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 text-white">No communities yet</h3>
               <p className="text-zinc-400 mb-8 max-w-md mx-auto">
                 Create a community to get started and be the first on the leaderboard!
               </p>
               <button
                 onClick={() => router.push('/communities/create')}
-                className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
+                className="inline-flex items-center gap-2 px-8 py-3 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
               >
                 <Plus size={20} />
                 Create Community
@@ -169,25 +167,24 @@ export default function PopularPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`glass-effect bg-zinc-900/50 backdrop-blur-xl border-2 rounded-2xl hover:border-cyan-500/50 transition-all duration-300 overflow-hidden group ${
+                    className={`glass-effect bg-zinc-900/50 backdrop-blur-xl border-2 rounded-2xl hover:border-white/30 transition-all duration-300 overflow-hidden group ${
                       index === 0 ? 'border-yellow-500/50 shadow-lg shadow-yellow-500/10' : 
                       index === 1 ? 'border-gray-400/50 shadow-lg shadow-gray-400/10' : 
                       index === 2 ? 'border-orange-600/50 shadow-lg shadow-orange-600/10' : 
                       'border-zinc-800/50'
                     }`}
                   >
-                    {/* ✨ UPDATED: New Layout with Rank on Left */}
                     <div className="p-4 sm:p-5">
                       <div className="flex items-start gap-4">
-                        {/* ✨ Rank Badge - Now on Left */}
+                        {/* Rank Badge */}
                         <div className="flex-shrink-0 pt-1">
                           {getRankBadge(index)}
                         </div>
 
-                        {/* Display Picture */}
+                        {/* ✨ WHITE DISPLAY PICTURE */}
                         <button
                           onClick={() => router.push(`/communities/${community.slug}`)}
-                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold overflow-hidden flex-shrink-0 hover:scale-110 transition-all duration-300 shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50"
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white flex items-center justify-center text-zinc-950 text-2xl sm:text-3xl font-bold overflow-hidden flex-shrink-0 hover:scale-110 transition-all duration-300 shadow-lg shadow-white/20 group-hover:shadow-white/30"
                         >
                           {getImageUrl(community.display_picture) ? (
                             <Image
@@ -206,7 +203,7 @@ export default function PopularPage() {
                         <div className="flex-1 min-w-0">
                           <button
                             onClick={() => router.push(`/communities/${community.slug}`)}
-                            className="text-lg sm:text-xl font-bold hover:text-cyan-400 transition-colors text-left mb-2 line-clamp-1"
+                            className="text-lg sm:text-xl font-bold text-white hover:text-zinc-300 transition-colors text-left mb-2 line-clamp-1"
                           >
                             c/{community.name}
                           </button>
@@ -214,10 +211,10 @@ export default function PopularPage() {
                             {community.description}
                           </p>
 
-                          {/* Stats - Responsive */}
+                          {/* Stats */}
                           <div className="flex flex-wrap items-center gap-4 text-sm mb-4">
                             <div className="flex items-center gap-2">
-                              <Users size={16} className="text-cyan-400" />
+                              <Users size={16} className="text-white" />
                               <span className="font-bold text-zinc-100">{community.member_count.toLocaleString()}</span>
                               <span className="text-zinc-500">members</span>
                             </div>
@@ -227,10 +224,10 @@ export default function PopularPage() {
                             </div>
                           </div>
 
-                          {/* View Button */}
+                          {/* ✨ WHITE BUTTON */}
                           <button
                             onClick={() => router.push(`/communities/${community.slug}`)}
-                            className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105"
+                            className="px-6 py-2 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
                           >
                             View Community
                           </button>
@@ -244,22 +241,22 @@ export default function PopularPage() {
           )}
         </main>
 
-        {/* Right Sidebar - Desktop Only */}
+        {/* ✨ RIGHT SIDEBAR - Proper layout */}
         <aside className="hidden xl:block w-80 flex-shrink-0">
           <div className="sticky top-20 space-y-4">
-            {/* How It Works Card */}
+            {/* ✨ WHITE THEME - How It Works Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
               className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl overflow-hidden"
             >
-              <div className="h-16 bg-gradient-to-r from-cyan-500 to-violet-600 relative overflow-hidden">
+              <div className="h-16 bg-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-20"></div>
               </div>
               <div className="p-5">
-                <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                  <Flame size={20} className="text-cyan-400" />
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-2 text-white">
+                  <Flame size={20} className="text-white" />
                   How It Works
                 </h3>
                 <p className="text-sm text-zinc-400 mb-5">
@@ -291,20 +288,21 @@ export default function PopularPage() {
               </div>
             </motion.div>
 
-            {/* Call to Action Card */}
+            {/* ✨ WHITE THEME - Call to Action Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
               className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5"
             >
-              <h3 className="font-bold text-lg mb-2">Want to be on top?</h3>
+              <h3 className="font-bold text-lg mb-2 text-white">Want to be on top?</h3>
               <p className="text-sm text-zinc-400 mb-5">
                 Create an engaging community and watch it climb the ranks!
               </p>
+              {/* ✨ WHITE BUTTON */}
               <button
                 onClick={() => router.push('/communities/create')}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
               >
                 <Plus size={18} />
                 Create Community

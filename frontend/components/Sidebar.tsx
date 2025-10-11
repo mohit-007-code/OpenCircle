@@ -13,17 +13,14 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Only animate on first mount, not on route changes
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const isActive = (path: string) => {
-    // Special handling for create page
     if (path === '/communities/create') {
       return pathname === '/communities/create';
     }
-    // For communities page, only match exact path
     if (path === '/communities') {
       return pathname === '/communities';
     }
@@ -38,7 +35,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop Sidebar - NO RELOAD ANIMATION */}
+      {/* Desktop Sidebar */}
       <aside 
         className={`hidden lg:block flex-shrink-0 transition-all duration-300 ${
           isCollapsed ? 'w-16' : 'w-64'
@@ -60,16 +57,16 @@ export default function Sidebar() {
                     href={item.href}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
                       active
-                        ? 'text-cyan-400 font-medium'
+                        ? 'text-zinc-900 font-medium'
                         : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
                     }`}
                     title={isCollapsed ? item.label : ''}
                   >
-                    {/* Smooth Active Indicator - Only this animates */}
+                    {/* ✨ WHITE BACKGROUND */}
                     {active && (
                       <motion.div
                         layoutId="desktopActiveTab"
-                        className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-violet-600/20 rounded-xl shadow-lg shadow-cyan-500/10"
+                        className="absolute inset-0 bg-white rounded-xl shadow-lg"
                         transition={{ 
                           type: "spring", 
                           bounce: 0.15, 
@@ -79,11 +76,11 @@ export default function Sidebar() {
                       />
                     )}
 
-                    {/* Active Bar */}
+                    {/* ✨ WHITE Active Bar */}
                     {active && (
                       <motion.div
                         layoutId="desktopActiveBar"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-cyan-500 to-violet-600 rounded-r-full"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
                         transition={{ 
                           type: "spring", 
                           bounce: 0.15, 
@@ -96,7 +93,7 @@ export default function Sidebar() {
                     <Icon 
                       size={20} 
                       className={`flex-shrink-0 transition-all duration-300 relative z-10 ${
-                        active ? 'text-cyan-400' : 'group-hover:scale-110'
+                        active ? 'text-zinc-950' : 'group-hover:scale-110'
                       }`}
                     />
                     
@@ -124,17 +121,17 @@ export default function Sidebar() {
                     href="/communities/create"
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
                       isActive('/communities/create')
-                        ? 'text-cyan-400 font-medium'
-                        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-cyan-400'
+                        ? 'text-zinc-900 font-medium'
+                        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
                     }`}
                     title={isCollapsed ? 'Create Community' : ''}
                   >
-                    {/* Active Indicator for Create */}
+                    {/* ✨ WHITE BACKGROUND */}
                     {isActive('/communities/create') && (
                       <>
                         <motion.div
                           layoutId="desktopActiveTab"
-                          className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-violet-600/20 rounded-xl shadow-lg shadow-cyan-500/10"
+                          className="absolute inset-0 bg-white rounded-xl shadow-lg"
                           transition={{ 
                             type: "spring", 
                             bounce: 0.15, 
@@ -144,7 +141,7 @@ export default function Sidebar() {
                         />
                         <motion.div
                           layoutId="desktopActiveBar"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-cyan-500 to-violet-600 rounded-r-full"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
                           transition={{ 
                             type: "spring", 
                             bounce: 0.15, 
@@ -158,7 +155,7 @@ export default function Sidebar() {
                     <Plus 
                       size={20} 
                       className={`flex-shrink-0 transition-all duration-300 relative z-10 ${
-                        isActive('/communities/create') ? 'text-cyan-400' : 'group-hover:rotate-90 group-hover:scale-110'
+                        isActive('/communities/create') ? 'text-zinc-950' : 'group-hover:rotate-90 group-hover:scale-110'
                       }`}
                     />
                     <AnimatePresence mode="wait">
@@ -187,7 +184,7 @@ export default function Sidebar() {
                     </h3>
                     <Link
                       href="/communities"
-                      className="flex items-center justify-between py-1.5 px-2 text-sm text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800/30 rounded-lg transition-all duration-300 group"
+                      className="flex items-center justify-between py-1.5 px-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/30 rounded-lg transition-all duration-300 group"
                     >
                       <span>View all</span>
                       <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
@@ -207,7 +204,7 @@ export default function Sidebar() {
         onClick={() => setIsCollapsed(!isCollapsed)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        className={`hidden lg:flex fixed top-20 z-50 items-center justify-center w-10 h-10 glass-effect bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:bg-zinc-800/50 transition-all duration-300 shadow-lg hover:shadow-cyan-500/20 group ${
+        className={`hidden lg:flex fixed top-20 z-50 items-center justify-center w-10 h-10 glass-effect bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:bg-zinc-800/50 transition-all duration-300 shadow-lg hover:shadow-white/10 group ${
           isCollapsed ? 'left-12' : 'left-60'
         }`}
         title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -221,7 +218,7 @@ export default function Sidebar() {
               exit={{ opacity: 0, rotate: 90 }}
               transition={{ duration: 0.2 }}
             >
-              <ChevronRight size={18} className="text-zinc-400 group-hover:text-cyan-400 transition-colors" />
+              <ChevronRight size={18} className="text-zinc-400 group-hover:text-white transition-colors" />
             </motion.div>
           ) : (
             <motion.div
@@ -231,15 +228,14 @@ export default function Sidebar() {
               exit={{ opacity: 0, rotate: -90 }}
               transition={{ duration: 0.2 }}
             >
-              <ChevronLeft size={18} className="text-zinc-400 group-hover:text-cyan-400 transition-colors" />
+              <ChevronLeft size={18} className="text-zinc-400 group-hover:text-white transition-colors" />
             </motion.div>
           )}
         </AnimatePresence>
       </motion.button>
 
-      {/* Mobile Floating Bottom Navigation - WITH EXPANDING TEXT */}
+      {/* Mobile Floating Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-        {/* Dynamic Width Navigation Bar */}
         <motion.div 
           layout
           className="glass-effect backdrop-blur-2xl bg-white/10 dark:bg-zinc-900/90 border border-zinc-700/30 rounded-full shadow-2xl shadow-black/30 px-2 py-2"
@@ -254,10 +250,11 @@ export default function Sidebar() {
                   : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50'
               }`}
             >
+              {/* ✨ WHITE BACKGROUND */}
               {isActive('/') && (
                 <motion.div
                   layoutId="mobileActiveIndicator"
-                  className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 rounded-full"
+                  className="absolute inset-0 bg-white dark:bg-white rounded-full"
                   transition={{ 
                     type: "spring", 
                     bounce: 0.15,
@@ -270,7 +267,7 @@ export default function Sidebar() {
               <Home 
                 size={20} 
                 strokeWidth={isActive('/') ? 2.5 : 2}
-                className="relative z-10 transition-all duration-300"
+                className={`relative z-10 transition-all duration-300 ${isActive('/') ? 'text-zinc-950' : ''}`}
               />
               
               <AnimatePresence mode="wait">
@@ -280,7 +277,7 @@ export default function Sidebar() {
                     animate={{ opacity: 1, width: 'auto' }}
                     exit={{ opacity: 0, width: 0 }}
                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden"
+                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
                   >
                     Home
                   </motion.span>
@@ -300,7 +297,7 @@ export default function Sidebar() {
               {isActive('/popular') && (
                 <motion.div
                   layoutId="mobileActiveIndicator"
-                  className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 rounded-full"
+                  className="absolute inset-0 bg-white dark:bg-white rounded-full"
                   transition={{ 
                     type: "spring", 
                     bounce: 0.15,
@@ -313,7 +310,7 @@ export default function Sidebar() {
               <TrendingUp 
                 size={20} 
                 strokeWidth={isActive('/popular') ? 2.5 : 2}
-                className="relative z-10 transition-all duration-300"
+                className={`relative z-10 transition-all duration-300 ${isActive('/popular') ? 'text-zinc-950' : ''}`}
               />
               
               <AnimatePresence mode="wait">
@@ -323,7 +320,7 @@ export default function Sidebar() {
                     animate={{ opacity: 1, width: 'auto' }}
                     exit={{ opacity: 0, width: 0 }}
                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden"
+                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
                   >
                     Popular
                   </motion.span>
@@ -331,7 +328,7 @@ export default function Sidebar() {
               </AnimatePresence>
             </Link>
 
-            {/* Create - Now with Active State */}
+            {/* Create */}
             {user && (
               <Link
                 href="/communities/create"
@@ -344,7 +341,7 @@ export default function Sidebar() {
                 {isActive('/communities/create') && (
                   <motion.div
                     layoutId="mobileActiveIndicator"
-                    className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 rounded-full"
+                    className="absolute inset-0 bg-white dark:bg-white rounded-full"
                     transition={{ 
                       type: "spring", 
                       bounce: 0.15,
@@ -357,7 +354,7 @@ export default function Sidebar() {
                 <Plus 
                   size={20} 
                   strokeWidth={isActive('/communities/create') ? 2.5 : 2}
-                  className="relative z-10 transition-all duration-300"
+                  className={`relative z-10 transition-all duration-300 ${isActive('/communities/create') ? 'text-zinc-950' : ''}`}
                 />
 
                 <AnimatePresence mode="wait">
@@ -367,7 +364,7 @@ export default function Sidebar() {
                       animate={{ opacity: 1, width: 'auto' }}
                       exit={{ opacity: 0, width: 0 }}
                       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden"
+                      className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
                     >
                       Create
                     </motion.span>
@@ -388,7 +385,7 @@ export default function Sidebar() {
               {isActive('/communities') && (
                 <motion.div
                   layoutId="mobileActiveIndicator"
-                  className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 rounded-full"
+                  className="absolute inset-0 bg-white dark:bg-white rounded-full"
                   transition={{ 
                     type: "spring", 
                     bounce: 0.15,
@@ -401,7 +398,7 @@ export default function Sidebar() {
               <Compass 
                 size={20} 
                 strokeWidth={isActive('/communities') ? 2.5 : 2}
-                className="relative z-10 transition-all duration-300"
+                className={`relative z-10 transition-all duration-300 ${isActive('/communities') ? 'text-zinc-950' : ''}`}
               />
               
               <AnimatePresence mode="wait">
@@ -411,7 +408,7 @@ export default function Sidebar() {
                     animate={{ opacity: 1, width: 'auto' }}
                     exit={{ opacity: 0, width: 0 }}
                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden"
+                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
                   >
                     Explore
                   </motion.span>
@@ -419,7 +416,7 @@ export default function Sidebar() {
               </AnimatePresence>
             </Link>
 
-            {/* Profile - Only if user logged in */}
+            {/* Profile */}
             {user && (
               <Link
                 href="/profile"
@@ -432,7 +429,7 @@ export default function Sidebar() {
                 {isActive('/profile') && (
                   <motion.div
                     layoutId="mobileActiveIndicator"
-                    className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 rounded-full"
+                    className="absolute inset-0 bg-white dark:bg-white rounded-full"
                     transition={{ 
                       type: "spring", 
                       bounce: 0.15,
@@ -445,7 +442,7 @@ export default function Sidebar() {
                 <User 
                   size={20} 
                   strokeWidth={isActive('/profile') ? 2.5 : 2}
-                  className="relative z-10 transition-all duration-300"
+                  className={`relative z-10 transition-all duration-300 ${isActive('/profile') ? 'text-zinc-950' : ''}`}
                 />
                 
                 <AnimatePresence mode="wait">
@@ -455,7 +452,7 @@ export default function Sidebar() {
                       animate={{ opacity: 1, width: 'auto' }}
                       exit={{ opacity: 0, width: 0 }}
                       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden"
+                      className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
                     >
                       Profile
                     </motion.span>
@@ -466,11 +463,9 @@ export default function Sidebar() {
           </div>
         </motion.div>
 
-        {/* Subtle shadow underneath */}
         <div className="absolute inset-0 rounded-full bg-zinc-900/20 blur-xl -z-10" />
       </nav>
 
-      {/* Reduced padding for compact nav */}
       <div className="lg:hidden h-20"></div>
     </>
   );
