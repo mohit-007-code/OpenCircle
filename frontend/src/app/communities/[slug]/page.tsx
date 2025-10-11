@@ -88,7 +88,7 @@ export default function CommunityDetailPage() {
       const membersData = membersRes.data?.results || membersRes.data || [];
       setMembers(Array.isArray(membersData) ? membersData : []);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching community data:', error);
     } finally {
       setLoading(false);
