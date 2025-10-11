@@ -7,7 +7,8 @@ import api from '@/lib/api';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { Upload, X, ArrowLeft } from 'lucide-react';
+import { Upload, X, ArrowLeft, ImageIcon, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CreateCommunityPage() {
   const { user, loading: authLoading } = useAuth();
@@ -32,8 +33,8 @@ export default function CreateCommunityPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0b0f14] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -102,51 +103,81 @@ export default function CreateCommunityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f14]">
+    <div className="min-h-screen bg-zinc-950">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-5">
+      <div className="max-w-7xl mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
 
-        <main className="flex-1 max-w-3xl">
-          {/* Header */}
-          <button
+        <main className="flex-1 max-w-3xl mx-auto">
+          {/* Back Button */}
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-[#818384] hover:text-white mb-4 transition-colors"
+            className="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 mb-5 transition-colors group"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span>Back</span>
-          </button>
+          </motion.button>
 
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
-            <h1 className="text-2xl font-bold mb-2">Create a Community</h1>
-            <p className="text-[#818384]">Build and grow a community about something you care about</p>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
-                {error}
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 sm:p-6 mb-6"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <Sparkles size={24} className="text-white" />
               </div>
-            )}
+              <div>
+                <h1 className="text-2xl font-bold gradient-text">Create a Community</h1>
+                <p className="text-zinc-400 text-sm">Build and grow a community about something you care about</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Error Message */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="glass-effect bg-red-500/10 backdrop-blur-xl border border-red-500/50 rounded-2xl p-4 text-red-400"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Cover Image */}
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
-              <label className="block text-sm font-semibold mb-3">Cover Image</label>
-              <div className="relative h-40 bg-gradient-to-r from-[#ff4500] to-[#ff6a00] rounded-lg overflow-hidden group">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 sm:p-6"
+            >
+              <label className="flex items-center gap-2 text-sm font-semibold mb-3">
+                <ImageIcon size={18} className="text-cyan-400" />
+                Cover Image
+              </label>
+              <div className="relative h-40 sm:h-48 bg-gradient-to-r from-cyan-500 to-violet-600 rounded-xl overflow-hidden group">
                 {coverPreview && (
                   <>
                     <Image src={coverPreview} alt="Cover" fill className="object-cover" />
                     <button
                       type="button"
                       onClick={() => removeImage('cover')}
-                      className="absolute top-3 right-3 p-2 bg-black/70 hover:bg-black rounded-lg transition-all z-10"
+                      className="absolute top-3 right-3 p-2 bg-black/70 hover:bg-black rounded-xl transition-all z-10 backdrop-blur-sm"
                     >
                       <X size={18} />
                     </button>
                   </>
                 )}
-                <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-black/20 hover:bg-black/30 transition-all">
+                <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-black/20 hover:bg-black/40 transition-all">
                   <Upload size={32} className="text-white mb-2" />
                   <span className="text-white text-sm font-medium">
                     {coverPreview ? 'Change Cover' : 'Upload Cover'}
@@ -159,13 +190,21 @@ export default function CreateCommunityPage() {
                   />
                 </label>
               </div>
-            </div>
+            </motion.div>
 
             {/* Display Picture */}
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
-              <label className="block text-sm font-semibold mb-3">Community Icon</label>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 sm:p-6"
+            >
+              <label className="flex items-center gap-2 text-sm font-semibold mb-3">
+                <ImageIcon size={18} className="text-cyan-400" />
+                Community Icon
+              </label>
               <div className="flex items-center gap-4">
-                <div className="relative w-20 h-20 rounded-full bg-[#272729] overflow-hidden">
+                <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 overflow-hidden shadow-lg">
                   {dpPreview ? (
                     <>
                       <Image src={dpPreview} alt="DP" fill className="object-cover" />
@@ -178,13 +217,13 @@ export default function CreateCommunityPage() {
                       </button>
                     </>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-[#818384]">
+                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white">
                       ?
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-[#272729] hover:bg-[#343536] border border-[#343536] rounded-full text-sm font-medium transition-colors">
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105">
                     <Upload size={16} />
                     <span>Upload Icon</span>
                     <input
@@ -194,64 +233,86 @@ export default function CreateCommunityPage() {
                       onChange={(e) => handleFileChange(e, 'dp')}
                     />
                   </label>
-                  <p className="text-xs text-[#818384] mt-2">Recommended size: 256x256px</p>
+                  <p className="text-xs text-zinc-500 mt-2">Recommended size: 256x256px</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Community Name */}
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 sm:p-6"
+            >
               <label className="block text-sm font-semibold mb-2">
-                Name <span className="text-[#ff4500]">*</span>
+                Name <span className="text-cyan-400">*</span>
               </label>
               <input
                 type="text"
                 name="name"
                 required
                 maxLength={100}
-                className="w-full px-4 py-2.5 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300"
                 placeholder="Community name"
                 value={formData.name}
                 onChange={handleChange}
               />
-              <p className="text-xs text-[#818384] mt-2">
+              <p className="text-xs text-zinc-500 mt-2">
                 Community names cannot be changed
               </p>
-            </div>
+            </motion.div>
 
             {/* Description */}
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 sm:p-6"
+            >
               <label className="block text-sm font-semibold mb-2">
-                Description <span className="text-[#ff4500]">*</span>
+                Description <span className="text-cyan-400">*</span>
               </label>
               <textarea
                 name="description"
                 required
                 maxLength={500}
                 rows={4}
-                className="w-full px-4 py-2.5 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384] resize-none"
+                className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300 resize-none"
                 placeholder="What is your community about?"
                 value={formData.description}
                 onChange={handleChange}
               />
-              <p className="text-xs text-[#818384] mt-2">
-                {formData.description.length}/500 characters
-              </p>
-            </div>
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-xs text-zinc-500">
+                  {formData.description.length}/500 characters
+                </p>
+                <div className={`text-xs font-medium ${
+                  formData.description.length > 450 ? 'text-yellow-500' : 'text-zinc-500'
+                }`}>
+                  {formData.description.length > 450 && `${500 - formData.description.length} left`}
+                </div>
+              </div>
+            </motion.div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col sm:flex-row gap-3 sticky bottom-24 lg:bottom-6 bg-zinc-950/80 backdrop-blur-xl p-4 rounded-2xl border border-zinc-800/50"
+            >
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="flex-1 py-3 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold transition-colors"
+                className="flex-1 py-3 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-3 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -262,7 +323,7 @@ export default function CreateCommunityPage() {
                   'Create Community'
                 )}
               </button>
-            </div>
+            </motion.div>
           </form>
         </main>
       </div>

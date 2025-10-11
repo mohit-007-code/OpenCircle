@@ -20,7 +20,9 @@ import {
   Users,
   UserPlus,
   UserMinus,
+  Sparkles,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ToastMessage {
   message: string;
@@ -223,17 +225,17 @@ export default function PublicUserProfilePage() {
 
   if (loading || !profileUser) {
     return (
-      <div className="min-h-screen bg-[#0b0f14]">
+      <div className="min-h-screen bg-zinc-950">
         <Navbar />
         <div className="flex justify-center items-center h-96">
-          <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f14]">
+    <div className="min-h-screen bg-zinc-950 pb-20 lg:pb-0">
       <Navbar />
 
       {toast && (
@@ -244,6 +246,7 @@ export default function PublicUserProfilePage() {
         />
       )}
 
+      {/* Modals */}
       <Modal
         isOpen={showFollowersModal}
         onClose={() => setShowFollowersModal(false)}
@@ -252,7 +255,7 @@ export default function PublicUserProfilePage() {
       >
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {followers.map((follower) => (
-            <div key={follower.id} className="flex items-center justify-between p-3 bg-[#272729] rounded">
+            <div key={follower.id} className="flex items-center justify-between p-3 glass-effect bg-zinc-800/50 backdrop-blur-xl border border-zinc-700/50 rounded-xl">
               <div 
                 className="flex items-center gap-3 cursor-pointer flex-1"
                 onClick={() => {
@@ -260,27 +263,27 @@ export default function PublicUserProfilePage() {
                   router.push(`/users/${follower.id}`);
                 }}
               >
-                <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-bold overflow-hidden">
                   {follower.profile_picture ? (
                     <Image src={getImageUrl(follower.profile_picture)!} alt={follower.username} width={40} height={40} className="object-cover w-full h-full" />
                   ) : (
                     follower.username[0].toUpperCase()
                   )}
                 </div>
-                <div>
-                  <p className="font-semibold">u/{follower.username}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-zinc-100 truncate">u/{follower.username}</p>
                   {(follower.first_name || follower.last_name) && (
-                    <p className="text-sm text-[#818384]">{follower.first_name} {follower.last_name}</p>
+                    <p className="text-sm text-zinc-500 truncate">{follower.first_name} {follower.last_name}</p>
                   )}
                 </div>
               </div>
               {currentUser && follower.id !== currentUser.id && (
                 <button
                   onClick={() => handleFollowToggle(follower.id)}
-                  className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors ${
+                  className={`px-3 sm:px-4 py-1.5 rounded-full font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${
                     follower.is_following
-                      ? 'bg-[#272729] hover:bg-[#343536]'
-                      : 'bg-[#d93900] hover:bg-[#c13300] text-white'
+                      ? 'bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-100'
+                      : 'bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white shadow-lg shadow-cyan-500/20'
                   }`}
                 >
                   {follower.is_following ? 'Following' : 'Follow'}
@@ -299,7 +302,7 @@ export default function PublicUserProfilePage() {
       >
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {followingList.map((followingUser) => (
-            <div key={followingUser.id} className="flex items-center justify-between p-3 bg-[#272729] rounded">
+            <div key={followingUser.id} className="flex items-center justify-between p-3 glass-effect bg-zinc-800/50 backdrop-blur-xl border border-zinc-700/50 rounded-xl">
               <div 
                 className="flex items-center gap-3 cursor-pointer flex-1"
                 onClick={() => {
@@ -307,27 +310,27 @@ export default function PublicUserProfilePage() {
                   router.push(`/users/${followingUser.id}`);
                 }}
               >
-                <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-bold overflow-hidden">
                   {followingUser.profile_picture ? (
                     <Image src={getImageUrl(followingUser.profile_picture)!} alt={followingUser.username} width={40} height={40} className="object-cover w-full h-full" />
                   ) : (
                     followingUser.username[0].toUpperCase()
                   )}
                 </div>
-                <div>
-                  <p className="font-semibold">u/{followingUser.username}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-zinc-100 truncate">u/{followingUser.username}</p>
                   {(followingUser.first_name || followingUser.last_name) && (
-                    <p className="text-sm text-[#818384]">{followingUser.first_name} {followingUser.last_name}</p>
+                    <p className="text-sm text-zinc-500 truncate">{followingUser.first_name} {followingUser.last_name}</p>
                   )}
                 </div>
               </div>
               {currentUser && followingUser.id !== currentUser.id && (
                 <button
                   onClick={() => handleFollowToggle(followingUser.id)}
-                  className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors ${
+                  className={`px-3 sm:px-4 py-1.5 rounded-full font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${
                     followingUser.is_following
-                      ? 'bg-[#272729] hover:bg-[#343536]'
-                      : 'bg-[#d93900] hover:bg-[#c13300] text-white'
+                      ? 'bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-100'
+                      : 'bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white shadow-lg shadow-cyan-500/20'
                   }`}
                 >
                   {followingUser.is_following ? 'Following' : 'Follow'}
@@ -338,14 +341,18 @@ export default function PublicUserProfilePage() {
         </div>
       </Modal>
 
-      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-4 pb-5">
+      <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
 
         <main className="flex-1 min-w-0">
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4 overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl mb-4 overflow-hidden"
+          >
             {/* Cover Image */}
             <div className="relative">
-              <div className="h-48 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative">
+              <div className="h-32 sm:h-48 bg-gradient-to-r from-cyan-500 via-violet-600 to-cyan-500 relative">
                 {profileUser.cover_image && (
                   <Image 
                     src={getImageUrl(profileUser.cover_image)!} 
@@ -357,16 +364,16 @@ export default function PublicUserProfilePage() {
               </div>
             </div>
             
-            <div className="px-6 pb-4">
-              {/* Profile Picture - Overlapping Banner (FIXED) */}
-              <div className="-mt-20 mb-4">
-                <div className="w-28 h-28 rounded-full border-4 border-[#1a1a1b] bg-[#d93900] flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-xl">
+            <div className="px-4 sm:px-6 pb-4">
+              {/* Profile Picture */}
+              <div className="-mt-12 sm:-mt-16 mb-4">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-zinc-900 bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold overflow-hidden shadow-2xl shadow-cyan-500/30">
                   {profileUser.profile_picture ? (
                     <Image 
                       src={getImageUrl(profileUser.profile_picture)!} 
                       alt={profileUser.username} 
-                      width={112} 
-                      height={112} 
+                      width={128} 
+                      height={128} 
                       className="object-cover w-full h-full" 
                     />
                   ) : (
@@ -375,33 +382,35 @@ export default function PublicUserProfilePage() {
                 </div>
               </div>
 
-              {/* Username and Follow Button (BELOW DP) */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold">u/{profileUser.username}</h1>
+              {/* Username and Follow Button */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold gradient-text truncate">u/{profileUser.username}</h1>
                   {(profileUser.first_name || profileUser.last_name) && (
-                    <p className="text-[#818384]">{profileUser.first_name} {profileUser.last_name}</p>
+                    <p className="text-zinc-400 mt-1 text-sm sm:text-base truncate">{profileUser.first_name} {profileUser.last_name}</p>
                   )}
-                  {profileUser.bio && <p className="text-sm text-[#818384] mt-1">{profileUser.bio}</p>}
+                  {profileUser.bio && (
+                    <p className="text-xs sm:text-sm text-zinc-400 mt-2 line-clamp-2">{profileUser.bio}</p>
+                  )}
                 </div>
 
                 {currentUser && currentUser.id !== profileUser.id && (
                   <button
                     onClick={() => handleFollowToggle()}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-colors ${
+                    className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
                       following
-                        ? 'bg-[#272729] hover:bg-[#343536]'
-                        : 'bg-[#d93900] hover:bg-[#c13300] text-white'
+                        ? 'bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-100 border border-zinc-700/50'
+                        : 'bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105'
                     }`}
                   >
                     {following ? (
                       <>
-                        <UserMinus size={18} />
+                        <UserMinus size={16} className="sm:w-[18px] sm:h-[18px]" />
                         <span>Unfollow</span>
                       </>
                     ) : (
                       <>
-                        <UserPlus size={18} />
+                        <UserPlus size={16} className="sm:w-[18px] sm:h-[18px]" />
                         <span>Follow</span>
                       </>
                     )}
@@ -409,94 +418,104 @@ export default function PublicUserProfilePage() {
                 )}
               </div>
 
-              <div className="flex gap-6 mt-4 pt-4 border-t border-[#343536]">
+              {/* Stats - Grid on mobile, flex on desktop */}
+              <div className="grid grid-cols-2 sm:flex gap-4 sm:gap-8 py-4 border-t border-zinc-800/50">
                 <div>
-                  <p className="text-2xl font-bold">{stats?.total_posts || 0}</p>
-                  <p className="text-sm text-[#818384]">Posts</p>
+                  <p className="text-xl sm:text-2xl font-bold gradient-text">{stats?.total_posts || 0}</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Posts</p>
                 </div>
                 <button
                   onClick={() => {
                     setShowFollowersModal(true);
                     fetchFollowers();
                   }}
-                  className="hover:opacity-80 transition-opacity"
+                  className="hover:opacity-80 transition-opacity text-left"
                 >
-                  <p className="text-2xl font-bold">{profileUser.followers_count}</p>
-                  <p className="text-sm text-[#818384]">Followers</p>
+                  <p className="text-xl sm:text-2xl font-bold gradient-text">{profileUser.followers_count}</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Followers</p>
                 </button>
                 <button
                   onClick={() => {
                     setShowFollowingModal(true);
                     fetchFollowing();
                   }}
-                  className="hover:opacity-80 transition-opacity"
+                  className="hover:opacity-80 transition-opacity text-left"
                 >
-                  <p className="text-2xl font-bold">{profileUser.following_count}</p>
-                  <p className="text-sm text-[#818384]">Following</p>
+                  <p className="text-xl sm:text-2xl font-bold gradient-text">{profileUser.following_count}</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Following</p>
                 </button>
                 <div>
-                  <p className="text-2xl font-bold">{stats?.member_of || 0}</p>
-                  <p className="text-sm text-[#818384]">Communities</p>
+                  <p className="text-xl sm:text-2xl font-bold gradient-text">{stats?.member_of || 0}</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Communities</p>
                 </div>
               </div>
 
-              <div className="flex gap-6 mt-4 pt-4 border-t border-[#343536]">
+              {/* Tabs - Scrollable on mobile */}
+              <div className="flex gap-4 sm:gap-6 pt-4 border-t border-zinc-800/50 overflow-x-auto scrollbar-hide">
                 <button
                   onClick={() => setActiveTab('overview')}
-                  className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
+                  className={`flex items-center gap-2 text-xs sm:text-sm font-semibold pb-3 border-b-2 transition-all whitespace-nowrap ${
                     activeTab === 'overview'
-                      ? 'border-[#d93900] text-white'
-                      : 'border-transparent text-[#818384] hover:text-white'
+                      ? 'border-cyan-500 text-cyan-400'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
-                  <TrendingUp size={18} />
+                  <TrendingUp size={16} className="sm:w-[18px] sm:h-[18px]" />
                   <span>Overview</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('posts')}
-                  className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
+                  className={`flex items-center gap-2 text-xs sm:text-sm font-semibold pb-3 border-b-2 transition-all whitespace-nowrap ${
                     activeTab === 'posts'
-                      ? 'border-[#d93900] text-white'
-                      : 'border-transparent text-[#818384] hover:text-white'
+                      ? 'border-cyan-500 text-cyan-400'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
-                  <FileText size={18} />
+                  <FileText size={16} className="sm:w-[18px] sm:h-[18px]" />
                   <span>Posts</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('comments')}
-                  className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
+                  className={`flex items-center gap-2 text-xs sm:text-sm font-semibold pb-3 border-b-2 transition-all whitespace-nowrap ${
                     activeTab === 'comments'
-                      ? 'border-[#d93900] text-white'
-                      : 'border-transparent text-[#818384] hover:text-white'
+                      ? 'border-cyan-500 text-cyan-400'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
-                  <MessageSquare size={18} />
+                  <MessageSquare size={16} className="sm:w-[18px] sm:h-[18px]" />
                   <span>Comments</span>
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
+          {/* Content Sections */}
           {activeTab === 'overview' && (
-            <div className="space-y-4">
-              <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-                <h3 className="font-semibold mb-4">Active in Communities</h3>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-4"
+            >
+              <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 sm:p-6">
+                <h3 className="font-semibold text-base sm:text-lg mb-4 flex items-center gap-2">
+                  <Sparkles size={16} className="text-cyan-400 sm:w-[18px] sm:h-[18px]" />
+                  <span>Active in Communities</span>
+                </h3>
                 {stats?.communities && stats.communities.length > 0 ? (
                   <div className="space-y-2">
                     {stats.communities.map((community) => (
                       <button
                         key={community.slug}
                         onClick={() => router.push(`/communities/${community.slug}`)}
-                        className="w-full flex items-center justify-between p-3 bg-[#272729] hover:bg-[#343536] rounded transition-colors"
+                        className="w-full flex items-center justify-between p-3 sm:p-4 glass-effect bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700/30 hover:border-cyan-500/30 rounded-xl transition-all group"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-bold shadow-lg shadow-cyan-500/20 flex-shrink-0">
                             {community.name[0].toUpperCase()}
                           </div>
-                          <div className="text-left">
-                            <p className="font-semibold">c/{community.name}</p>
-                            <p className="text-sm text-[#818384]">{community.post_count} posts</p>
+                          <div className="text-left min-w-0 flex-1">
+                            <p className="font-semibold text-sm sm:text-base group-hover:text-cyan-400 transition-colors truncate">c/{community.name}</p>
+                            <p className="text-xs sm:text-sm text-zinc-500">{community.post_count} posts</p>
                           </div>
                         </div>
                       </button>
@@ -504,32 +523,41 @@ export default function PublicUserProfilePage() {
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-[#818384]">No community activity yet</p>
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                      <Sparkles size={24} className="text-cyan-400 sm:w-[32px] sm:h-[32px]" />
+                    </div>
+                    <p className="text-sm sm:text-base text-zinc-500">No community activity yet</p>
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
 
           {activeTab === 'posts' && (
-            <div className="space-y-3">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-3"
+            >
               {posts.length === 0 ? (
-                <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
-                  <FileText size={48} className="mx-auto mb-4 text-[#818384]" />
-                  <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
-                  <p className="text-[#818384]">This user hasn't posted anything</p>
+                <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-8 sm:p-12 text-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                    <FileText size={24} className="text-cyan-400 sm:w-[32px] sm:h-[32px]" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2 gradient-text">No posts yet</h3>
+                  <p className="text-sm sm:text-base text-zinc-500">This user hasn't posted anything</p>
                 </div>
               ) : (
                 posts.map((post) => (
                   <article
                     key={post.id}
                     onClick={() => router.push(`/posts/${post.id}`)}
-                    className="bg-[#1a1a1b] border border-[#343536] rounded-lg hover:border-[#474748] transition-colors cursor-pointer overflow-hidden"
+                    className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 hover:border-cyan-500/30 rounded-2xl transition-all cursor-pointer overflow-hidden group"
                   >
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 text-sm text-[#818384] mb-2">
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 mb-2">
                         <span
-                          className="hover:underline"
+                          className="hover:text-cyan-400 transition-colors truncate"
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/communities/${post.community_slug}`);
@@ -538,34 +566,34 @@ export default function PublicUserProfilePage() {
                           c/{post.community_name}
                         </span>
                         <span>•</span>
-                        <span>{formatTime(post.created_at)}</span>
+                        <span className="whitespace-nowrap">{formatTime(post.created_at)}</span>
                       </div>
 
                       {post.title && (
-                        <h2 className="text-lg font-semibold text-[#d7dadc] mb-2">{post.title}</h2>
+                        <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-2 group-hover:text-cyan-400 transition-colors line-clamp-2">{post.title}</h2>
                       )}
 
-                      <p className="text-sm text-[#d7dadc] line-clamp-2 mb-3">{post.content}</p>
+                      <p className="text-sm text-zinc-300 line-clamp-2 mb-3">{post.content}</p>
 
                       {getImageUrl(post.image) && (
-                        <div className="mb-3 rounded overflow-hidden">
+                        <div className="mb-3 rounded-xl overflow-hidden">
                           <Image
                             src={getImageUrl(post.image)!}
                             alt="Post"
                             width={600}
                             height={400}
-                            className="w-full max-h-[300px] object-cover"
+                            className="w-full max-h-[200px] sm:max-h-[300px] object-cover"
                           />
                         </div>
                       )}
 
-                      <div className="flex items-center gap-4 text-xs text-[#818384]">
+                      <div className="flex items-center gap-4 text-xs text-zinc-500">
                         <div className="flex items-center gap-1">
-                          <ArrowBigUp size={16} />
+                          <ArrowBigUp size={14} className="text-cyan-400 sm:w-4 sm:h-4" />
                           <span>{post.likes_count}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <MessageSquare size={16} />
+                          <MessageSquare size={14} className="sm:w-4 sm:h-4" />
                           <span>{post.comments_count}</span>
                         </div>
                       </div>
@@ -573,27 +601,33 @@ export default function PublicUserProfilePage() {
                   </article>
                 ))
               )}
-            </div>
+            </motion.div>
           )}
 
           {activeTab === 'comments' && (
-            <div className="space-y-3">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-3"
+            >
               {comments.length === 0 ? (
-                <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
-                  <MessageSquare size={48} className="mx-auto mb-4 text-[#818384]" />
-                  <h3 className="text-xl font-semibold mb-2">No comments yet</h3>
-                  <p className="text-[#818384]">This user hasn't commented</p>
+                <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-8 sm:p-12 text-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                    <MessageSquare size={24} className="text-cyan-400 sm:w-[32px] sm:h-[32px]" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2 gradient-text">No comments yet</h3>
+                  <p className="text-sm sm:text-base text-zinc-500">This user hasn't commented</p>
                 </div>
               ) : (
                 comments.map((comment) => (
                   <div
                     key={comment.id}
                     onClick={() => router.push(`/posts/${comment.post}`)}
-                    className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4 hover:border-[#474748] transition-colors cursor-pointer"
+                    className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 hover:border-cyan-500/30 rounded-2xl p-3 sm:p-4 transition-all cursor-pointer group"
                   >
-                    <div className="flex items-center gap-2 text-sm text-[#818384] mb-2">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 mb-2">
                       <span
-                        className="hover:underline"
+                        className="hover:text-cyan-400 transition-colors truncate"
                         onClick={(e) => {
                           e.stopPropagation();
                           router.push(`/communities/${comment.community_slug}`);
@@ -602,44 +636,70 @@ export default function PublicUserProfilePage() {
                         c/{comment.community_name}
                       </span>
                       <span>•</span>
-                      <span>{formatTime(comment.created_at)}</span>
+                      <span className="whitespace-nowrap">{formatTime(comment.created_at)}</span>
                     </div>
 
-                    <p className="text-[#d7dadc] mb-2">{comment.content}</p>
+                    <p className="text-sm sm:text-base text-zinc-300 mb-2 group-hover:text-cyan-400 transition-colors line-clamp-3">{comment.content}</p>
 
-                    <div className="flex items-center gap-1 text-xs text-[#818384]">
-                      <ArrowBigUp size={14} />
+                    <div className="flex items-center gap-1 text-xs text-zinc-500">
+                      <ArrowBigUp size={12} className="text-cyan-400 sm:w-[14px] sm:h-[14px]" />
                       <span>{comment.likes_count} likes</span>
                     </div>
                   </div>
                 ))
               )}
-            </div>
+            </motion.div>
           )}
         </main>
 
+        {/* Right Sidebar - Hidden on mobile */}
         <aside className="hidden xl:block w-80 flex-shrink-0">
-          <div className="sticky top-16 pt-2 space-y-4">
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
-              <h3 className="font-semibold mb-4">About</h3>
+          <div className="sticky top-20">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5"
+            >
+              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <Sparkles size={18} className="text-cyan-400" />
+                <span>About</span>
+              </h3>
               <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-2 text-[#818384]">
-                  <UserIcon size={16} />
+                <div className="flex items-center gap-3 text-zinc-400">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                    <UserIcon size={16} className="text-cyan-400" />
+                  </div>
                   <span>u/{profileUser.username}</span>
                 </div>
-                <div className="flex items-center gap-2 text-[#818384]">
-                  <Calendar size={16} />
+                <div className="flex items-center gap-3 text-zinc-400">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                    <Calendar size={16} className="text-cyan-400" />
+                  </div>
                   <span>Joined {formatTime(profileUser.date_joined)}</span>
                 </div>
-                <div className="flex items-center gap-2 text-[#818384]">
-                  <Users size={16} />
+                <div className="flex items-center gap-3 text-zinc-400">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                    <Users size={16} className="text-cyan-400" />
+                  </div>
                   <span>{profileUser.followers_count} followers</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </aside>
       </div>
+
+      {/* Add custom scrollbar hide CSS */}
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }

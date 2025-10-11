@@ -1,4 +1,4 @@
-// frontend/src/app/profile/page.tsx
+// app/profile/page.tsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,7 +20,13 @@ import {
   TrendingUp,
   ArrowBigUp,
   Camera,
+  ArrowLeft,
+  LogOut,
+  Users,
+  Sparkles,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ToastMessage {
   message: string;
@@ -48,7 +54,7 @@ interface UserComment extends Comment {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, setUser, loading: authLoading } = useAuth();
+  const { user, setUser, loading: authLoading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'posts' | 'comments'>('overview');
   const [stats, setStats] = useState<UserStats | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -81,6 +87,7 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [removingFollowerId, setRemovingFollowerId] = useState<number | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     setToast({ message, type });
@@ -295,6 +302,12 @@ export default function ProfilePage() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+    showToast('Logged out successfully', 'success');
+  };
+
   const getImageUrl = (imageUrl: string | null | undefined) => {
     if (!imageUrl) return null;
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
@@ -316,12 +329,21 @@ export default function ProfilePage() {
     return `${Math.floor(diffInSeconds / 31536000)}y ago`;
   };
 
+  // Loading Skeleton
+  const PostSkeleton = () => (
+    <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
+      <Skeleton className="h-6 w-3/4" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+    </div>
+  );
+
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-[#0b0f14]">
+      <div className="min-h-screen bg-zinc-950">
         <Navbar />
         <div className="flex justify-center items-center h-96">
-          <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -329,17 +351,23 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f14]">
+      <div className="min-h-screen bg-zinc-950">
         <Navbar />
-        <div className="flex justify-center items-center h-96">
-          <div className="w-12 h-12 border-4 border-[#d93900] border-t-transparent rounded-full animate-spin"></div>
+        <div className="max-w-7xl mx-auto px-4 py-20">
+          <div className="space-y-4">
+            <Skeleton className="h-48 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            {[1, 2, 3].map((i) => (
+              <PostSkeleton key={i} />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f14]">
+    <div className="min-h-screen bg-zinc-950">
       <Navbar />
 
       {toast && (
@@ -350,6 +378,7 @@ export default function ProfilePage() {
         />
       )}
 
+      {/* Followers Modal */}
       <Modal
         isOpen={showFollowersModal}
         onClose={() => setShowFollowersModal(false)}
@@ -358,7 +387,7 @@ export default function ProfilePage() {
       >
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {followers.map((follower) => (
-            <div key={follower.id} className="flex items-center justify-between p-3 bg-[#272729] rounded">
+            <div key={follower.id} className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl">
               <div 
                 className="flex items-center gap-3 cursor-pointer flex-1"
                 onClick={() => {
@@ -366,7 +395,7 @@ export default function ProfilePage() {
                   router.push(`/users/${follower.id}`);
                 }}
               >
-                <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold overflow-hidden">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-bold overflow-hidden">
                   {follower.profile_picture ? (
                     <Image src={getImageUrl(follower.profile_picture)!} alt={follower.username} width={40} height={40} className="object-cover w-full h-full" />
                   ) : (
@@ -376,7 +405,7 @@ export default function ProfilePage() {
                 <div>
                   <p className="font-semibold">u/{follower.username}</p>
                   {(follower.first_name || follower.last_name) && (
-                    <p className="text-sm text-[#818384]">{follower.first_name} {follower.last_name}</p>
+                    <p className="text-sm text-zinc-400">{follower.first_name} {follower.last_name}</p>
                   )}
                 </div>
               </div>
@@ -387,18 +416,19 @@ export default function ProfilePage() {
                   handleRemoveFollower(follower.id);
                 }}
                 disabled={removingFollowerId === follower.id}
-                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {removingFollowerId === follower.id ? 'Removing...' : 'Remove'}
               </button>
             </div>
           ))}
           {followers.length === 0 && (
-            <p className="text-center text-[#818384] py-8">No followers yet</p>
+            <p className="text-center text-zinc-400 py-8">No followers yet</p>
           )}
         </div>
       </Modal>
 
+      {/* Following Modal */}
       <Modal
         isOpen={showFollowingModal}
         onClose={() => setShowFollowingModal(false)}
@@ -407,7 +437,7 @@ export default function ProfilePage() {
       >
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {following.map((followingUser) => (
-            <div key={followingUser.id} className="flex items-center justify-between p-3 bg-[#272729] rounded">
+            <div key={followingUser.id} className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl">
               <div 
                 className="flex items-center gap-3 cursor-pointer flex-1"
                 onClick={() => {
@@ -415,7 +445,7 @@ export default function ProfilePage() {
                   router.push(`/users/${followingUser.id}`);
                 }}
               >
-                <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold overflow-hidden">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-bold overflow-hidden">
                   {followingUser.profile_picture ? (
                     <Image src={getImageUrl(followingUser.profile_picture)!} alt={followingUser.username} width={40} height={40} className="object-cover w-full h-full" />
                   ) : (
@@ -425,39 +455,68 @@ export default function ProfilePage() {
                 <div>
                   <p className="font-semibold">u/{followingUser.username}</p>
                   {(followingUser.first_name || followingUser.last_name) && (
-                    <p className="text-sm text-[#818384]">{followingUser.first_name} {followingUser.last_name}</p>
+                    <p className="text-sm text-zinc-400">{followingUser.first_name} {followingUser.last_name}</p>
                   )}
                 </div>
               </div>
               <button
                 onClick={() => handleFollowToggle(followingUser.id, true)}
-                className="px-4 py-1.5 bg-[#272729] hover:bg-[#343536] rounded-full font-semibold text-sm transition-colors"
+                className="px-4 py-1.5 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl font-semibold text-sm transition-colors"
               >
                 Unfollow
               </button>
             </div>
           ))}
           {following.length === 0 && (
-            <p className="text-center text-[#818384] py-8">Not following anyone yet</p>
+            <p className="text-center text-zinc-400 py-8">Not following anyone yet</p>
           )}
         </div>
       </Modal>
 
-      <div className="max-w-[1400px] mx-auto flex gap-3 px-3 pt-4 pb-5">
+      {/* Logout Confirmation Modal */}
+      <Modal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
+
+      <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
 
         <main className="flex-1 min-w-0">
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg mb-4 overflow-hidden">
+          {/* ✨ NEW: Back Button */}
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 mb-5 transition-colors group"
+          >
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back</span>
+          </motion.button>
+
+          {/* Profile Header Card */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl mb-6 overflow-hidden"
+          >
             {/* Cover Image */}
             <div className="relative">
-              <div className="h-48 bg-gradient-to-r from-[#d93900] to-[#a62d00] relative">
+              <div className="h-40 sm:h-48 bg-gradient-to-r from-cyan-500 to-violet-600 relative">
                 {coverPreview && (
                   <Image src={coverPreview} alt="Cover" fill className="object-cover" />
                 )}
                 {editMode && (
                   <button
                     onClick={() => coverInputRef.current?.click()}
-                    className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors z-10"
+                    className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 rounded-xl transition-colors z-10 backdrop-blur-sm"
                   >
                     <Camera size={20} />
                   </button>
@@ -469,13 +528,14 @@ export default function ProfilePage() {
                   className="hidden"
                   onChange={handleCoverImageChange}
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
               </div>
             </div>
             
-            <div className="px-6 pb-4">
-              {/* Profile Picture - Overlapping Banner (COMMUNITY STYLE) */}
-              <div className="-mt-16 mb-4 relative">
-                <div className="w-28 h-28 rounded-full border-4 border-[#1a1a1b] bg-[#d93900] flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-xl">
+            <div className="px-5 sm:px-6 pb-5">
+              {/* Profile Picture - Overlapping */}
+              <div className="-mt-12 sm:-mt-16 mb-4 relative">
+                <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl border-4 border-zinc-950 bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold overflow-hidden shadow-2xl shadow-cyan-500/30">
                   {profilePreview ? (
                     <Image src={profilePreview} alt={user.username} width={112} height={112} className="object-cover w-full h-full" />
                   ) : (
@@ -485,7 +545,7 @@ export default function ProfilePage() {
                 {editMode && (
                   <button
                     onClick={() => profileInputRef.current?.click()}
-                    className="absolute bottom-0 right-0 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors z-10"
+                    className="absolute bottom-0 right-0 p-2 bg-black/50 hover:bg-black/70 rounded-xl transition-colors z-10 backdrop-blur-sm"
                   >
                     <Camera size={16} />
                   </button>
@@ -499,244 +559,317 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {/* Username and Details (BELOW DP) */}
-              <div>
-                <h1 className="text-2xl font-bold">u/{user.username}</h1>
+              {/* Username and Details */}
+              <div className="mb-4">
+                <h1 className="text-xl sm:text-2xl font-bold gradient-text">u/{user.username}</h1>
                 {(user.first_name || user.last_name) && (
-                  <p className="text-[#818384]">{user.first_name} {user.last_name}</p>
+                  <p className="text-zinc-400">{user.first_name} {user.last_name}</p>
                 )}
-                {user.bio && <p className="text-sm text-[#818384] mt-1">{user.bio}</p>}
+                {user.bio && <p className="text-sm text-zinc-400 mt-2">{user.bio}</p>}
               </div>
 
-              <div className="flex gap-6 mt-4 pt-4 border-t border-[#343536]">
+              {/* Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-t border-zinc-800/50">
                 <div>
-                  <p className="text-2xl font-bold">{stats?.total_posts || 0}</p>
-                  <p className="text-sm text-[#818384]">Posts</p>
+                  <p className="text-xl sm:text-2xl font-bold text-cyan-400">{stats?.total_posts || 0}</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Posts</p>
                 </div>
                 <button
                   onClick={() => {
                     setShowFollowersModal(true);
                     fetchFollowers();
                   }}
-                  className="hover:opacity-80 transition-opacity"
+                  className="hover:opacity-80 transition-opacity text-left"
                 >
-                  <p className="text-2xl font-bold">{stats?.followers_count || 0}</p>
-                  <p className="text-sm text-[#818384]">Followers</p>
+                  <p className="text-xl sm:text-2xl font-bold text-cyan-400">{stats?.followers_count || 0}</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Followers</p>
                 </button>
                 <button
                   onClick={() => {
                     setShowFollowingModal(true);
                     fetchFollowing();
                   }}
-                  className="hover:opacity-80 transition-opacity"
+                  className="hover:opacity-80 transition-opacity text-left"
                 >
-                  <p className="text-2xl font-bold">{stats?.following_count || 0}</p>
-                  <p className="text-sm text-[#818384]">Following</p>
+                  <p className="text-xl sm:text-2xl font-bold text-cyan-400">{stats?.following_count || 0}</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Following</p>
                 </button>
                 <div>
-                  <p className="text-2xl font-bold">{stats?.member_of || 0}</p>
-                  <p className="text-sm text-[#818384]">Communities</p>
+                  <p className="text-xl sm:text-2xl font-bold text-cyan-400">{stats?.member_of || 0}</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Communities</p>
                 </div>
               </div>
 
-              <div className="flex gap-6 mt-4 pt-4 border-t border-[#343536]">
+              {/* Tabs */}
+              <div className="flex gap-6 pt-4 border-t border-zinc-800/50 overflow-x-auto">
                 <button
                   onClick={() => setActiveTab('overview')}
-                  className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
+                  className={`relative flex items-center gap-2 text-sm font-semibold pb-2 whitespace-nowrap transition-colors ${
                     activeTab === 'overview'
-                      ? 'border-[#d93900] text-white'
-                      : 'border-transparent text-[#818384] hover:text-white'
+                      ? 'text-white'
+                      : 'text-zinc-400 hover:text-zinc-100'
                   }`}
                 >
                   <TrendingUp size={18} />
                   <span>Overview</span>
+                  {activeTab === 'overview' && (
+                    <motion.div
+                      layoutId="profileActiveTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 to-violet-600 rounded-full"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab('posts')}
-                  className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
+                  className={`relative flex items-center gap-2 text-sm font-semibold pb-2 whitespace-nowrap transition-colors ${
                     activeTab === 'posts'
-                      ? 'border-[#d93900] text-white'
-                      : 'border-transparent text-[#818384] hover:text-white'
+                      ? 'text-white'
+                      : 'text-zinc-400 hover:text-zinc-100'
                   }`}
                 >
                   <FileText size={18} />
                   <span>Posts</span>
+                  {activeTab === 'posts' && (
+                    <motion.div
+                      layoutId="profileActiveTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 to-violet-600 rounded-full"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab('comments')}
-                  className={`flex items-center gap-2 text-sm font-semibold pb-2 border-b-2 transition-colors ${
+                  className={`relative flex items-center gap-2 text-sm font-semibold pb-2 whitespace-nowrap transition-colors ${
                     activeTab === 'comments'
-                      ? 'border-[#d93900] text-white'
-                      : 'border-transparent text-[#818384] hover:text-white'
+                      ? 'text-white'
+                      : 'text-zinc-400 hover:text-zinc-100'
                   }`}
                 >
                   <MessageSquare size={18} />
                   <span>Comments</span>
+                  {activeTab === 'comments' && (
+                    <motion.div
+                      layoutId="profileActiveTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 to-violet-600 rounded-full"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {activeTab === 'overview' && (
-            <div className="space-y-4">
-              <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6">
-                <h3 className="font-semibold mb-4">Active in Communities</h3>
-                {stats?.communities && stats.communities.length > 0 ? (
-                  <div className="space-y-2">
-                    {stats.communities.map((community) => (
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div
+                key="overview"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Users size={20} className="text-cyan-400" />
+                    Active in Communities
+                  </h3>
+                  {stats?.communities && stats.communities.length > 0 ? (
+                    <div className="space-y-2">
+                      {stats.communities.map((community) => (
+                        <button
+                          key={community.slug}
+                          onClick={() => router.push(`/communities/${community.slug}`)}
+                          className="w-full flex items-center justify-between p-3 bg-zinc-800/30 hover:bg-zinc-800/50 rounded-xl transition-colors group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-bold">
+                              {community.name[0].toUpperCase()}
+                            </div>
+                            <div className="text-left">
+                              <p className="font-semibold group-hover:text-cyan-400 transition-colors">c/{community.name}</p>
+                              <p className="text-sm text-zinc-500">{community.post_count} posts</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                        <Users size={32} className="text-cyan-400" />
+                      </div>
+                      <p className="text-zinc-400 mb-4">No community activity yet</p>
                       <button
-                        key={community.slug}
-                        onClick={() => router.push(`/communities/${community.slug}`)}
-                        className="w-full flex items-center justify-between p-3 bg-[#272729] hover:bg-[#343536] rounded transition-colors"
+                        onClick={() => router.push('/communities')}
+                        className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#d93900] flex items-center justify-center text-white font-bold">
-                            {community.name[0].toUpperCase()}
-                          </div>
-                          <div className="text-left">
-                            <p className="font-semibold">c/{community.name}</p>
-                            <p className="text-sm text-[#818384]">{community.post_count} posts</p>
-                          </div>
-                        </div>
+                        Explore Communities
                       </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-[#818384]">No community activity yet</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'posts' && (
+              <motion.div
+                key="posts"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                {posts.length === 0 ? (
+                  <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-3xl p-12 text-center">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                      <FileText size={40} className="text-cyan-400" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 gradient-text">No posts yet</h3>
+                    <p className="text-zinc-400 mb-8">Start sharing your thoughts!</p>
                     <button
                       onClick={() => router.push('/communities')}
-                      className="mt-4 px-6 py-2 bg-[#d93900] hover:bg-[#c13300] text-white rounded-full font-semibold transition-colors"
+                      className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
                     >
-                      Explore Communities
+                      Browse Communities
                     </button>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
+                ) : (
+                  posts.map((post, index) => (
+                    <motion.article
+                      key={post.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => router.push(`/posts/${post.id}`)}
+                      className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:border-cyan-500/50 transition-all duration-300 cursor-pointer overflow-hidden group"
+                    >
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-zinc-500 mb-3">
+                          <span
+                            className="hover:text-cyan-400 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/communities/${post.community_slug}`);
+                            }}
+                          >
+                            c/{post.community_name}
+                          </span>
+                          <span>•</span>
+                          <span>{formatTime(post.created_at)}</span>
+                        </div>
 
-          {activeTab === 'posts' && (
-            <div className="space-y-3">
-              {posts.length === 0 ? (
-                <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
-                  <FileText size={48} className="mx-auto mb-4 text-[#818384]" />
-                  <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
-                  <p className="text-[#818384] mb-4">Start sharing your thoughts!</p>
-                  <button
-                    onClick={() => router.push('/communities')}
-                    className="px-6 py-2 bg-[#d93900] hover:bg-[#c13300] text-white rounded-full font-semibold transition-colors"
-                  >
-                    Browse Communities
-                  </button>
-                </div>
-              ) : (
-                posts.map((post) => (
-                  <article
-                    key={post.id}
-                    onClick={() => router.push(`/posts/${post.id}`)}
-                    className="bg-[#1a1a1b] border border-[#343536] rounded-lg hover:border-[#474748] transition-colors cursor-pointer overflow-hidden"
-                  >
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 text-sm text-[#818384] mb-2">
+                        {post.title && (
+                          <h2 className="text-lg font-semibold text-zinc-100 mb-2 group-hover:text-cyan-400 transition-colors">{post.title}</h2>
+                        )}
+
+                        <p className="text-sm text-zinc-400 line-clamp-2 mb-3">{post.content}</p>
+
+                        {getImageUrl(post.image) && (
+                          <div className="mb-3 rounded-xl overflow-hidden">
+                            <Image
+                              src={getImageUrl(post.image)!}
+                              alt="Post"
+                              width={600}
+                              height={400}
+                              className="w-full max-h-[300px] object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4 text-sm text-zinc-500">
+                          <div className="flex items-center gap-1">
+                            <ArrowBigUp size={18} className="text-cyan-400" />
+                            <span>{post.likes_count}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageSquare size={18} />
+                            <span>{post.comments_count}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.article>
+                  ))
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === 'comments' && (
+              <motion.div
+                key="comments"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                {comments.length === 0 ? (
+                  <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-3xl p-12 text-center">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                      <MessageSquare size={40} className="text-cyan-400" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 gradient-text">No comments yet</h3>
+                    <p className="text-zinc-400">Join the conversation!</p>
+                  </div>
+                ) : (
+                  comments.map((comment, index) => (
+                    <motion.div
+                      key={comment.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => router.push(`/posts/${comment.post}`)}
+                      className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 hover:border-cyan-500/50 transition-all duration-300 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 text-sm text-zinc-500 mb-2">
                         <span
-                          className="hover:underline"
+                          className="hover:text-cyan-400 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/communities/${post.community_slug}`);
+                            router.push(`/communities/${comment.community_slug}`);
                           }}
                         >
-                          c/{post.community_name}
+                          c/{comment.community_name}
                         </span>
                         <span>•</span>
-                        <span>{formatTime(post.created_at)}</span>
+                        <span>{formatTime(comment.created_at)}</span>
                       </div>
 
-                      {post.title && (
-                        <h2 className="text-lg font-semibold text-[#d7dadc] mb-2">{post.title}</h2>
-                      )}
+                      <p className="text-zinc-100 mb-3">{comment.content}</p>
 
-                      <p className="text-sm text-[#d7dadc] line-clamp-2 mb-3">{post.content}</p>
-
-                      {getImageUrl(post.image) && (
-                        <div className="mb-3 rounded overflow-hidden">
-                          <Image
-                            src={getImageUrl(post.image)!}
-                            alt="Post"
-                            width={600}
-                            height={400}
-                            className="w-full max-h-[300px] object-cover"
-                          />
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-4 text-xs text-[#818384]">
-                        <div className="flex items-center gap-1">
-                          <ArrowBigUp size={16} />
-                          <span>{post.likes_count}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MessageSquare size={16} />
-                          <span>{post.comments_count}</span>
-                        </div>
+                      <div className="flex items-center gap-1 text-sm text-zinc-500">
+                        <ArrowBigUp size={16} className="text-cyan-400" />
+                        <span>{comment.likes_count} likes</span>
                       </div>
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
-          )}
-
-          {activeTab === 'comments' && (
-            <div className="space-y-3">
-              {comments.length === 0 ? (
-                <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
-                  <MessageSquare size={48} className="mx-auto mb-4 text-[#818384]" />
-                  <h3 className="text-xl font-semibold mb-2">No comments yet</h3>
-                  <p className="text-[#818384]">Join the conversation!</p>
-                </div>
-              ) : (
-                comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    onClick={() => router.push(`/posts/${comment.post}`)}
-                    className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4 hover:border-[#474748] transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 text-sm text-[#818384] mb-2">
-                      <span
-                        className="hover:underline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/communities/${comment.community_slug}`);
-                        }}
-                      >
-                        c/{comment.community_name}
-                      </span>
-                      <span>•</span>
-                      <span>{formatTime(comment.created_at)}</span>
-                    </div>
-
-                    <p className="text-[#d7dadc] mb-2">{comment.content}</p>
-
-                    <div className="flex items-center gap-1 text-xs text-[#818384]">
-                      <ArrowBigUp size={14} />
-                      <span>{comment.likes_count} likes</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
+                    </motion.div>
+                  ))
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
 
+        {/* Right Sidebar - Desktop Only */}
         <aside className="hidden xl:block w-80 flex-shrink-0">
-          <div className="sticky top-16 pt-2 space-y-4">
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
+          <div className="sticky top-20 space-y-4">
+            {/* Profile Settings Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5"
+            >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Profile</h3>
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <Sparkles size={18} className="text-cyan-400" />
+                  Profile
+                </h3>
                 <button
                   onClick={() => setEditMode(!editMode)}
-                  className="p-2 hover:bg-[#272729] rounded transition-colors"
+                  className="p-2 hover:bg-zinc-800/50 rounded-xl transition-colors"
                 >
                   <Settings size={18} />
                 </button>
@@ -745,42 +878,42 @@ export default function ProfilePage() {
               {editMode ? (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm text-[#818384] mb-1">Username</label>
+                    <label className="block text-sm text-zinc-400 mb-1">Username</label>
                     <input
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] focus:outline-none focus:border-[#818384]"
+                      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#818384] mb-1">First Name</label>
+                    <label className="block text-sm text-zinc-400 mb-1">First Name</label>
                     <input
                       type="text"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] focus:outline-none focus:border-[#818384]"
+                      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#818384] mb-1">Last Name</label>
+                    <label className="block text-sm text-zinc-400 mb-1">Last Name</label>
                     <input
                       type="text"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] focus:outline-none focus:border-[#818384]"
+                      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#818384] mb-1">Bio</label>
+                    <label className="block text-sm text-zinc-400 mb-1">Bio</label>
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] focus:outline-none focus:border-[#818384] resize-none"
+                      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all resize-none"
                     />
                   </div>
 
@@ -793,14 +926,14 @@ export default function ProfilePage() {
                         setProfilePreview(getImageUrl(user.profile_picture));
                         setCoverPreview(getImageUrl(user.cover_image));
                       }}
-                      className="flex-1 px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded font-semibold transition-colors"
+                      className="flex-1 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl font-semibold transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleUpdateProfile}
                       disabled={updating}
-                      className="flex-1 px-4 py-2 bg-[#d93900] hover:bg-[#c13300] text-white rounded font-semibold disabled:opacity-50 transition-colors"
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-xl font-semibold disabled:opacity-50 transition-all shadow-lg shadow-cyan-500/20"
                     >
                       {updating ? 'Saving...' : 'Update'}
                     </button>
@@ -808,67 +941,84 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2 text-[#818384]">
+                  <div className="flex items-center gap-2 text-zinc-400">
                     <User size={16} />
                     <span>u/{user.username}</span>
                   </div>
                   {(user.first_name || user.last_name) && (
-                    <div className="flex items-center gap-2 text-[#818384]">
+                    <div className="flex items-center gap-2 text-zinc-400">
                       <User size={16} />
                       <span>{user.first_name} {user.last_name}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-[#818384]">
+                  <div className="flex items-center gap-2 text-zinc-400">
                     <Mail size={16} />
                     <span className="truncate">{user.email}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[#818384]">
+                  <div className="flex items-center gap-2 text-zinc-400">
                     <Calendar size={16} />
                     <span>Joined {formatTime(user.date_joined || new Date().toISOString())}</span>
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
 
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
-              <h3 className="font-semibold mb-4">Security</h3>
+            {/* ✨ NEW: Security Card with Logout */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5"
+            >
+              <h3 className="font-bold text-lg mb-4">Security</h3>
               
               {!showPasswordForm ? (
-                <button
-                  onClick={() => setShowPasswordForm(true)}
-                  className="w-full px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded font-semibold transition-colors"
-                >
-                  Change Password
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setShowPasswordForm(true)}
+                    className="w-full px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl font-semibold transition-colors"
+                  >
+                    Change Password
+                  </button>
+                  
+                  {/* ✨ Logout Button */}
+                  <button
+                    onClick={() => setShowLogoutModal(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-xl font-semibold transition-colors"
+                  >
+                    <LogOut size={18} />
+                    <span>Logout</span>
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm text-[#818384] mb-1">Current Password</label>
+                    <label className="block text-sm text-zinc-400 mb-1">Current Password</label>
                     <input
                       type="password"
                       value={oldPassword}
                       onChange={(e) => setOldPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] focus:outline-none focus:border-[#818384]"
+                      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#818384] mb-1">New Password</label>
+                    <label className="block text-sm text-zinc-400 mb-1">New Password</label>
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] focus:outline-none focus:border-[#818384]"
+                      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#818384] mb-1">Confirm Password</label>
+                    <label className="block text-sm text-zinc-400 mb-1">Confirm Password</label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#272729] border border-[#343536] rounded text-[#d7dadc] focus:outline-none focus:border-[#818384]"
+                      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     />
                   </div>
 
@@ -880,20 +1030,20 @@ export default function ProfilePage() {
                         setNewPassword('');
                         setConfirmPassword('');
                       }}
-                      className="flex-1 px-4 py-2 bg-[#272729] hover:bg-[#343536] rounded font-semibold transition-colors"
+                      className="flex-1 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl font-semibold transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleChangePassword}
-                      className="flex-1 px-4 py-2 bg-[#d93900] hover:bg-[#c13300] text-white rounded font-semibold transition-colors"
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-cyan-500/20"
                     >
                       Update
                     </button>
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
         </aside>
       </div>

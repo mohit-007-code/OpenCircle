@@ -7,7 +7,9 @@ import Sidebar from '@/components/Sidebar';
 import api from '@/lib/api';
 import { Community } from '@/types';
 import Image from 'next/image';
-import { TrendingUp, Users, Calendar, Award, Crown, Flame } from 'lucide-react';
+import { TrendingUp, Users, Calendar, Award, Crown, Flame, Plus, ArrowLeft } from 'lucide-react'; // Added ArrowLeft
+import { motion, AnimatePresence } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function PopularPage() {
   const router = useRouter();
@@ -21,22 +23,17 @@ export default function PopularPage() {
   const fetchPopularCommunities = async () => {
     try {
       const response = await api.get('/communities/');
-      console.log('Communities response:', response.data); // DEBUG
       
-      // Handle paginated response (results) or direct array
       let allCommunities = response.data.results || response.data || [];
       if (!Array.isArray(allCommunities)) {
         allCommunities = [];
       }
-      
-      console.log('Total communities:', allCommunities.length); // DEBUG
       
       // Sort by member count
       allCommunities.sort((a, b) => b.member_count - a.member_count);
       
       // Take top 5
       const top5 = allCommunities.slice(0, 5);
-      console.log('Top 5:', top5); // DEBUG
       
       setCommunities(top5);
     } catch (error) {
@@ -67,97 +64,130 @@ export default function PopularPage() {
     return `${Math.floor(diffInSeconds / 31536000)}y ago`;
   };
 
+  // ✨ UPDATED: Rank Badge Component
   const getRankBadge = (index: number) => {
     if (index === 0) {
-      return (
-        <div className="flex flex-col items-center">
-          <Crown size={28} className="text-yellow-500" />
-          <span className="text-xs text-yellow-500 font-bold mt-1">#1</span>
-        </div>
-      );
+      return <Crown size={28} className="text-yellow-500 flex-shrink-0" />;
     } else if (index === 1) {
-      return (
-        <div className="flex flex-col items-center">
-          <Award size={24} className="text-gray-400" />
-          <span className="text-xs text-gray-400 font-bold mt-1">#2</span>
-        </div>
-      );
+      return <Award size={24} className="text-gray-400 flex-shrink-0" />;
     } else if (index === 2) {
-      return (
-        <div className="flex flex-col items-center">
-          <Award size={24} className="text-orange-600" />
-          <span className="text-xs text-orange-600 font-bold mt-1">#3</span>
-        </div>
-      );
+      return <Award size={24} className="text-orange-600 flex-shrink-0" />;
     }
     return (
-      <div className="flex flex-col items-center">
-        <span className="text-2xl font-bold text-[#818384]">#{index + 1}</span>
+      <div className="w-10 h-10 rounded-xl bg-zinc-800/50 flex items-center justify-center">
+        <span className="text-lg font-bold text-zinc-400">#{index + 1}</span>
       </div>
     );
   };
 
+  // Loading Skeleton Component
+  const CommunitySkeleton = () => (
+    <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
+      <div className="flex items-center gap-4">
+        <Skeleton className="w-16 h-16 rounded-xl" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-[#0b0f14]">
+    <div className="min-h-screen bg-zinc-950">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-5">
+      <div className="max-w-7xl mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
 
-        <main className="flex-1 max-w-4xl">
-          {/* Header */}
-          <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-6 mb-4">
-            <div className="flex items-center gap-3 mb-2">
-              <Flame size={32} className="text-[#ff4500]" />
-              <h1 className="text-3xl font-bold">Top 5 Communities</h1>
+        <main className="flex-1 max-w-4xl mx-auto">
+          {/* ✨ NEW: Back Button */}
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 mb-5 transition-colors group"
+          >
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back</span>
+          </motion.button>
+
+          {/* ✨ UPDATED: Header - Removed Emoji */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 sm:p-6 mb-6"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <Flame size={28} className="text-white" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Top 5 Communities</h1>
             </div>
-            <p className="text-[#818384]">
-              The hottest communities with the most members on OpenCircle 🔥
+            <p className="text-zinc-400 text-sm sm:text-base">
+              The hottest communities with the most members on OpenCircle
             </p>
-          </div>
+          </motion.div>
 
           {/* Loading State */}
           {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="w-12 h-12 border-4 border-[#ff4500] border-t-transparent rounded-full animate-spin"></div>
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <CommunitySkeleton key={i} />
+              ))}
             </div>
           ) : communities.length === 0 ? (
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-12 text-center">
-              <Users size={48} className="mx-auto mb-4 text-[#818384]" />
-              <h3 className="text-xl font-semibold mb-2">No communities yet</h3>
-              <p className="text-[#818384] mb-6">Create a community to get started!</p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-3xl p-8 sm:p-12 text-center"
+            >
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 flex items-center justify-center">
+                <Users size={40} className="text-cyan-400" />
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 gradient-text">No communities yet</h3>
+              <p className="text-zinc-400 mb-8 max-w-md mx-auto">
+                Create a community to get started and be the first on the leaderboard!
+              </p>
               <button
                 onClick={() => router.push('/communities/create')}
-                className="px-6 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors"
+                className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
               >
+                <Plus size={20} />
                 Create Community
               </button>
-            </div>
+            </motion.div>
           ) : (
             <div className="space-y-4">
-              {communities.map((community, index) => (
-                <article
-                  key={community.id}
-                  className={`bg-[#1a1a1b] border-2 rounded-lg hover:border-[#ff4500] transition-colors overflow-hidden ${
-                    index === 0 ? 'border-yellow-500/50' : 
-                    index === 1 ? 'border-gray-400/50' : 
-                    index === 2 ? 'border-orange-600/50' : 
-                    'border-[#343536]'
-                  }`}
-                >
-                  <div className="flex">
-                    {/* Rank Section */}
-                    <div className="flex items-center justify-center bg-[#161617] px-6">
-                      {getRankBadge(index)}
-                    </div>
-
-                    {/* Community Info */}
-                    <div className="flex-1 p-5">
+              <AnimatePresence mode="popLayout">
+                {communities.map((community, index) => (
+                  <motion.article
+                    key={community.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`glass-effect bg-zinc-900/50 backdrop-blur-xl border-2 rounded-2xl hover:border-cyan-500/50 transition-all duration-300 overflow-hidden group ${
+                      index === 0 ? 'border-yellow-500/50 shadow-lg shadow-yellow-500/10' : 
+                      index === 1 ? 'border-gray-400/50 shadow-lg shadow-gray-400/10' : 
+                      index === 2 ? 'border-orange-600/50 shadow-lg shadow-orange-600/10' : 
+                      'border-zinc-800/50'
+                    }`}
+                  >
+                    {/* ✨ UPDATED: New Layout with Rank on Left */}
+                    <div className="p-4 sm:p-5">
                       <div className="flex items-start gap-4">
+                        {/* ✨ Rank Badge - Now on Left */}
+                        <div className="flex-shrink-0 pt-1">
+                          {getRankBadge(index)}
+                        </div>
+
                         {/* Display Picture */}
                         <button
                           onClick={() => router.push(`/communities/${community.slug}`)}
-                          className="w-20 h-20 rounded-full bg-[#ff4500] flex items-center justify-center text-white text-3xl font-bold overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity border-2 border-[#ff4500]"
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold overflow-hidden flex-shrink-0 hover:scale-110 transition-all duration-300 shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50"
                         >
                           {getImageUrl(community.display_picture) ? (
                             <Image
@@ -165,7 +195,7 @@ export default function PopularPage() {
                               alt={community.name}
                               width={80}
                               height={80}
-                              className="object-cover"
+                              className="object-cover w-full h-full"
                             />
                           ) : (
                             community.name[0].toUpperCase()
@@ -176,98 +206,110 @@ export default function PopularPage() {
                         <div className="flex-1 min-w-0">
                           <button
                             onClick={() => router.push(`/communities/${community.slug}`)}
-                            className="text-2xl font-bold hover:underline text-left flex items-center gap-2"
+                            className="text-lg sm:text-xl font-bold hover:text-cyan-400 transition-colors text-left mb-2 line-clamp-1"
                           >
                             c/{community.name}
-                            {index === 0 && <Crown size={20} className="text-yellow-500" />}
-                            {index === 1 && <Award size={18} className="text-gray-400" />}
-                            {index === 2 && <Award size={18} className="text-orange-600" />}
                           </button>
-                          <p className="text-sm text-[#818384] mt-2 line-clamp-2">
+                          <p className="text-sm text-zinc-400 mb-3 line-clamp-2">
                             {community.description}
                           </p>
 
-                          {/* Stats */}
-                          <div className="flex items-center gap-6 mt-4 text-sm">
+                          {/* Stats - Responsive */}
+                          <div className="flex flex-wrap items-center gap-4 text-sm mb-4">
                             <div className="flex items-center gap-2">
-                              <Users size={18} className="text-[#ff4500]" />
-                              <span className="font-bold text-[#d7dadc]">{community.member_count}</span>
-                              <span className="text-[#818384]">members</span>
+                              <Users size={16} className="text-cyan-400" />
+                              <span className="font-bold text-zinc-100">{community.member_count.toLocaleString()}</span>
+                              <span className="text-zinc-500">members</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Calendar size={18} className="text-[#818384]" />
-                              <span className="text-[#818384]">Created {formatTime(community.created_at)}</span>
+                              <Calendar size={16} className="text-zinc-500" />
+                              <span className="text-zinc-500">Created {formatTime(community.created_at)}</span>
                             </div>
                           </div>
-                        </div>
 
-                        {/* View Button */}
-                        <button
-                          onClick={() => router.push(`/communities/${community.slug}`)}
-                          className="px-6 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors flex-shrink-0 self-start"
-                        >
-                          View
-                        </button>
+                          {/* View Button */}
+                          <button
+                            onClick={() => router.push(`/communities/${community.slug}`)}
+                            className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105"
+                          >
+                            View Community
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </motion.article>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </main>
 
-        {/* Right Sidebar */}
-        <aside className="hidden xl:block w-80">
-          <div className="sticky top-14 space-y-4">
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg overflow-hidden">
-              <div className="h-12 bg-gradient-to-r from-[#ff4500] to-[#ff6a00]"></div>
-              <div className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Flame size={18} className="text-[#ff4500]" />
+        {/* Right Sidebar - Desktop Only */}
+        <aside className="hidden xl:block w-80 flex-shrink-0">
+          <div className="sticky top-20 space-y-4">
+            {/* How It Works Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl overflow-hidden"
+            >
+              <div className="h-16 bg-gradient-to-r from-cyan-500 to-violet-600 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-20"></div>
+              </div>
+              <div className="p-5">
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <Flame size={20} className="text-cyan-400" />
                   How It Works
                 </h3>
-                <p className="text-sm text-[#818384] mb-4">
+                <p className="text-sm text-zinc-400 mb-5">
                   Rankings are based on member count. The more members, the higher the rank!
                 </p>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-start gap-2">
+                <div className="space-y-4 text-sm">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-zinc-800/30">
                     <Crown size={20} className="text-yellow-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold text-yellow-500">#1 Top Community</p>
-                      <p className="text-[#818384]">Most members</p>
+                      <p className="text-zinc-500">Most members</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-zinc-800/30">
                     <Award size={18} className="text-gray-400 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold text-gray-400">#2 Runner-up</p>
-                      <p className="text-[#818384]">High membership</p>
+                      <p className="text-zinc-500">High membership</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-zinc-800/30">
                     <Award size={18} className="text-orange-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold text-orange-600">#3 Rising Star</p>
-                      <p className="text-[#818384]">Growing fast</p>
+                      <p className="text-zinc-500">Growing fast</p>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-[#1a1a1b] border border-[#343536] rounded-lg p-4">
-              <h3 className="font-semibold mb-2">Want to be on top?</h3>
-              <p className="text-sm text-[#818384] mb-4">
+            {/* Call to Action Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5"
+            >
+              <h3 className="font-bold text-lg mb-2">Want to be on top?</h3>
+              <p className="text-sm text-zinc-400 mb-5">
                 Create an engaging community and watch it climb the ranks!
               </p>
               <button
                 onClick={() => router.push('/communities/create')}
-                className="w-full py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white font-semibold rounded-full transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105"
               >
+                <Plus size={18} />
                 Create Community
               </button>
-            </div>
+            </motion.div>
           </div>
         </aside>
       </div>

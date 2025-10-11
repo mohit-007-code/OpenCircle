@@ -4,9 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Bell, MessageSquare, User, LogOut, Menu, X } from 'lucide-react';
+import { Search, Plus, Bell, MessageSquare, User, LogOut, Menu, X, Home } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Community {
   id: number;
@@ -28,7 +29,6 @@ export default function Navbar() {
   const [userProfilePic, setUserProfilePic] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Fetch user profile picture
   useEffect(() => {
     if (user) {
       fetchUserProfile();
@@ -44,7 +44,6 @@ export default function Navbar() {
     }
   };
 
-  // Search communities
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
       searchCommunities(searchQuery);
@@ -59,20 +58,18 @@ export default function Navbar() {
       const response = await api.get('/communities/');
       let communities = response.data.results || response.data || [];
       
-      // Filter communities by search query
       const filtered = communities.filter((community: Community) =>
         community.name.toLowerCase().includes(query.toLowerCase()) ||
         community.description.toLowerCase().includes(query.toLowerCase())
       );
       
-      setSearchResults(filtered.slice(0, 5)); // Show max 5 results
+      setSearchResults(filtered.slice(0, 5));
       setShowSearchResults(true);
     } catch (error) {
       console.error('Error searching communities:', error);
     }
   };
 
-  // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -95,267 +92,320 @@ export default function Navbar() {
   const handleCommunityClick = (slug: string) => {
     setSearchQuery('');
     setShowSearchResults(false);
+    setMobileMenuOpen(false);
     router.push(`/communities/${slug}`);
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-[#1a1a1b] border-b border-[#343536]">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-12">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 hover:bg-[#272729] px-2 py-1 rounded transition-colors">
-            <div className="w-8 h-8 rounded-full bg-[#ff4500] flex items-center justify-center font-bold text-white">
-              O
-            </div>
-            <span className="font-bold text-xl hidden sm:block">OpenCircle</span>
-          </Link>
+    <>
+      {/* Top Navbar */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed top-0 left-0 right-0 z-50 glass-effect backdrop-blur-xl bg-zinc-900/80 border-b border-zinc-800/50 shadow-lg shadow-black/5"
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <Link 
+              href="/" 
+              className="flex items-center gap-2 hover:bg-zinc-800/50 px-2 sm:px-3 py-2 rounded-xl transition-all duration-300 hover:scale-105 group"
+            >
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-all duration-300">
+                O
+              </div>
+              <span className="font-bold text-lg sm:text-xl hidden sm:block gradient-text">OpenCircle</span>
+            </Link>
 
-          {/* Search Bar with Dropdown */}
-          <div className="flex-1 max-w-2xl mx-4 hidden md:block" ref={searchRef}>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={18} />
-              <input
-                type="text"
-                placeholder="Search communities..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => searchQuery && setShowSearchResults(true)}
-                className="w-full pl-10 pr-4 py-1.5 bg-[#272729] border border-[#343536] rounded-full text-sm text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
-              />
-              
-              {/* Search Results Dropdown */}
-              {showSearchResults && searchResults.length > 0 && (
-                <div className="absolute top-full mt-2 w-full bg-[#1a1a1b] border border-[#343536] rounded-lg shadow-xl max-h-80 overflow-y-auto animate-slideDown">
-                  {searchResults.map((community) => (
-                    <button
-                      key={community.id}
-                      onClick={() => handleCommunityClick(community.slug)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-[#272729] transition-colors text-left border-b border-[#343536] last:border-0"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff4500] to-[#ff6a00] flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden">
-                        {getImageUrl(community.display_picture) ? (
-                          <Image
-                            src={getImageUrl(community.display_picture)!}
-                            alt={community.name}
-                            width={40}
-                            height={40}
-                            className="object-cover w-full h-full"
-                          />
-                        ) : (
-                          community.name[0].toUpperCase()
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">c/{community.name}</p>
-                        <p className="text-xs text-[#818384] truncate">{community.description}</p>
-                        <p className="text-xs text-[#818384]">{community.member_count} members</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {showSearchResults && searchResults.length === 0 && searchQuery && (
-                <div className="absolute top-full mt-2 w-full bg-[#1a1a1b] border border-[#343536] rounded-lg shadow-xl p-4 text-center text-[#818384] text-sm animate-slideDown">
-                  No communities found for "{searchQuery}"
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-2">
-            {user ? (
-              <>
-                <Link
-                  href="/communities/create"
-                  className="flex items-center gap-1 px-3 py-1.5 hover:bg-[#272729] rounded text-sm transition-colors"
-                >
-                  <Plus size={18} />
-                  <span>Create</span>
-                </Link>
-
-                <button className="p-2 hover:bg-[#272729] rounded transition-colors relative">
-                  <Bell size={20} />
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#ff4500] rounded-full"></span>
-                </button>
-
-                <button className="p-2 hover:bg-[#272729] rounded transition-colors">
-                  <MessageSquare size={20} />
-                </button>
-
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-2 py-1 hover:bg-[#272729] rounded transition-colors"
-                  >
-                    {/* User Profile Picture */}
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff4500] to-[#ff6a00] flex items-center justify-center text-white font-semibold text-sm overflow-hidden border-2 border-[#343536]">
-                      {getImageUrl(userProfilePic) ? (
-                        <Image
-                          src={getImageUrl(userProfilePic)!}
-                          alt={user.username}
-                          width={32}
-                          height={32}
-                          className="object-cover w-full h-full"
-                        />
-                      ) : (
-                        user.username[0].toUpperCase()
-                      )}
-                    </div>
-                    <span className="text-sm font-medium">{user.username}</span>
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1b] border border-[#343536] rounded-lg shadow-xl animate-slideDown">
-                      <Link
-                        href="/profile"
-                        onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-[#272729] transition-colors"
-                      >
-                        <User size={18} />
-                        <span>Profile</span>
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setShowUserMenu(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#272729] transition-colors text-[#ff4500]"
-                      >
-                        <LogOut size={18} />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="px-6 py-1.5 text-sm font-semibold hover:bg-[#272729] rounded-full transition-colors"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-6 py-1.5 bg-[#ff4500] hover:bg-[#ff5414] text-white text-sm font-semibold rounded-full transition-colors"
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 hover:bg-[#272729] rounded transition-colors"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden pb-4 animate-slideDown">
-            <div className="mb-3">
+            {/* Desktop Search Bar */}
+            <div className="flex-1 max-w-2xl mx-4 hidden md:block" ref={searchRef}>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#818384]" size={18} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                 <input
                   type="text"
                   placeholder="Search communities..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-[#272729] border border-[#343536] rounded-full text-sm text-[#d7dadc] placeholder-[#818384] focus:outline-none focus:border-[#818384]"
+                  onFocus={() => searchQuery && setShowSearchResults(true)}
+                  className="w-full pl-11 pr-4 py-2.5 bg-zinc-800/50 border border-zinc-700/50 rounded-2xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300 backdrop-blur-sm hover:bg-zinc-800/70"
                 />
-              </div>
-              
-              {/* Mobile Search Results */}
-              {showSearchResults && searchResults.length > 0 && (
-                <div className="mt-2 bg-[#1a1a1b] border border-[#343536] rounded-lg max-h-60 overflow-y-auto">
-                  {searchResults.map((community) => (
-                    <button
-                      key={community.id}
-                      onClick={() => {
-                        handleCommunityClick(community.slug);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-[#272729] transition-colors text-left border-b border-[#343536] last:border-0"
+                
+                <AnimatePresence>
+                  {showSearchResults && searchResults.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full mt-2 w-full glass-effect bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl shadow-2xl max-h-80 overflow-y-auto"
                     >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff4500] to-[#ff6a00] flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden">
-                        {getImageUrl(community.display_picture) ? (
+                      {searchResults.map((community, index) => (
+                        <motion.button
+                          key={community.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          onClick={() => handleCommunityClick(community.slug)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-zinc-800/50 transition-all duration-300 text-left border-b border-zinc-800/30 last:border-0 group"
+                        >
+                          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden shadow-lg group-hover:shadow-cyan-500/30 transition-all duration-300 group-hover:scale-110">
+                            {getImageUrl(community.display_picture) ? (
+                              <Image
+                                src={getImageUrl(community.display_picture)!}
+                                alt={community.name}
+                                width={44}
+                                height={44}
+                                className="object-cover w-full h-full"
+                              />
+                            ) : (
+                              community.name[0].toUpperCase()
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate text-zinc-100 group-hover:text-cyan-400 transition-colors">
+                              c/{community.name}
+                            </p>
+                            <p className="text-xs text-zinc-500 truncate">{community.description}</p>
+                            <p className="text-xs text-zinc-600">{community.member_count} members</p>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {showSearchResults && searchResults.length === 0 && searchQuery && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full mt-2 w-full glass-effect bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl shadow-2xl p-4 text-center text-zinc-500 text-sm"
+                    >
+                      No communities found for "{searchQuery}"
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-2">
+              {user ? (
+                <>
+                  <Link
+                    href="/communities/create"
+                    className="flex items-center gap-1.5 px-4 py-2 hover:bg-zinc-800/50 rounded-xl text-sm transition-all duration-300 hover:scale-105 group"
+                  >
+                    <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                    <span className="font-medium hidden lg:inline">Create</span>
+                  </Link>
+
+                  <button className="p-2.5 hover:bg-zinc-800/50 rounded-xl transition-all duration-300 hover:scale-105 relative group">
+                    <Bell size={20} className="group-hover:animate-pulse" />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-gradient-to-br from-cyan-500 to-violet-600 rounded-full shadow-lg shadow-cyan-500/50 animate-pulse"></span>
+                  </button>
+
+                  <button className="p-2.5 hover:bg-zinc-800/50 rounded-xl transition-all duration-300 hover:scale-105">
+                    <MessageSquare size={20} />
+                  </button>
+
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all duration-300 hover:scale-105"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-semibold text-sm overflow-hidden border-2 border-zinc-700/50 shadow-lg shadow-cyan-500/20">
+                        {getImageUrl(userProfilePic) ? (
                           <Image
-                            src={getImageUrl(community.display_picture)!}
-                            alt={community.name}
-                            width={40}
-                            height={40}
+                            src={getImageUrl(userProfilePic)!}
+                            alt={user.username}
+                            width={36}
+                            height={36}
                             className="object-cover w-full h-full"
                           />
                         ) : (
-                          community.name[0].toUpperCase()
+                          user.username[0].toUpperCase()
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">c/{community.name}</p>
-                        <p className="text-xs text-[#818384]">{community.member_count} members</p>
-                      </div>
+                      <span className="text-sm font-medium hidden lg:inline">{user.username}</span>
                     </button>
-                  ))}
-                </div>
+
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-2 w-52 glass-effect bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl shadow-2xl overflow-hidden"
+                        >
+                          <Link
+                            href="/profile"
+                            onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-all duration-300 group"
+                          >
+                            <User size={18} className="group-hover:scale-110 transition-transform" />
+                            <span>Profile</span>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              logout();
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-all duration-300 text-red-400 hover:text-red-300 group"
+                          >
+                            <LogOut size={18} className="group-hover:scale-110 transition-transform" />
+                            <span>Logout</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="px-4 lg:px-6 py-2 text-sm font-semibold hover:bg-zinc-800/50 rounded-2xl transition-all duration-300 hover:scale-105"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="px-4 lg:px-6 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white text-sm font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50"
+                  >
+                    Sign Up
+                  </Link>
+                </>
               )}
             </div>
-            {user ? (
-              <div className="space-y-1">
-                <Link
-                  href="/communities/create"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-[#272729] rounded transition-colors"
-                >
-                  <Plus size={20} />
-                  <span>Create Community</span>
-                </Link>
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-[#272729] rounded transition-colors"
-                >
-                  <User size={20} />
-                  <span>Profile</span>
-                </Link>
-                <button
-                  onClick={() => {
-                    logout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#272729] rounded transition-colors text-[#ff4500]"
-                >
-                  <LogOut size={20} />
-                  <span>Logout</span>
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center px-4 py-2 hover:bg-[#272729] rounded-full transition-colors"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center px-4 py-2 bg-[#ff4500] hover:bg-[#ff5414] text-white rounded-full transition-colors"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2.5 hover:bg-zinc-800/50 rounded-xl transition-all duration-300"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
-        )}
-      </div>
-    </nav>
+
+          {/* Mobile Menu Dropdown */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="md:hidden pb-4 overflow-hidden"
+              >
+                <div className="mb-3">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                    <input
+                      type="text"
+                      placeholder="Search communities..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-11 pr-4 py-2.5 bg-zinc-800/50 border border-zinc-700/50 rounded-2xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300"
+                    />
+                  </div>
+                  
+                  <AnimatePresence>
+                    {showSearchResults && searchResults.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-2 glass-effect bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl max-h-60 overflow-y-auto"
+                      >
+                        {searchResults.map((community) => (
+                          <button
+                            key={community.id}
+                            onClick={() => handleCommunityClick(community.slug)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-zinc-800/50 transition-all duration-300 text-left border-b border-zinc-800/30 last:border-0"
+                          >
+                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden shadow-lg">
+                              {getImageUrl(community.display_picture) ? (
+                                <Image
+                                  src={getImageUrl(community.display_picture)!}
+                                  alt={community.name}
+                                  width={44}
+                                  height={44}
+                                  className="object-cover w-full h-full"
+                                />
+                              ) : (
+                                community.name[0].toUpperCase()
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm truncate text-zinc-100">c/{community.name}</p>
+                              <p className="text-xs text-zinc-500">{community.member_count} members</p>
+                            </div>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {user ? (
+                  <div className="space-y-1">
+                    <Link
+                      href="/communities/create"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 rounded-xl transition-all duration-300"
+                    >
+                      <Plus size={20} />
+                      <span>Create Community</span>
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 rounded-xl transition-all duration-300"
+                    >
+                      <User size={20} />
+                      <span>Profile</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 rounded-xl transition-all duration-300 text-red-400"
+                    >
+                      <LogOut size={20} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block text-center px-4 py-2.5 hover:bg-zinc-800/50 rounded-2xl transition-all duration-300"
+                    >
+                      Log In
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block text-center px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-violet-600 text-white rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/30"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.nav>
+
+      {/* Add padding to prevent content from going under fixed navbar */}
+      <div className="h-14"></div>
+    </>
   );
 }
