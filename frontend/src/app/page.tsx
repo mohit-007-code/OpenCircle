@@ -1,3 +1,3 @@
-﻿export default function Home() {
-  return <div>OpenCircle Works!</div>;
+﻿export default function Page() {
+  return <h1>OpenCircle Works!</h1>;
 }
