@@ -368,7 +368,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-zinc-950 pb-24 lg:pb-0">
       <Navbar />
 
       {toast && (

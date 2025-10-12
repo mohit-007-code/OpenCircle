@@ -64,7 +64,6 @@ function AuthPageContent() {
         refresh: response.data.refresh,
       });
       
-      // Toast is shown automatically in AuthContext
       router.push('/');
     } catch (err: any) {
       const errorMessage =
@@ -87,11 +86,9 @@ function AuthPageContent() {
     try {
       const response = await api.post<AuthResponse>('/auth/register/', registerData);
       
-      // Check if email verification is required
       if (response.data.requires_verification) {
         showToast('Registration successful! Please check your email to verify your account 📧', 'success');
         
-        // Reset form
         setRegisterData({
           email: '',
           username: '',
@@ -101,10 +98,8 @@ function AuthPageContent() {
           last_name: '',
         });
         
-        // Switch to login mode
         setIsSignUp(false);
       } else {
-        // Normal registration without verification
         login(response.data.user, {
           access: response.data.access,
           refresh: response.data.refresh,
@@ -114,7 +109,6 @@ function AuthPageContent() {
     } catch (err: any) {
       console.error('Registration error:', err.response?.data);
       
-      // Handle specific field errors
       const errors = err.response?.data?.error || err.response?.data;
       let errorMessage = 'Registration failed. Please try again.';
       
@@ -179,7 +173,7 @@ function AuthPageContent() {
         
         {/* LEFT SIDE */}
         <div className="w-1/2 h-full relative overflow-hidden">
-          {/* Register Form - Shows on LEFT when isSignUp is TRUE */}
+          {/* Register Form */}
           <div 
             className="absolute inset-0 flex items-center justify-center p-8 bg-zinc-950 transition-transform duration-700 ease-in-out"
             style={{
@@ -330,7 +324,7 @@ function AuthPageContent() {
             </div>
           </div>
 
-          {/* "New here?" Panel - Shows on LEFT when isSignUp is FALSE */}
+          {/* "New here?" Panel */}
           <div 
             className="absolute inset-0 bg-gradient-to-br from-white/95 via-zinc-100/95 to-zinc-200/95 flex flex-col items-center justify-center text-zinc-950 p-12 transition-transform duration-700 ease-in-out"
             style={{
@@ -353,7 +347,7 @@ function AuthPageContent() {
 
         {/* RIGHT SIDE */}
         <div className="w-1/2 h-full relative overflow-hidden">
-          {/* "One of us?" Panel - Shows on RIGHT when isSignUp is TRUE */}
+          {/* "One of us?" Panel */}
           <div 
             className="absolute inset-0 bg-gradient-to-br from-white/95 via-zinc-100/95 to-zinc-200/95 flex flex-col items-center justify-center text-zinc-950 p-12 transition-transform duration-700 ease-in-out"
             style={{
@@ -373,7 +367,7 @@ function AuthPageContent() {
             </button>
           </div>
 
-          {/* Login Form - Shows on RIGHT when isSignUp is FALSE */}
+          {/* Login Form */}
           <div 
             className="absolute inset-0 flex items-center justify-center p-8 bg-zinc-950 transition-transform duration-700 ease-in-out"
             style={{
@@ -469,8 +463,253 @@ function AuthPageContent() {
         </div>
       </div>
 
-      {/* Mobile Layout - Keep existing code */}
-      {/* ... your existing mobile code ... */}
+      {/* Mobile Layout */}
+      <div className="lg:hidden w-full min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {!isSignUp ? (
+            /* Mobile - Login */
+            <div className="w-full">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto rounded-full bg-white flex items-center justify-center mb-4 shadow-2xl">
+                  <span className="text-3xl font-bold text-zinc-950">O</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white">Log In</h2>
+                <p className="text-zinc-400 text-sm mt-2">Connect with communities around the world</p>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-zinc-300">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                      placeholder="you@example.com"
+                      value={loginData.email}
+                      onChange={handleLoginChange}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-zinc-300">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+                    <input
+                      name="password"
+                      type="password"
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                      placeholder="••••••••"
+                      value={loginData.password}
+                      onChange={handleLoginChange}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-white hover:bg-zinc-100 text-zinc-950 font-bold rounded-xl disabled:opacity-50"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div>
+                      Logging in...
+                    </span>
+                  ) : (
+                    'Log In'
+                  )}
+                </button>
+              </form>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-700/50"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-zinc-950 text-zinc-500">OR</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="filled_black"
+                  size="large"
+                  text="signin_with"
+                />
+              </div>
+
+              <p className="text-center text-sm text-zinc-500 mt-6">
+                New to OpenCircle?{' '}
+                <button onClick={toggleMode} className="text-white hover:text-zinc-300 font-semibold">
+                  Sign Up
+                </button>
+              </p>
+            </div>
+          ) : (
+            /* Mobile - Sign Up */
+            <div className="w-full">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 mx-auto rounded-full bg-white flex items-center justify-center mb-4 shadow-2xl">
+                  <span className="text-3xl font-bold text-zinc-950">O</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white">Sign Up</h2>
+                <p className="text-zinc-400 text-sm mt-2">Discover communities and connect with people</p>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleRegisterSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-zinc-300">Email *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                      placeholder="you@example.com"
+                      value={registerData.email}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-zinc-300">Username *</label>
+                  <div className="relative">
+                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+                    <input
+                      name="username"
+                      type="text"
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                      placeholder="johndoe"
+                      value={registerData.username}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-zinc-300">First Name</label>
+                    <input
+                      name="first_name"
+                      type="text"
+                      className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                      placeholder="John"
+                      value={registerData.first_name}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-zinc-300">Last Name</label>
+                    <input
+                      name="last_name"
+                      type="text"
+                      className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                      placeholder="Doe"
+                      value={registerData.last_name}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-zinc-300">Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+                    <input
+                      name="password"
+                      type="password"
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                      placeholder="••••••••"
+                      value={registerData.password}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-zinc-300">Confirm Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+                    <input
+                      name="password2"
+                      type="password"
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                      placeholder="••••••••"
+                      value={registerData.password2}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-white hover:bg-zinc-100 text-zinc-950 font-bold rounded-xl disabled:opacity-50"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div>
+                      Creating account...
+                    </span>
+                  ) : (
+                    'Sign Up'
+                  )}
+                </button>
+              </form>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-700/50"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-zinc-950 text-zinc-500">OR</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="filled_black"
+                  size="large"
+                  text="signup_with"
+                />
+              </div>
+
+              <p className="text-center text-sm text-zinc-500 mt-4">
+                Already a member?{' '}
+                <button onClick={toggleMode} className="text-white hover:text-zinc-300 font-semibold">
+                  Log In
+                </button>
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
