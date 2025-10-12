@@ -16,20 +16,19 @@ import {
   MessageSquare,
   FileText,
   TrendingUp,  
-  ArrowBigUp,
+  Heart,
   Users,
   UserPlus,
   UserMinus,
   Sparkles,
+  ArrowLeft,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-
 
 interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info' | 'warning';
 }
-
 
 interface PublicUser {
   id: number;
@@ -46,7 +45,6 @@ interface PublicUser {
   is_own_profile: boolean;
 }
 
-
 interface UserStats {
   total_posts: number;
   total_comments: number;
@@ -58,20 +56,17 @@ interface UserStats {
   member_of: number;
 }
 
-
 interface UserComment extends Comment {
   post_title?: string;
   community_name?: string;
   community_slug?: string;
 }
 
-
 export default function PublicUserProfilePage() {
   const router = useRouter();
   const params = useParams();
   const { user: currentUser } = useAuth();
   const userId = params.id as string;
-
 
   const [profileUser, setProfileUser] = useState<PublicUser | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'posts' | 'comments'>('overview');
@@ -82,17 +77,14 @@ export default function PublicUserProfilePage() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [following, setFollowing] = useState(false);
 
-
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [followers, setFollowers] = useState<FollowUser[]>([]);
   const [followingList, setFollowingList] = useState<FollowUser[]>([]);
 
-
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     setToast({ message, type });
   };
-
 
   useEffect(() => {
     if (userId) {
@@ -100,7 +92,6 @@ export default function PublicUserProfilePage() {
       fetchUserPosts();
     }
   }, [userId]);
-
 
   const fetchUserProfile = async () => {
     setLoading(true);
@@ -120,7 +111,6 @@ export default function PublicUserProfilePage() {
     }
   };
 
-
   const fetchUserPosts = async () => {
     try {
       const [postsRes, commentsRes] = await Promise.all([
@@ -128,10 +118,8 @@ export default function PublicUserProfilePage() {
         api.get(`/auth/comments/`).catch(() => ({ data: [] }))
       ]);
 
-
       setPosts(postsRes.data);
       setComments(commentsRes.data);
-
 
       const communitiesMap = new Map();
       postsRes.data.forEach((post: Post) => {
@@ -145,7 +133,6 @@ export default function PublicUserProfilePage() {
         communitiesMap.get(post.community_slug).post_count++;
       });
 
-
       setStats({
         total_posts: postsRes.data.length,
         total_comments: commentsRes.data.length,
@@ -157,7 +144,6 @@ export default function PublicUserProfilePage() {
     }
   };
 
-
   const fetchFollowers = async () => {
     try {
       const response = await api.get(`/auth/users/${userId}/followers/`);
@@ -166,7 +152,6 @@ export default function PublicUserProfilePage() {
       showToast('Failed to load followers', 'error');
     }
   };
-
 
   const fetchFollowing = async () => {
     try {
@@ -177,17 +162,14 @@ export default function PublicUserProfilePage() {
     }
   };
 
-
   const handleFollowToggle = async (targetUserId?: number) => {
     if (!currentUser) {
       router.push('/login');
       return;
     }
 
-
     const userToFollow = targetUserId || profileUser?.id;
     if (!userToFollow) return;
-
 
     try {
       await api.post(`/auth/users/${userToFollow}/follow/`);
@@ -221,7 +203,6 @@ export default function PublicUserProfilePage() {
     }
   };
 
-
   const getImageUrl = (imageUrl: string | null | undefined) => {
     if (!imageUrl) return null;
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
@@ -230,12 +211,10 @@ export default function PublicUserProfilePage() {
     return `http://localhost:8000${imageUrl}`;
   };
 
-
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
 
     if (diffInSeconds < 60) return 'just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
@@ -244,7 +223,6 @@ export default function PublicUserProfilePage() {
     if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo ago`;
     return `${Math.floor(diffInSeconds / 31536000)}y ago`;
   };
-
 
   if (loading || !profileUser) {
     return (
@@ -257,11 +235,9 @@ export default function PublicUserProfilePage() {
     );
   }
 
-
   return (
     <div className="min-h-screen bg-zinc-950 pb-20 lg:pb-0">
       <Navbar />
-
 
       {toast && (
         <Toast
@@ -270,7 +246,6 @@ export default function PublicUserProfilePage() {
           onClose={() => setToast(null)}
         />
       )}
-
 
       {/* Modals */}
       <Modal
@@ -320,7 +295,6 @@ export default function PublicUserProfilePage() {
         </div>
       </Modal>
 
-
       <Modal
         isOpen={showFollowingModal}
         onClose={() => setShowFollowingModal(false)}
@@ -368,12 +342,21 @@ export default function PublicUserProfilePage() {
         </div>
       </Modal>
 
-
       <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
 
-
         <main className="flex-1 min-w-0">
+          {/* ✅ NEW: Back button */}
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-zinc-400 hover:text-white mb-5 transition-colors group"
+          >
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back</span>
+          </motion.button>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -413,7 +396,6 @@ export default function PublicUserProfilePage() {
                 </div>
               </div>
 
-
               {/* Username and Follow Button */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
                 <div className="flex-1 min-w-0">
@@ -425,7 +407,6 @@ export default function PublicUserProfilePage() {
                     <p className="text-xs sm:text-sm text-zinc-400 mt-2 line-clamp-2">{profileUser.bio}</p>
                   )}
                 </div>
-
 
                 {currentUser && currentUser.id !== profileUser.id && (
                   <button
@@ -450,7 +431,6 @@ export default function PublicUserProfilePage() {
                   </button>
                 )}
               </div>
-
 
               {/* Stats - Grid on mobile, flex on desktop */}
               <div className="grid grid-cols-2 sm:flex gap-4 sm:gap-8 py-4 border-t border-zinc-800/50">
@@ -483,7 +463,6 @@ export default function PublicUserProfilePage() {
                   <p className="text-xs sm:text-sm text-white">Communities</p>
                 </div>
               </div>
-
 
               {/* Tabs - Scrollable on mobile */}
               <div className="flex gap-4 sm:gap-6 pt-4 border-t border-zinc-800/50 overflow-x-auto scrollbar-hide">
@@ -523,7 +502,6 @@ export default function PublicUserProfilePage() {
               </div>
             </div>
           </motion.div>
-
 
           {/* Content Sections */}
           {activeTab === 'overview' && (
@@ -569,7 +547,6 @@ export default function PublicUserProfilePage() {
             </motion.div>
           )}
 
-
           {activeTab === 'posts' && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -588,52 +565,74 @@ export default function PublicUserProfilePage() {
                 posts.map((post) => (
                   <article
                     key={post.id}
-                    onClick={() => router.push(`/posts/${post.id}`)}
-                    className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 hover:border-white/30 rounded-2xl transition-all cursor-pointer overflow-hidden group"
+                    className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 hover:border-white/30 rounded-2xl transition-all overflow-hidden group"
                   >
                     <div className="p-3 sm:p-4">
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 mb-2">
-                        <span
-                          className="hover:text-white transition-colors truncate"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/communities/${post.community_slug}`);
-                          }}
-                        >
-                          c/{post.community_name}
-                        </span>
-                        <span>•</span>
-                        <span className="whitespace-nowrap">{formatTime(post.created_at)}</span>
+                      <div 
+                        onClick={() => router.push(`/posts/${post.id}`)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 mb-2">
+                          <span
+                            className="hover:text-white transition-colors truncate"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/communities/${post.community_slug}`);
+                            }}
+                          >
+                            c/{post.community_name}
+                          </span>
+                          <span>•</span>
+                          <span className="whitespace-nowrap">{formatTime(post.created_at)}</span>
+                        </div>
+
+                        {post.title && (
+                          <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-2 group-hover:text-white transition-colors line-clamp-2">{post.title}</h2>
+                        )}
+
+                        <p className="text-sm text-zinc-300 line-clamp-2 mb-3">{post.content}</p>
+
+                        {getImageUrl(post.image) && (
+                          <div className="mb-3 rounded-xl overflow-hidden">
+                            <Image
+                              src={getImageUrl(post.image)!}
+                              alt="Post"
+                              width={600}
+                              height={400}
+                              className="w-full max-h-[200px] sm:max-h-[300px] object-cover"
+                            />
+                          </div>
+                        )}
                       </div>
 
-
-                      {post.title && (
-                        <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-2 group-hover:text-white transition-colors line-clamp-2">{post.title}</h2>
-                      )}
-
-
-                      <p className="text-sm text-zinc-300 line-clamp-2 mb-3">{post.content}</p>
-
-
-                      {getImageUrl(post.image) && (
-                        <div className="mb-3 rounded-xl overflow-hidden">
-                          <Image
-                            src={getImageUrl(post.image)!}
-                            alt="Post"
-                            width={600}
-                            height={400}
-                            className="w-full max-h-[200px] sm:max-h-[300px] object-cover"
+                      {/* ✅ UPDATED: Clickable heart with like functionality */}
+                      <div className="flex items-center gap-4 text-xs">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const response = await api.post(`/posts/${post.id}/like/`);
+                              setPosts(prev => prev.map(p => 
+                                p.id === post.id 
+                                  ? { ...p, is_liked: response.data.liked, likes_count: response.data.likes_count }
+                                  : p
+                              ));
+                            } catch (error) {
+                              showToast('Failed to update like', 'error');
+                            }
+                          }}
+                          className={`flex items-center gap-1 transition-all hover:scale-110 ${
+                            post.is_liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500'
+                          }`}
+                        >
+                          <Heart 
+                            size={14} 
+                            className="sm:w-4 sm:h-4" 
+                            fill={post.is_liked ? 'currentColor' : 'none'}
                           />
-                        </div>
-                      )}
-
-
-                      <div className="flex items-center gap-4 text-xs text-zinc-500">
-                        <div className="flex items-center gap-1">
-                          <ArrowBigUp size={14} className="text-white sm:w-4 sm:h-4" />
                           <span>{post.likes_count}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
+                        </button>
+                        <div className="flex items-center gap-1 text-zinc-500">
                           <MessageSquare size={14} className="sm:w-4 sm:h-4" />
                           <span>{post.comments_count}</span>
                         </div>
@@ -644,7 +643,6 @@ export default function PublicUserProfilePage() {
               )}
             </motion.div>
           )}
-
 
           {activeTab === 'comments' && (
             <motion.div
@@ -681,12 +679,11 @@ export default function PublicUserProfilePage() {
                       <span className="whitespace-nowrap">{formatTime(comment.created_at)}</span>
                     </div>
 
-
                     <p className="text-sm sm:text-base text-zinc-300 mb-2 group-hover:text-white transition-colors line-clamp-3">{comment.content}</p>
 
-
+                    {/* ✅ UPDATED: Heart icon instead of ArrowBigUp */}
                     <div className="flex items-center gap-1 text-xs text-zinc-500">
-                      <ArrowBigUp size={12} className="text-white sm:w-[14px] sm:h-[14px]" />
+                      <Heart size={12} className="text-red-400 sm:w-[14px] sm:h-[14px]" fill={comment.is_liked ? 'currentColor' : 'none'} />
                       <span>{comment.likes_count} likes</span>
                     </div>
                   </div>
@@ -695,7 +692,6 @@ export default function PublicUserProfilePage() {
             </motion.div>
           )}
         </main>
-
 
         {/* Right Sidebar - Hidden on mobile */}
         <aside className="hidden xl:block w-80 flex-shrink-0">
@@ -734,7 +730,6 @@ export default function PublicUserProfilePage() {
           </div>
         </aside>
       </div>
-
 
       {/* Add custom scrollbar hide CSS */}
       <style jsx global>{`

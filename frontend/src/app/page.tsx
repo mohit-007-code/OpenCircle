@@ -11,7 +11,6 @@ import { Post, Community } from '@/types';
 import Image from 'next/image';
 import { Heart, MessageSquare, Share2, TrendingUp, Sparkles, Clock, Crown, Award, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -29,7 +28,11 @@ export default function HomePage() {
   }, [filter]);
 
   const fetchFeed = async () => {
-    setLoading(true);
+    // Only show loading skeleton on initial load, not on filter change
+    if (posts.length === 0) {
+      setLoading(true);
+    }
+    
     try {
       const response = await api.get('/posts/feed/');
       let allPosts = Array.isArray(response.data) ? response.data : [];
@@ -174,21 +177,42 @@ export default function HomePage() {
     );
   };
 
+  // ✨ IMPROVED SKELETON WITH STAGGERED ANIMATION
   const PostSkeleton = () => (
-    <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
-      <div className="flex items-center gap-3">
-        <Skeleton className="w-10 h-10 rounded-xl" />
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-3 w-24" />
-        </div>
-      </div>
-      <Skeleton className="h-6 w-3/4" />
-      <Skeleton className="h-48 w-full rounded-xl" />
-      <div className="flex gap-4">
-        <Skeleton className="h-8 w-24" />
-        <Skeleton className="h-8 w-24" />
-      </div>
+    <div className="space-y-4">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.1, duration: 0.3 }}
+          className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-zinc-800 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-32 bg-zinc-800 rounded animate-pulse" />
+              <div className="h-3 w-24 bg-zinc-800 rounded animate-pulse" />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="h-5 w-3/4 bg-zinc-800 rounded animate-pulse" />
+            <div className="h-5 w-1/2 bg-zinc-800 rounded animate-pulse" />
+          </div>
+          
+          <div 
+            className="w-full bg-zinc-800 rounded-xl animate-pulse" 
+            style={{ height: `${200 + (i * 50)}px` }}
+          />
+          
+          <div className="flex gap-4">
+            <div className="h-10 w-24 bg-zinc-800 rounded-xl animate-pulse" />
+            <div className="h-10 w-24 bg-zinc-800 rounded-xl animate-pulse" />
+            <div className="h-10 w-24 bg-zinc-800 rounded-xl animate-pulse" />
+          </div>
+        </motion.div>
+      ))}
     </div>
   );
 
@@ -243,11 +267,7 @@ export default function HomePage() {
 
           {/* Posts */}
           {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <PostSkeleton key={i} />
-              ))}
-            </div>
+            <PostSkeleton />
           ) : posts.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -277,7 +297,10 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ 
+                      delay: index * 0.05,
+                      duration: 0.3 
+                    }}
                     onClick={() => router.push(`/posts/${post.id}`)}
                     className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:border-zinc-700/50 transition-all duration-300 overflow-hidden cursor-pointer group"
                   >
@@ -298,12 +321,20 @@ export default function HomePage() {
                         </button>
                         <span className="hidden sm:inline">•</span>
                         <span className="hidden sm:inline">Posted by</span>
+                        {/* ✅ FIXED USERNAME CLICK */}
                         <span 
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/users/${post.author.id}`);
+                            // Check if it's your own profile
+                            if (user && post.author.id === user.id) {
+                              router.push('/profile');
+                            } else {
+                              router.push(`/users/${post.author.id}`);
+                            }
                           }}
-                          className="hover:text-white cursor-pointer transition-colors font-semibold"
+                          className={`hover:text-white cursor-pointer transition-colors font-semibold ${
+                            user && post.author.id === user.id ? 'text-blue-400' : ''
+                          }`}
                         >
                           u/{post.author.username}
                         </span>
@@ -324,14 +355,14 @@ export default function HomePage() {
                             alt="Post"
                             width={600}
                             height={400}
+                            loading="lazy"
                             className="w-full max-h-[400px] sm:max-h-[500px] object-cover transition-transform duration-300 group-hover/image:scale-105"
                           />
                         </div>
                       )}
 
-                      {/* Post Actions - HEART INCLUDED */}
+                      {/* Post Actions */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        {/* HEART BUTTON */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -349,7 +380,6 @@ export default function HomePage() {
                           <span>{post.likes_count}</span>
                         </button>
 
-                        {/* COMMENTS */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -361,7 +391,6 @@ export default function HomePage() {
                           <span>{post.comments_count}</span>
                         </button>
 
-                        {/* SHARE */}
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -388,7 +417,6 @@ export default function HomePage() {
         {/* Right Sidebar */}
         <aside className="hidden xl:block w-80 flex-shrink-0">
           <div className="sticky top-20 space-y-4">
-            {/* ✨ IMPROVED HOME CARD */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -416,7 +444,6 @@ export default function HomePage() {
               </Link>
             </motion.div>
 
-            {/* ✨ TOP COMMUNITIES - WHITE TEXT */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -465,7 +492,6 @@ export default function HomePage() {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        {/* ✨ WHITE TEXT */}
                         <p className="font-bold text-sm truncate text-white group-hover:text-zinc-300 transition-colors">
                           c/{community.name}
                         </p>

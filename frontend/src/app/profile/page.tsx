@@ -18,7 +18,7 @@ import {
   MessageSquare,
   FileText,
   TrendingUp,
-  ArrowBigUp,
+  Heart,
   Camera,
   ArrowLeft,
   LogOut,
@@ -331,7 +331,6 @@ export default function ProfilePage() {
     return `${Math.floor(diffInSeconds / 31536000)}y ago`;
   };
 
-  // Loading Skeleton
   const PostSkeleton = () => (
     <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
       <Skeleton className="h-6 w-3/4" />
@@ -380,7 +379,6 @@ export default function ProfilePage() {
         />
       )}
 
-      {/* Followers Modal */}
       <Modal
         isOpen={showFollowersModal}
         onClose={() => setShowFollowersModal(false)}
@@ -430,16 +428,15 @@ export default function ProfilePage() {
         </div>
       </Modal>
 
-      {/* Following Modal */}
       <Modal
         isOpen={showFollowingModal}
         onClose={() => setShowFollowingModal(false)}
         title={`Following (${stats?.following_count || 0})`}
         showActions={false}
       >
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="space-y-2 max-h-96 text-white overflow-y-auto">
           {following.map((followingUser) => (
-            <div key={followingUser.id} className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl">
+            <div key={followingUser.id} className="flex items-center  justify-between p-3 bg-zinc-800/50 rounded-xl">
               <div 
                 className="flex items-center gap-3 cursor-pointer text-white flex-1"
                 onClick={() => {
@@ -475,7 +472,6 @@ export default function ProfilePage() {
         </div>
       </Modal>
 
-      {/* Mobile Settings Modal */}
       <Modal
         isOpen={showMobileSettings}
         onClose={() => setShowMobileSettings(false)}
@@ -483,7 +479,6 @@ export default function ProfilePage() {
         showActions={false}
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-          {/* Profile Settings Card */}
           <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2 text-white">
@@ -492,9 +487,9 @@ export default function ProfilePage() {
               </h3>
               <button
                 onClick={() => setEditMode(!editMode)}
-                className="p-2 hover:bg-zinc-800/50 rounded-xl transition-colors"
+                className="p-2 hover:bg-zinc-800/50 text-white rounded-xl transition-colors"
               >
-                <Settings size={18} />
+                <Settings size={18}  / >
               </button>
             </div>
 
@@ -586,7 +581,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Security Card */}
           <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5">
             <h3 className="font-bold text-lg mb-4 text-white">Security</h3>
             
@@ -667,7 +661,6 @@ export default function ProfilePage() {
         </div>
       </Modal>
 
-      {/* Logout Confirmation Modal */}
       <Modal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
@@ -680,13 +673,11 @@ export default function ProfilePage() {
       />
 
       <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
-        {/* Sidebar - Hidden on mobile */}
         <div className="hidden lg:block">
           <Sidebar />
         </div>
 
         <main className="flex-1 min-w-0">
-          {/* Mobile Header with Back and Settings */}
           <div className="flex items-center justify-between mb-5 lg:mb-0">
             <motion.button
               initial={{ opacity: 0, x: -20 }}
@@ -698,7 +689,6 @@ export default function ProfilePage() {
               <span className="font-medium hidden sm:inline">Back</span>
             </motion.button>
 
-            {/* Mobile Settings Button */}
             <button
               onClick={() => setShowMobileSettings(true)}
               className="lg:hidden p-2 hover:bg-zinc-800/50 rounded-xl transition-colors"
@@ -707,14 +697,12 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* Profile Header Card */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl mb-6 overflow-hidden"
           >
-            {/* Cover Image */}
             <div className="relative">
               <div className="h-32 sm:h-40 md:h-48 bg-gradient-to-r from-white to-white relative">
                 {coverPreview && (
@@ -740,7 +728,6 @@ export default function ProfilePage() {
             </div>
             
             <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5">
-              {/* Profile Picture - Overlapping */}
               <div className="-mt-12 sm:-mt-14 md:-mt-16 mb-4 relative">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl border-4 border-zinc-950 bg-gradient-to-br from-white to-white flex items-center justify-center text-white text-xl sm:text-2xl md:text-3xl font-bold overflow-hidden shadow-2xl shadow-white/30">
                   {profilePreview ? (
@@ -766,7 +753,6 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {/* Username and Details */}
               <div className="mb-4">
                 <h1 className="text-lg sm:text-xl md:text-2xl text-white font-bold gradient-text">u/{user.username}</h1>
                 {(user.first_name || user.last_name) && (
@@ -775,7 +761,6 @@ export default function ProfilePage() {
                 {user.bio && <p className="text-xs sm:text-sm text-zinc-400 mt-2">{user.bio}</p>}
               </div>
 
-              {/* Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 py-4 border-t border-zinc-800/50">
                 <div>
                   <p className="text-lg sm:text-xl md:text-2xl font-bold text-white">{stats?.total_posts || 0}</p>
@@ -807,7 +792,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Tabs */}
               <div className="flex gap-4 sm:gap-6 pt-4 border-t border-zinc-800/50 overflow-x-auto">
                 <button
                   onClick={() => setActiveTab('overview')}
@@ -867,7 +851,6 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
-          {/* Tab Content */}
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
               <motion.div
@@ -951,48 +934,74 @@ export default function ProfilePage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      onClick={() => router.push(`/posts/${post.id}`)}
-                      className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:border-white/50 transition-all duration-300 cursor-pointer overflow-hidden group"
+                      className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:border-white/50 transition-all duration-300 overflow-hidden group"
                     >
                       <div className="p-3 sm:p-4">
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 mb-2 sm:mb-3">
-                          <span
-                            className="hover:text-white transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/communities/${post.community_slug}`);
-                            }}
-                          >
-                            c/{post.community_name}
-                          </span>
-                          <span>•</span>
-                          <span>{formatTime(post.created_at)}</span>
+                        <div 
+                          onClick={() => router.push(`/posts/${post.id}`)}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 mb-2 sm:mb-3">
+                            <span
+                              className="hover:text-white transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/communities/${post.community_slug}`);
+                              }}
+                            >
+                              c/{post.community_name}
+                            </span>
+                            <span>•</span>
+                            <span>{formatTime(post.created_at)}</span>
+                          </div>
+
+                          {post.title && (
+                            <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-2 group-hover:text-white transition-colors">{post.title}</h2>
+                          )}
+
+                          <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 mb-2 sm:mb-3">{post.content}</p>
+
+                          {getImageUrl(post.image) && (
+                            <div className="mb-2 sm:mb-3 rounded-xl overflow-hidden">
+                              <Image
+                                src={getImageUrl(post.image)!}
+                                alt="Post"
+                                width={600}
+                                height={400}
+                                className="w-full max-h-[200px] sm:max-h-[300px] object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                            </div>
+                          )}
                         </div>
 
-                        {post.title && (
-                          <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-2 group-hover:text-white transition-colors">{post.title}</h2>
-                        )}
-
-                        <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 mb-2 sm:mb-3">{post.content}</p>
-
-                        {getImageUrl(post.image) && (
-                          <div className="mb-2 sm:mb-3 rounded-xl overflow-hidden">
-                            <Image
-                              src={getImageUrl(post.image)!}
-                              alt="Post"
-                              width={600}
-                              height={400}
-                              className="w-full max-h-[200px] sm:max-h-[300px] object-cover transition-transform duration-300 group-hover:scale-105"
+                        {/* ✅ UPDATED: Clickable heart with like functionality */}
+                        <div className="flex items-center gap-4 text-xs sm:text-sm">
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                const response = await api.post(`/posts/${post.id}/like/`);
+                                setPosts(prev => prev.map(p => 
+                                  p.id === post.id 
+                                    ? { ...p, is_liked: response.data.liked, likes_count: response.data.likes_count }
+                                    : p
+                                ));
+                              } catch (error) {
+                                showToast('Failed to update like', 'error');
+                              }
+                            }}
+                            className={`flex items-center gap-1 transition-all hover:scale-110 ${
+                              post.is_liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500'
+                            }`}
+                          >
+                            <Heart 
+                              size={16} 
+                              className="sm:w-4 sm:h-4" 
+                              fill={post.is_liked ? 'currentColor' : 'none'}
                             />
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-4 text-xs sm:text-sm text-zinc-500">
-                          <div className="flex items-center gap-1">
-                            <ArrowBigUp size={16} className="text-white sm:w-4 sm:h-4" />
                             <span>{post.likes_count}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
+                          </button>
+                          <div className="flex items-center gap-1 text-zinc-500">
                             <MessageSquare size={16} className="sm:w-4 sm:h-4" />
                             <span>{post.comments_count}</span>
                           </div>
@@ -1048,7 +1057,7 @@ export default function ProfilePage() {
                       <p className="text-zinc-100 mb-2 sm:mb-3 text-sm sm:text-base">{comment.content}</p>
 
                       <div className="flex items-center gap-1 text-xs sm:text-sm text-zinc-500">
-                        <ArrowBigUp size={14} className="text-white sm:w-4 sm:h-4" />
+                        <Heart size={14} className="text-red-400 sm:w-4 sm:h-4" fill={comment.is_liked ? 'currentColor' : 'none'} />
                         <span>{comment.likes_count} likes</span>
                       </div>
                     </motion.div>
@@ -1059,10 +1068,8 @@ export default function ProfilePage() {
           </AnimatePresence>
         </main>
 
-        {/* Right Sidebar - Desktop Only */}
         <aside className="hidden xl:block w-80 flex-shrink-0">
           <div className="sticky top-20 space-y-4">
-            {/* Profile Settings Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -1170,7 +1177,6 @@ export default function ProfilePage() {
               )}
             </motion.div>
 
-            {/* Security Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}

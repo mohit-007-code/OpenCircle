@@ -5,7 +5,7 @@ import { Home, TrendingUp, Plus, Compass, ChevronLeft, ChevronRight, User } from
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -46,154 +46,152 @@ export default function Sidebar() {
             isCollapsed ? 'w-16' : 'w-64'
           }`}
         >
-          <div className="p-3 space-y-1">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              
-              return (
-                <div key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
-                      active
-                        ? 'text-zinc-900 font-medium'
-                        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
-                    }`}
-                    title={isCollapsed ? item.label : ''}
-                  >
-                    {/* ✨ WHITE BACKGROUND */}
-                    {active && (
-                      <motion.div
-                        layoutId="desktopActiveTab"
-                        className="absolute inset-0 bg-white rounded-xl shadow-lg"
-                        transition={{ 
-                          type: "spring", 
-                          bounce: 0.15, 
-                          duration: 0.8,
-                          ease: [0.22, 1, 0.36, 1]
-                        }}
-                      />
-                    )}
-
-                    {/* ✨ WHITE Active Bar */}
-                    {active && (
-                      <motion.div
-                        layoutId="desktopActiveBar"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
-                        transition={{ 
-                          type: "spring", 
-                          bounce: 0.15, 
-                          duration: 0.8,
-                          ease: [0.22, 1, 0.36, 1]
-                        }}
-                      />
-                    )}
-                    
-                    <Icon 
-                      size={20} 
-                      className={`flex-shrink-0 transition-all duration-300 relative z-10 ${
-                        active ? 'text-zinc-950' : 'group-hover:scale-110'
-                      }`}
-                    />
-                    
-                    <AnimatePresence mode="wait">
-                      {!isCollapsed && (
-                        <motion.span
-                          initial={false}
-                          className="whitespace-nowrap relative z-10"
-                        >
-                          {item.label}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Link>
-                </div>
-              );
-            })}
-
-            {user && (
-              <>
-                <div className="h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent my-3" />
+          <LayoutGroup id="desktop-sidebar">
+            <div className="p-3 space-y-1">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
                 
-                <div>
-                  <Link
-                    href="/communities/create"
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
-                      isActive('/communities/create')
-                        ? 'text-zinc-900 font-medium'
-                        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
-                    }`}
-                    title={isCollapsed ? 'Create Community' : ''}
-                  >
-                    {/* ✨ WHITE BACKGROUND */}
-                    {isActive('/communities/create') && (
-                      <>
-                        <motion.div
-                          layoutId="desktopActiveTab"
-                          className="absolute inset-0 bg-white rounded-xl shadow-lg"
-                          transition={{ 
-                            type: "spring", 
-                            bounce: 0.15, 
-                            duration: 0.8,
-                            ease: [0.22, 1, 0.36, 1]
-                          }}
-                        />
-                        <motion.div
-                          layoutId="desktopActiveBar"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
-                          transition={{ 
-                            type: "spring", 
-                            bounce: 0.15, 
-                            duration: 0.8,
-                            ease: [0.22, 1, 0.36, 1]
-                          }}
-                        />
-                      </>
-                    )}
-
-                    <Plus 
-                      size={20} 
-                      className={`flex-shrink-0 transition-all duration-300 relative z-10 ${
-                        isActive('/communities/create') ? 'text-zinc-950' : 'group-hover:rotate-90 group-hover:scale-110'
-                      }`}
-                    />
-                    <AnimatePresence mode="wait">
-                      {!isCollapsed && (
-                        <motion.span
-                          initial={false}
-                          className="whitespace-nowrap relative z-10"
-                        >
-                          Create Community
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Link>
-                </div>
-              </>
-            )}
-
-            <AnimatePresence mode="wait">
-              {!isCollapsed && (
-                <div>
-                  <div className="h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent my-3" />
-                  
-                  <div className="px-3 py-2">
-                    <h3 className="text-xs font-semibold text-zinc-500 uppercase mb-2 tracking-wider">
-                      Your Communities
-                    </h3>
+                return (
+                  <div key={item.href}>
                     <Link
-                      href="/communities"
-                      className="flex items-center justify-between py-1.5 px-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/30 rounded-lg transition-all duration-300 group"
+                      href={item.href}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                        active
+                          ? 'text-zinc-900 font-medium'
+                          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
+                      }`}
+                      title={isCollapsed ? item.label : ''}
                     >
-                      <span>View all</span>
-                      <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
+                      {active && (
+                        <>
+                          <motion.div
+                            layoutId="desktopActiveTab"
+                            className="absolute inset-0 bg-white rounded-xl shadow-lg"
+                            transition={{ 
+                              type: "spring", 
+                              stiffness: 500,
+                              damping: 30,
+                              mass: 0.8
+                            }}
+                          />
+                          <motion.div
+                            layoutId="desktopActiveBar"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
+                            transition={{ 
+                              type: "spring", 
+                              stiffness: 500,
+                              damping: 30,
+                              mass: 0.8
+                            }}
+                          />
+                        </>
+                      )}
+                      
+                      <Icon 
+                        size={20} 
+                        className={`flex-shrink-0 transition-all duration-300 relative z-10 ${
+                          active ? 'text-zinc-950' : 'group-hover:scale-110'
+                        }`}
+                      />
+                      
+                      <AnimatePresence mode="wait">
+                        {!isCollapsed && (
+                          <motion.span
+                            initial={false}
+                            className="whitespace-nowrap relative z-10"
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </Link>
                   </div>
-                </div>
+                );
+              })}
+
+              {user && (
+                <>
+                  <div className="h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent my-3" />
+                  
+                  <div>
+                    <Link
+                      href="/communities/create"
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                        isActive('/communities/create')
+                          ? 'text-zinc-900 font-medium'
+                          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
+                      }`}
+                      title={isCollapsed ? 'Create Community' : ''}
+                    >
+                      {isActive('/communities/create') && (
+                        <>
+                          <motion.div
+                            layoutId="desktopActiveTab"
+                            className="absolute inset-0 bg-white rounded-xl shadow-lg"
+                            transition={{ 
+                              type: "spring", 
+                              stiffness: 500,
+                              damping: 30,
+                              mass: 0.8
+                            }}
+                          />
+                          <motion.div
+                            layoutId="desktopActiveBar"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
+                            transition={{ 
+                              type: "spring", 
+                              stiffness: 500,
+                              damping: 30,
+                              mass: 0.8
+                            }}
+                          />
+                        </>
+                      )}
+
+                      <Plus 
+                        size={20} 
+                        className={`flex-shrink-0 transition-all duration-300 relative z-10 ${
+                          isActive('/communities/create') ? 'text-zinc-950' : 'group-hover:rotate-90 group-hover:scale-110'
+                        }`}
+                      />
+                      <AnimatePresence mode="wait">
+                        {!isCollapsed && (
+                          <motion.span
+                            initial={false}
+                            className="whitespace-nowrap relative z-10"
+                          >
+                            Create Community
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </Link>
+                  </div>
+                </>
               )}
-            </AnimatePresence>
-          </div>
+
+              <AnimatePresence mode="wait">
+                {!isCollapsed && (
+                  <div>
+                    <div className="h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent my-3" />
+                    
+                    <div className="px-3 py-2">
+                      <h3 className="text-xs font-semibold text-zinc-500 uppercase mb-2 tracking-wider">
+                        Your Communities
+                      </h3>
+                      <Link
+                        href="/communities"
+                        className="flex items-center justify-between py-1.5 px-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/30 rounded-lg transition-all duration-300 group"
+                      >
+                        <span>View all</span>
+                        <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </LayoutGroup>
 
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-zinc-900/80 to-transparent pointer-events-none" />
         </div>
@@ -234,234 +232,266 @@ export default function Sidebar() {
         </AnimatePresence>
       </motion.button>
 
-      {/* Mobile Floating Bottom Navigation */}
+      {/* ✨ ULTRA SMOOTH Mobile Floating Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-        <motion.div 
-          layout
-          className="glass-effect backdrop-blur-2xl bg-white/10 dark:bg-zinc-900/90 border border-zinc-700/30 rounded-full shadow-2xl shadow-black/30 px-2 py-2"
-        >
-          <div className="flex items-center justify-center gap-1">
-            {/* Home */}
-            <Link
-              href="/"
-              className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden ${
-                isActive('/') 
-                  ? 'text-zinc-900 dark:text-zinc-100' 
-                  : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50'
-              }`}
-            >
-              {/* ✨ WHITE BACKGROUND */}
-              {isActive('/') && (
-                <motion.div
-                  layoutId="mobileActiveIndicator"
-                  className="absolute inset-0 bg-white dark:bg-white rounded-full"
-                  transition={{ 
-                    type: "spring", 
-                    bounce: 0.15,
-                    duration: 0.8,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                />
-              )}
-              
-              <Home 
-                size={20} 
-                strokeWidth={isActive('/') ? 2.5 : 2}
-                className={`relative z-10 transition-all duration-300 ${isActive('/') ? 'text-zinc-950' : ''}`}
-              />
-              
-              <AnimatePresence mode="wait">
-                {isActive('/') && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
-                  >
-                    Home
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Link>
-
-            {/* Popular */}
-            <Link
-              href="/popular"
-              className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden ${
-                isActive('/popular') 
-                  ? 'text-zinc-900 dark:text-zinc-100' 
-                  : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50'
-              }`}
-            >
-              {isActive('/popular') && (
-                <motion.div
-                  layoutId="mobileActiveIndicator"
-                  className="absolute inset-0 bg-white dark:bg-white rounded-full"
-                  transition={{ 
-                    type: "spring", 
-                    bounce: 0.15,
-                    duration: 0.8,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                />
-              )}
-              
-              <TrendingUp 
-                size={20} 
-                strokeWidth={isActive('/popular') ? 2.5 : 2}
-                className={`relative z-10 transition-all duration-300 ${isActive('/popular') ? 'text-zinc-950' : ''}`}
-              />
-              
-              <AnimatePresence mode="wait">
-                {isActive('/popular') && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
-                  >
-                    Popular
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Link>
-
-            {/* Create */}
-            {user && (
+        <LayoutGroup id="mobile-nav">
+          <motion.div 
+            layout
+            className="glass-effect backdrop-blur-2xl bg-white/10 dark:bg-zinc-900/90 border border-zinc-700/30 rounded-full shadow-2xl shadow-black/30 px-2 py-2"
+            transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 30,
+              mass: 0.8
+            }}
+          >
+            <div className="flex items-center justify-center gap-1">
+              {/* Home */}
               <Link
-                href="/communities/create"
-                className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden ${
-                  isActive('/communities/create')
-                    ? 'text-zinc-900 dark:text-zinc-100'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50'
-                }`}
-              >
-                {isActive('/communities/create') && (
-                  <motion.div
-                    layoutId="mobileActiveIndicator"
-                    className="absolute inset-0 bg-white dark:bg-white rounded-full"
-                    transition={{ 
-                      type: "spring", 
-                      bounce: 0.15,
-                      duration: 0.8,
-                      ease: [0.22, 1, 0.36, 1]
-                    }}
-                  />
-                )}
-
-                <Plus 
-                  size={20} 
-                  strokeWidth={isActive('/communities/create') ? 2.5 : 2}
-                  className={`relative z-10 transition-all duration-300 ${isActive('/communities/create') ? 'text-zinc-950' : ''}`}
-                />
-
-                <AnimatePresence mode="wait">
-                  {isActive('/communities/create') && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
-                    >
-                      Create
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </Link>
-            )}
-
-            {/* Explore */}
-            <Link
-              href="/communities"
-              className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden ${
-                isActive('/communities') 
-                  ? 'text-zinc-900 dark:text-zinc-100' 
-                  : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50'
-              }`}
-            >
-              {isActive('/communities') && (
-                <motion.div
-                  layoutId="mobileActiveIndicator"
-                  className="absolute inset-0 bg-white dark:bg-white rounded-full"
-                  transition={{ 
-                    type: "spring", 
-                    bounce: 0.15,
-                    duration: 0.8,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                />
-              )}
-              
-              <Compass 
-                size={20} 
-                strokeWidth={isActive('/communities') ? 2.5 : 2}
-                className={`relative z-10 transition-all duration-300 ${isActive('/communities') ? 'text-zinc-950' : ''}`}
-              />
-              
-              <AnimatePresence mode="wait">
-                {isActive('/communities') && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
-                  >
-                    Explore
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Link>
-
-            {/* Profile */}
-            {user && (
-              <Link
-                href="/profile"
-                className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden ${
-                  isActive('/profile') 
+                href="/"
+                className={`flex items-center gap-2 px-4 py-3 rounded-full transition-colors duration-200 relative overflow-hidden ${
+                  isActive('/') 
                     ? 'text-zinc-900 dark:text-zinc-100' 
-                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50'
+                    : 'text-zinc-500 dark:text-zinc-400'
                 }`}
               >
-                {isActive('/profile') && (
+                {isActive('/') && (
                   <motion.div
                     layoutId="mobileActiveIndicator"
                     className="absolute inset-0 bg-white dark:bg-white rounded-full"
                     transition={{ 
                       type: "spring", 
-                      bounce: 0.15,
-                      duration: 0.8,
-                      ease: [0.22, 1, 0.36, 1]
+                      stiffness: 500,
+                      damping: 30,
+                      mass: 0.8
                     }}
                   />
                 )}
                 
-                <User 
+                <Home 
                   size={20} 
-                  strokeWidth={isActive('/profile') ? 2.5 : 2}
-                  className={`relative z-10 transition-all duration-300 ${isActive('/profile') ? 'text-zinc-950' : ''}`}
+                  strokeWidth={isActive('/') ? 2.5 : 2}
+                  className="relative z-10 transition-all duration-200"
+                  style={{ color: isActive('/') ? '#18181b' : undefined }}
                 />
                 
                 <AnimatePresence mode="wait">
-                  {isActive('/profile') && (
+                  {isActive('/') && (
                     <motion.span
                       initial={{ opacity: 0, width: 0 }}
                       animate={{ opacity: 1, width: 'auto' }}
                       exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 500,
+                        damping: 30
+                      }}
                       className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
                     >
-                      Profile
+                      Home
                     </motion.span>
                   )}
                 </AnimatePresence>
               </Link>
-            )}
-          </div>
-        </motion.div>
+
+              {/* Popular */}
+              <Link
+                href="/popular"
+                className={`flex items-center gap-2 px-4 py-3 rounded-full transition-colors duration-200 relative overflow-hidden ${
+                  isActive('/popular') 
+                    ? 'text-zinc-900 dark:text-zinc-100' 
+                    : 'text-zinc-500 dark:text-zinc-400'
+                }`}
+              >
+                {isActive('/popular') && (
+                  <motion.div
+                    layoutId="mobileActiveIndicator"
+                    className="absolute inset-0 bg-white dark:bg-white rounded-full"
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 500,
+                      damping: 30,
+                      mass: 0.8
+                    }}
+                  />
+                )}
+                
+                <TrendingUp 
+                  size={20} 
+                  strokeWidth={isActive('/popular') ? 2.5 : 2}
+                  className="relative z-10 transition-all duration-200"
+                  style={{ color: isActive('/popular') ? '#18181b' : undefined }}
+                />
+                
+                <AnimatePresence mode="wait">
+                  {isActive('/popular') && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: 'auto' }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 500,
+                        damping: 30
+                      }}
+                      className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
+                    >
+                      Popular
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Link>
+
+              {/* Create */}
+              {user && (
+                <Link
+                  href="/communities/create"
+                  className={`flex items-center gap-2 px-4 py-3 rounded-full transition-colors duration-200 relative overflow-hidden ${
+                    isActive('/communities/create')
+                      ? 'text-zinc-900 dark:text-zinc-100'
+                      : 'text-zinc-500 dark:text-zinc-400'
+                  }`}
+                >
+                  {isActive('/communities/create') && (
+                    <motion.div
+                      layoutId="mobileActiveIndicator"
+                      className="absolute inset-0 bg-white dark:bg-white rounded-full"
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 500,
+                        damping: 30,
+                        mass: 0.8
+                      }}
+                    />
+                  )}
+
+                  <Plus 
+                    size={20} 
+                    strokeWidth={isActive('/communities/create') ? 2.5 : 2}
+                    className="relative z-10 transition-all duration-200"
+                    style={{ color: isActive('/communities/create') ? '#18181b' : undefined }}
+                  />
+
+                  <AnimatePresence mode="wait">
+                    {isActive('/communities/create') && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 'auto' }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ 
+                          type: "spring", 
+                          stiffness: 500,
+                          damping: 30
+                        }}
+                        className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
+                      >
+                        Create
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              )}
+
+              {/* Explore */}
+              <Link
+                href="/communities"
+                className={`flex items-center gap-2 px-4 py-3 rounded-full transition-colors duration-200 relative overflow-hidden ${
+                  isActive('/communities') 
+                    ? 'text-zinc-900 dark:text-zinc-100' 
+                    : 'text-zinc-500 dark:text-zinc-400'
+                }`}
+              >
+                {isActive('/communities') && (
+                  <motion.div
+                    layoutId="mobileActiveIndicator"
+                    className="absolute inset-0 bg-white dark:bg-white rounded-full"
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 500,
+                      damping: 30,
+                      mass: 0.8
+                    }}
+                  />
+                )}
+                
+                <Compass 
+                  size={20} 
+                  strokeWidth={isActive('/communities') ? 2.5 : 2}
+                  className="relative z-10 transition-all duration-200"
+                  style={{ color: isActive('/communities') ? '#18181b' : undefined }}
+                />
+                
+                <AnimatePresence mode="wait">
+                  {isActive('/communities') && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: 'auto' }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 500,
+                        damping: 30
+                      }}
+                      className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
+                    >
+                      Explore
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Link>
+
+              {/* Profile */}
+              {user && (
+                <Link
+                  href="/profile"
+                  className={`flex items-center gap-2 px-4 py-3 rounded-full transition-colors duration-200 relative overflow-hidden ${
+                    isActive('/profile') 
+                      ? 'text-zinc-900 dark:text-zinc-100' 
+                      : 'text-zinc-500 dark:text-zinc-400'
+                  }`}
+                >
+                  {isActive('/profile') && (
+                    <motion.div
+                      layoutId="mobileActiveIndicator"
+                      className="absolute inset-0 bg-white dark:bg-white rounded-full"
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 500,
+                        damping: 30,
+                        mass: 0.8
+                      }}
+                    />
+                  )}
+                  
+                  <User 
+                    size={20} 
+                    strokeWidth={isActive('/profile') ? 2.5 : 2}
+                    className="relative z-10 transition-all duration-200"
+                    style={{ color: isActive('/profile') ? '#18181b' : undefined }}
+                  />
+                  
+                  <AnimatePresence mode="wait">
+                    {isActive('/profile') && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 'auto' }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ 
+                          type: "spring", 
+                          stiffness: 500,
+                          damping: 30
+                        }}
+                        className="relative z-10 font-semibold text-sm whitespace-nowrap overflow-hidden text-zinc-900"
+                      >
+                        Profile
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        </LayoutGroup>
 
         <div className="absolute inset-0 rounded-full bg-zinc-900/20 blur-xl -z-10" />
       </nav>

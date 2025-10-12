@@ -59,7 +59,6 @@ export default function CommunityDetailPage() {
   const [memberToKick, setMemberToKick] = useState<{ id: number; username: string } | null>(null);
   const [copiedPostId, setCopiedPostId] = useState<number | null>(null);
   
-  // Confirmation dropdown states
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
 
@@ -384,13 +383,11 @@ export default function CommunityDetailPage() {
             <span className="font-medium">Back</span>
           </motion.button>
 
-          {/* ✨ MOBILE RESPONSIVE BANNER */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="relative mb-6 rounded-2xl overflow-hidden"
           >
-            {/* Cover Image */}
             <div className="h-32 sm:h-40 md:h-48 bg-white relative">
               {getImageUrl(community.cover_image) && (
                 <Image
@@ -403,10 +400,8 @@ export default function CommunityDetailPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
             </div>
 
-            {/* Content Section */}
             <div className="px-3 sm:px-4 md:px-6">
               <div className="relative">
-                {/* Display Picture */}
                 <div className="absolute -top-10 sm:-top-12 md:-top-16 left-0 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl border-3 sm:border-4 border-zinc-950 bg-white overflow-hidden shadow-2xl shadow-white/20">
                   {getImageUrl(community.display_picture) ? (
                     <Image
@@ -422,10 +417,8 @@ export default function CommunityDetailPage() {
                   )}
                 </div>
 
-                {/* Community Info and Buttons */}
                 <div className="pt-2 sm:pt-3 md:pt-4 pb-4 pl-20 sm:pl-24 md:pl-36">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    {/* Community Name and Description */}
                     <div className="flex-1 min-w-0 pr-2">
                       <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 text-white truncate">
                         c/{community.name}
@@ -433,7 +426,6 @@ export default function CommunityDetailPage() {
                       <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2">{community.description}</p>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex gap-2 flex-shrink-0">
                       {community.is_creator ? (
                         <button
@@ -456,7 +448,6 @@ export default function CommunityDetailPage() {
                             <span>Leave</span>
                           </button>
 
-                          {/* LEAVE CONFIRMATION DROPDOWN */}
                           {showLeaveConfirm && (
                             <div className="absolute right-0 mt-2 w-44 sm:w-48 glass-effect bg-zinc-900 backdrop-blur-xl border border-zinc-800/50 rounded-xl shadow-2xl z-50 overflow-hidden">
                               <button
@@ -689,12 +680,20 @@ export default function CommunityDetailPage() {
                               </div>
                             )}
                             <span>Posted by</span>
+                            {/* ✅ FIX #1: Post author click */}
                             <span 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                router.push(`/users/${post.author.id}`);
+                                // Check if it's your own profile
+                                if (user && post.author.id === user.id) {
+                                  router.push('/profile');
+                                } else {
+                                  router.push(`/users/${post.author.id}`);
+                                }
                               }}
-                              className="hover:text-white cursor-pointer font-semibold transition-colors"
+                              className={`hover:text-white cursor-pointer font-semibold transition-colors ${
+                                user && post.author.id === user.id ? 'text-blue-400' : ''
+                              }`}
                             >
                               u/{post.author.username}
                             </span>
@@ -702,7 +701,6 @@ export default function CommunityDetailPage() {
                             <span>{formatTime(post.created_at)}</span>
                           </div>
 
-                          {/* DELETE BUTTON WITH CONFIRMATION DROPDOWN */}
                           {post.can_delete && (
                             <div className="relative">
                               <button
@@ -715,7 +713,6 @@ export default function CommunityDetailPage() {
                                 <Trash2 size={18} />
                               </button>
 
-                              {/* DELETE CONFIRMATION DROPDOWN */}
                               {showDeleteConfirm === post.id && (
                                 <div className="absolute right-0 mt-2 w-40 glass-effect bg-zinc-900 backdrop-blur-xl border border-zinc-800/50 rounded-xl shadow-2xl z-50 overflow-hidden">
                                   <button
@@ -838,9 +835,17 @@ export default function CommunityDetailPage() {
                           transition={{ delay: index * 0.05 }}
                           className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl hover:bg-zinc-800/50 transition-all group"
                         >
+                          {/* ✅ FIX #2: Member list click */}
                           <div 
                             className="flex items-center gap-3 cursor-pointer flex-1"
-                            onClick={() => router.push(`/users/${member.user.id}`)}
+                            onClick={() => {
+                              // Check if it's your own profile
+                              if (user && member.user.id === user.id) {
+                                router.push('/profile');
+                              } else {
+                                router.push(`/users/${member.user.id}`);
+                              }
+                            }}
                           >
                             {member.user.profile_picture ? (
                               <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
@@ -858,7 +863,9 @@ export default function CommunityDetailPage() {
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-white hover:text-zinc-300 transition-colors truncate">
+                              <p className={`font-semibold hover:text-zinc-300 transition-colors truncate ${
+                                user && member.user.id === user.id ? 'text-blue-400' : 'text-white'
+                              }`}>
                                 u/{member.user.username}
                               </p>
                               <div className="flex items-center gap-2 flex-wrap">
@@ -949,9 +956,19 @@ export default function CommunityDetailPage() {
                 <div className="flex items-center gap-3 text-sm p-3 bg-zinc-800/30 rounded-xl">
                   <Crown size={18} className="text-yellow-500" />
                   <span className="text-zinc-500">Created by</span>
+                  {/* ✅ FIX #3: Creator link */}
                   <span 
-                    onClick={() => router.push(`/users/${community.creator_id}`)}
-                    className="font-semibold text-white hover:text-zinc-300 cursor-pointer transition-colors"
+                    onClick={() => {
+                      // Check if it's your own profile
+                      if (user && community.creator_id === user.id) {
+                        router.push('/profile');
+                      } else {
+                        router.push(`/users/${community.creator_id}`);
+                      }
+                    }}
+                    className={`font-semibold hover:text-zinc-300 cursor-pointer transition-colors ${
+                      user && community.creator_id === user.id ? 'text-blue-400' : 'text-white'
+                    }`}
                   >
                     u/{members.find(m => m.user.id === community.creator_id)?.user.username || 'Creator'}
                   </span>

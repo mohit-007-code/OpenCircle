@@ -16,6 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="http://localhost:8000" />
+        <link rel="dns-prefetch" href="http://localhost:8000" />
+      </head>
       <body className="bg-[#0b0f14] m-0 p-0">
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
           <AuthProvider>

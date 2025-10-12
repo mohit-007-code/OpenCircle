@@ -10,8 +10,7 @@ import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import Toast from '@/components/Toast';
 import { 
-  ArrowBigUp,
-  ArrowBigDown,
+  Heart,
   MessageSquare,
   Share2,
   ArrowLeft,
@@ -51,6 +50,7 @@ export default function PostDetailPage() {
   const [replies, setReplies] = useState<{ [key: number]: Comment[] }>({});
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [showCommentDrawer, setShowCommentDrawer] = useState(false);
+  const [showDeletePostConfirm, setShowDeletePostConfirm] = useState(false);
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -64,7 +64,6 @@ export default function PostDetailPage() {
     }
   }, [postId]);
 
-  // Auto-focus reply input when reply mode is active
   useEffect(() => {
     if (replyTo && replyInputRef.current) {
       replyInputRef.current.focus();
@@ -183,7 +182,6 @@ export default function PostDetailPage() {
     }
   };
 
-  // ✨ STATIC REPLY HANDLER
   const handleCreateReply = async (e: FormEvent) => {
     e.preventDefault();
     if (!replyContent.trim() || !replyTo) return;
@@ -195,13 +193,11 @@ export default function PostDetailPage() {
         parent: replyTo
       });
       
-      // Add reply to state
       setReplies(prev => ({
         ...prev,
         [replyTo]: [...(prev[replyTo] || []), response.data]
       }));
       
-      // Update reply counts
       setComments(prev => prev.map(c => 
         c.id === replyTo 
           ? { ...c, replies_count: c.replies_count + 1 }
@@ -222,15 +218,11 @@ export default function PostDetailPage() {
       
       setPost(prev => prev ? { ...prev, comments_count: prev.comments_count + 1 } : null);
       
-      // Clear reply input but KEEP reply mode active
       setReplyContent('');
-      
-      // Auto-expand to show new reply
       setExpandedReplies(prev => new Set(prev).add(replyTo));
       
       showToast('Reply posted!', 'success');
       
-      // Keep focus on reply input
       if (replyInputRef.current) {
         replyInputRef.current.focus();
       }
@@ -241,13 +233,11 @@ export default function PostDetailPage() {
     }
   };
 
-  // ✨ START REPLY - Activates reply mode
   const handleStartReply = (commentId: number, username: string) => {
     setReplyTo(commentId);
     setReplyToUsername(username);
   };
 
-  // ✨ CANCEL REPLY
   const handleCancelReply = () => {
     setReplyTo(null);
     setReplyToUsername('');
@@ -281,6 +271,19 @@ export default function PostDetailPage() {
     }
   }, []);
 
+  // ✅ NEW: Delete post handler
+  const handleDeletePost = async () => {
+    try {
+      await api.delete(`/posts/${postId}/`);
+      showToast('Post deleted successfully', 'success');
+      setTimeout(() => router.push('/'), 1000);
+    } catch (error) {
+      showToast('Failed to delete post', 'error');
+    } finally {
+      setShowDeletePostConfirm(false);
+    }
+  };
+
   const handleShare = async () => {
     const postUrl = `${window.location.origin}/posts/${postId}`;
     try {
@@ -310,7 +313,7 @@ export default function PostDetailPage() {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
-  // ✨ SIMPLIFIED Comment Component - No inline reply form
+  // ✅ UPDATED: Comment Component with Heart voting
   const CommentItem = memo(({ 
     comment, 
     depth = 0,
@@ -330,42 +333,49 @@ export default function PostDetailPage() {
     isExpanded: boolean;
     commentReplies: Comment[] | undefined;
   }) => {
+    // ✅ FIX: Profile redirect check
     const handleUsernameClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      router.push(`/users/${comment.author.id}`);
+      if (user && comment.author.id === user.id) {
+        router.push('/profile');
+      } else {
+        router.push(`/users/${comment.author.id}`);
+      }
     };
 
     return (
       <div className={`${depth > 0 ? 'ml-4 pl-3 border-l-2 border-zinc-700/30' : ''}`}>
         <div className="glass-effect bg-zinc-800/30 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-3 mb-3">
           <div className="flex gap-3">
-            {/* Vote Section */}
-            <div className="flex flex-col items-center gap-1">
+            {/* ✅ CHANGED: Heart voting (No arrows) */}
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => onVote(comment.id)}
-                className={`p-1 rounded-xl hover:bg-zinc-700/50 transition-all ${
-                  comment.is_liked ? 'text-cyan-400' : 'text-zinc-500 hover:text-cyan-400'
+                className={`p-1.5 rounded-xl hover:bg-zinc-700/50 transition-all group ${
+                  comment.is_liked ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'
                 }`}
               >
-                <ArrowBigUp size={16} fill={comment.is_liked ? 'currentColor' : 'none'} />
+                <Heart 
+                  size={16} 
+                  fill={comment.is_liked ? 'currentColor' : 'none'}
+                  className="group-hover:scale-110 transition-transform"
+                />
               </button>
-              <span className={`text-xs font-bold ${comment.is_liked ? 'text-cyan-400' : 'text-zinc-300'}`}>
+              <span className={`text-xs font-bold min-w-[1.5rem] text-center ${
+                comment.is_liked ? 'text-red-500' : 'text-zinc-300'
+              }`}>
                 {comment.likes_count}
               </span>
-              <button
-                onClick={() => onVote(comment.id)}
-                className="p-1 rounded-xl hover:bg-zinc-700/50 transition-all text-zinc-500 hover:text-violet-400"
-              >
-                <ArrowBigDown size={16} />
-              </button>
             </div>
 
-            {/* Comment Content */}
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  {/* ✅ FIX: Username with profile redirect & blue color for self */}
                   <span 
-                    className="font-semibold text-zinc-100 hover:text-cyan-400 cursor-pointer transition-colors"
+                    className={`font-semibold hover:text-cyan-400 cursor-pointer transition-colors ${
+                      user && comment.author.id === user.id ? 'text-blue-400' : 'text-zinc-100'
+                    }`}
                     onClick={handleUsernameClick}
                   >
                     u/{comment.author.username}
@@ -436,7 +446,6 @@ export default function PostDetailPage() {
           </div>
         </div>
 
-        {/* Nested Replies */}
         <AnimatePresence>
           {isExpanded && commentReplies && (
             <motion.div
@@ -467,7 +476,6 @@ export default function PostDetailPage() {
 
   CommentItem.displayName = 'CommentItem';
 
-  // Loading Skeleton
   const PostSkeleton = () => (
     <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
       <Skeleton className="h-6 w-3/4" />
@@ -549,82 +557,112 @@ export default function PostDetailPage() {
             transition={{ delay: 0.1 }}
             className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl mb-6 overflow-hidden"
           >
-            <div className="flex flex-col sm:flex-row">
-              <div className="flex sm:flex-col items-center gap-2 sm:gap-1 bg-zinc-900/80 px-4 py-3 sm:px-4 sm:py-4 border-b sm:border-b-0 sm:border-r border-zinc-800/50">
-                <button
-                  onClick={handleVotePost}
-                  className={`p-1.5 rounded-xl hover:bg-zinc-800/50 transition-all ${
-                    post.is_liked ? 'text-cyan-400' : 'text-zinc-500 hover:text-cyan-400'
-                  }`}
+            {/* ✅ CHANGED: Removed vote sidebar, added inline actions */}
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center gap-2 text-sm text-zinc-500 mb-3 flex-wrap">
+                <span
+                  className="hover:text-cyan-400 cursor-pointer transition-colors font-medium"
+                  onClick={() => router.push(`/communities/${post.community_slug}`)}
                 >
-                  <ArrowBigUp size={24} fill={post.is_liked ? 'currentColor' : 'none'} />
-                </button>
-                <span className={`text-sm font-bold min-w-[2rem] text-center ${
-                  post.is_liked ? 'text-cyan-400' : 'text-zinc-300'
-                }`}>
-                  {post.likes_count}
+                  c/{post.community_name}
                 </span>
-                <button
-                  onClick={handleVotePost}
-                  className="p-1.5 rounded-xl hover:bg-zinc-800/50 transition-all text-zinc-500 hover:text-violet-400"
+                <span>•</span>
+                {/* ✅ FIX: Profile redirect check */}
+                <span
+                  className={`hover:text-cyan-400 cursor-pointer transition-colors ${
+                    user && post.author.id === user.id ? 'text-blue-400 font-semibold' : ''
+                  }`}
+                  onClick={() => {
+                    if (user && post.author.id === user.id) {
+                      router.push('/profile');
+                    } else {
+                      router.push(`/users/${post.author.id}`);
+                    }
+                  }}
                 >
-                  <ArrowBigDown size={24} />
-                </button>
+                  u/{post.author.username}
+                </span>
+                <span>•</span>
+                <span>{formatTime(post.created_at)}</span>
               </div>
 
-              <div className="flex-1 p-4 sm:p-5">
-                <div className="flex items-center gap-2 text-sm text-zinc-500 mb-3 flex-wrap">
-                  <span
-                    className="hover:text-cyan-400 cursor-pointer transition-colors font-medium"
-                    onClick={() => router.push(`/communities/${post.community_slug}`)}
-                  >
-                    c/{post.community_name}
-                  </span>
-                  <span>•</span>
-                  <span
-                    className="hover:text-cyan-400 cursor-pointer transition-colors"
-                    onClick={() => router.push(`/users/${post.author.id}`)}
-                  >
-                    u/{post.author.username}
-                  </span>
-                  <span>•</span>
-                  <span>{formatTime(post.created_at)}</span>
+              {post.title && (
+                <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 mb-3">{post.title}</h1>
+              )}
+
+              <p className="text-zinc-300 mb-4 whitespace-pre-wrap leading-relaxed">{post.content}</p>
+
+              {getImageUrl(post.image) && (
+                <div className="mb-4 rounded-xl overflow-hidden">
+                  <Image
+                    src={getImageUrl(post.image)!}
+                    alt="Post"
+                    width={800}
+                    height={600}
+                    className="w-full max-h-[600px] object-contain bg-zinc-950"
+                  />
                 </div>
+              )}
 
-                {post.title && (
-                  <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 mb-3">{post.title}</h1>
-                )}
-
-                <p className="text-zinc-300 mb-4 whitespace-pre-wrap leading-relaxed">{post.content}</p>
-
-                {getImageUrl(post.image) && (
-                  <div className="mb-4 rounded-xl overflow-hidden">
-                    <Image
-                      src={getImageUrl(post.image)!}
-                      alt="Post"
-                      width={800}
-                      height={600}
-                      className="w-full max-h-[600px] object-contain bg-zinc-950"
+              {/* ✅ NEW: Action buttons (Heart, Comment, Share, Delete) */}
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-zinc-800/50">
+                <div className="flex items-center gap-2">
+                  {/* ✅ Heart button (replaces arrows) */}
+                  <button
+                    onClick={handleVotePost}
+                    className={`flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all text-sm font-medium group ${
+                      post.is_liked ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'
+                    }`}
+                  >
+                    <Heart 
+                      size={20} 
+                      fill={post.is_liked ? 'currentColor' : 'none'}
+                      className="group-hover:scale-110 transition-transform" 
                     />
-                  </div>
-                )}
+                    <span>{post.likes_count}</span>
+                  </button>
 
-                <div className="flex items-center gap-3 pt-3 border-t border-zinc-800/50">
                   <button
                     onClick={() => setShowCommentDrawer(true)}
                     className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all text-zinc-400 hover:text-cyan-400 text-sm font-medium group"
                   >
                     <MessageSquare size={20} className="group-hover:scale-110 transition-transform" />
-                    <span>{post.comments_count} Comments</span>
+                    <span>{post.comments_count}</span>
                   </button>
+
                   <button 
                     onClick={handleShare}
                     className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all text-zinc-400 hover:text-cyan-400 text-sm font-medium group"
                   >
                     <Share2 size={20} className="group-hover:scale-110 transition-transform" />
-                    <span>Share</span>
+                    <span className="hidden sm:inline">Share</span>
                   </button>
                 </div>
+
+                {/* ✅ NEW: Delete button (only for post owner) */}
+                {post.can_delete && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowDeletePostConfirm(!showDeletePostConfirm)}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-red-500/10 rounded-xl transition-all text-red-400 hover:text-red-300 text-sm font-medium"
+                    >
+                      <Trash2 size={18} />
+                      <span className="hidden sm:inline">Delete</span>
+                    </button>
+
+                    {showDeletePostConfirm && (
+                      <div className="absolute right-0 bottom-full mb-2 w-48 glass-effect bg-zinc-900 backdrop-blur-xl border border-zinc-800/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <button
+                          onClick={handleDeletePost}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 hover:bg-red-500/20 transition-all text-sm text-red-400 hover:text-red-300 font-semibold"
+                        >
+                          <Trash2 size={16} />
+                          <span>Sure? Delete Post</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </motion.article>
@@ -638,7 +676,7 @@ export default function PostDetailPage() {
               transition={{ delay: 0.3 }}
               className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5"
             >
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <h3 className="font-bold text-lg mb-4 flex items-center text-white gap-2">
                 <Sparkles size={18} className="text-cyan-400" />
                 About
               </h3>
@@ -654,7 +692,7 @@ export default function PostDetailPage() {
         </aside>
       </div>
 
-      {/* ✨ COMMENT DRAWER with STATIC REPLY BOX */}
+      {/* Comment Drawer */}
       <AnimatePresence>
         {showCommentDrawer && (
           <>
@@ -673,7 +711,6 @@ export default function PostDetailPage() {
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t-2 border-cyan-500/30 rounded-t-3xl z-50 max-h-[90vh] flex flex-col shadow-2xl"
             >
-              {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-zinc-800/50">
                 <div className="flex items-center gap-2">
                   <MessageSquare size={20} className="text-cyan-400" />
@@ -687,7 +724,6 @@ export default function PostDetailPage() {
                 </button>
               </div>
 
-              {/* Minimized Post */}
               <div className="px-4 py-3 border-b border-zinc-800/50 bg-zinc-900/50">
                 <div className="flex gap-3">
                   {getImageUrl(post.image) && (
@@ -715,7 +751,6 @@ export default function PostDetailPage() {
                 </div>
               </div>
 
-              {/* Comments List */}
               <div className="flex-1 overflow-y-auto px-4 py-4 bg-zinc-950">
                 {comments.length === 0 ? (
                   <div className="text-center py-12">
@@ -753,10 +788,8 @@ export default function PostDetailPage() {
                 <div ref={commentsEndRef} />
               </div>
 
-              {/* ✨ STATIC INPUT SECTION (Switches between Comment and Reply) */}
               {user ? (
                 <div className="border-t border-zinc-800/50 bg-zinc-900">
-                  {/* ✨ Reply Mode Indicator */}
                   {replyTo && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -777,7 +810,6 @@ export default function PostDetailPage() {
                     </motion.div>
                   )}
 
-                  {/* Input Form */}
                   <form onSubmit={replyTo ? handleCreateReply : handleCreateComment} className="p-4">
                     <div className="flex gap-2">
                       <textarea
