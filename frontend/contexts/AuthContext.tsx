@@ -1,7 +1,9 @@
-// frontend/src/contexts/AuthContext.tsx
+// contexts/AuthContext.tsx
 'use client';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { useToast } from './ToastContext';
 
 interface User {
   id: number;
@@ -34,6 +36,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { showToast } = useToast();
 
   useEffect(() => {
     checkAuth();
@@ -65,12 +69,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('access_token', tokens.access);
     localStorage.setItem('refresh_token', tokens.refresh);
     setUser(userData);
+    
+    // Show success toast
+    showToast(`Welcome back, ${userData.username}! 🎉`, 'success');
   };
 
   const logout = () => {
+    const username = user?.username || 'User';
+    
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     setUser(null);
+    
+    // Show logout toast
+    showToast(`Goodbye, ${username}! See you soon! 👋`, 'info');
+    
+    // Redirect to auth page after a short delay
+    setTimeout(() => {
+      router.push('/auth');
+    }, 500);
   };
 
   return (
