@@ -337,6 +337,7 @@ export default function CommunityDetailPage() {
             <button
               onClick={() => router.push('/communities')}
               className="px-8 py-3 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
+              suppressHydrationWarning
             >
               Browse Communities
             </button>
@@ -378,6 +379,7 @@ export default function CommunityDetailPage() {
             animate={{ opacity: 1, x: 0 }}
             onClick={() => router.back()}
             className="flex items-center gap-2 text-zinc-400 hover:text-white mb-5 transition-colors group"
+            suppressHydrationWarning
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back</span>
@@ -388,34 +390,41 @@ export default function CommunityDetailPage() {
             animate={{ opacity: 1, y: 0 }}
             className="relative mb-6 rounded-2xl overflow-hidden"
           >
-            <div className="h-32 sm:h-40 md:h-48 bg-white relative">
-              {getImageUrl(community.cover_image) && (
-                <Image
-                  src={getImageUrl(community.cover_image)!}
-                  alt={community.name}
-                  fill
-                  className="object-cover"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
-            </div>
+         {/* Cover Image */}
+<div className="h-32 sm:h-40 md:h-48 bg-white relative">
+  {getImageUrl(community.cover_image) && (
+    <Image
+      src={getImageUrl(community.cover_image)!}
+      alt={community.name}
+      fill
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+      priority
+      className="object-cover"
+    />
+  )}
+  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+</div>
+
 
             <div className="px-3 sm:px-4 md:px-6">
               <div className="relative">
-                <div className="absolute -top-10 sm:-top-12 md:-top-16 left-0 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl border-3 sm:border-4 border-zinc-950 bg-white overflow-hidden shadow-2xl shadow-white/20">
-                  {getImageUrl(community.display_picture) ? (
-                    <Image
-                      src={getImageUrl(community.display_picture)!}
-                      alt={community.name}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xl sm:text-2xl md:text-4xl font-bold text-zinc-950">
-                      {community.name[0].toUpperCase()}
-                    </div>
-                  )}
-                </div>
+               {/* Display Picture */}
+                  <div className="absolute -top-10 sm:-top-12 md:-top-16 left-0 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl border-3 sm:border-4 border-zinc-950 bg-white overflow-hidden shadow-2xl shadow-white/20 relative">
+                    {getImageUrl(community.display_picture) ? (
+                      <Image
+                        src={getImageUrl(community.display_picture)!}
+                        alt={community.name}
+                        fill
+                        sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 112px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xl sm:text-2xl md:text-4xl font-bold text-zinc-950">
+                        {community.name[0].toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
 
                 <div className="pt-2 sm:pt-3 md:pt-4 pb-4 pl-20 sm:pl-24 md:pl-36">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -431,6 +440,7 @@ export default function CommunityDetailPage() {
                         <button
                           onClick={() => router.push(`/communities/${slug}/edit`)}
                           className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg sm:rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105"
+                          suppressHydrationWarning
                         >
                           <Settings size={16} className="sm:w-[18px] text-white sm:h-[18px]" />
                           <span className="hidden sm:inline text-white">Manage</span>
@@ -443,6 +453,7 @@ export default function CommunityDetailPage() {
                               setShowLeaveConfirm(!showLeaveConfirm);
                             }}
                             className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 text-red-400 hover:text-red-300 rounded-lg sm:rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 whitespace-nowrap"
+                            suppressHydrationWarning
                           >
                             <UserMinus size={16} className="sm:w-[18px] sm:h-[18px]" />
                             <span>Leave</span>
@@ -456,6 +467,7 @@ export default function CommunityDetailPage() {
                                   handleLeave();
                                 }}
                                 className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-3 hover:bg-zinc-800/50 transition-all text-sm text-red-400 hover:text-red-300 font-semibold"
+                                suppressHydrationWarning
                               >
                                 <Trash2 size={16} />
                                 <span>Sure? Leave</span>
@@ -467,6 +479,7 @@ export default function CommunityDetailPage() {
                         <button
                           onClick={handleJoin}
                           className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-100 rounded-lg sm:rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105 whitespace-nowrap"
+                          suppressHydrationWarning
                         >
                           <UserPlus size={16} className="sm:w-[18px] sm:h-[18px]" />
                           <span>Join</span>
@@ -493,6 +506,7 @@ export default function CommunityDetailPage() {
                     ? 'text-white'
                     : 'text-zinc-400 hover:text-zinc-100'
                 }`}
+                suppressHydrationWarning
               >
                 Posts
                 {activeTab === 'posts' && (
@@ -510,6 +524,7 @@ export default function CommunityDetailPage() {
                     ? 'text-white'
                     : 'text-zinc-400 hover:text-zinc-100'
                 }`}
+                suppressHydrationWarning
               >
                 Members ({community.member_count})
                 {activeTab === 'members' && (
@@ -539,15 +554,16 @@ export default function CommunityDetailPage() {
                       <button
                         onClick={() => setShowCreatePost(true)}
                         className="w-full flex items-center gap-3 px-4 py-3 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl border border-zinc-700/50 text-left text-zinc-400 transition-all duration-300"
+                        suppressHydrationWarning
                       >
                         {user?.profile_picture ? (
-                          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+                          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 relative">
                             <Image
                               src={getImageUrl(user.profile_picture)!}
                               alt={user.username}
-                              width={40}
-                              height={40}
-                              className="object-cover w-full h-full"
+                              fill
+                              sizes="40px"
+                              className="object-cover"
                             />
                           </div>
                         ) : (
@@ -584,7 +600,9 @@ export default function CommunityDetailPage() {
                               alt="Preview"
                               width={300}
                               height={200}
+                              sizes="300px"
                               className="rounded-xl"
+                              style={{ width: '100%', height: 'auto' }}
                             />
                             <button
                               type="button"
@@ -593,6 +611,7 @@ export default function CommunityDetailPage() {
                                 setImagePreview(null);
                               }}
                               className="absolute top-2 right-2 p-2 bg-black/70 rounded-xl hover:bg-black/90 transition-all"
+                              suppressHydrationWarning
                             >
                               <X size={16} />
                             </button>
@@ -622,6 +641,7 @@ export default function CommunityDetailPage() {
                                 setImagePreview(null);
                               }}
                               className="px-4 py-2 hover:bg-zinc-800/50 rounded-xl text-sm font-semibold transition-all"
+                              suppressHydrationWarning
                             >
                               Cancel
                             </button>
@@ -629,6 +649,7 @@ export default function CommunityDetailPage() {
                               type="submit"
                               disabled={posting || !postTitle.trim() || !postContent.trim()}
                               className="px-6 py-2 bg-white text-zinc-950 hover:bg-zinc-100 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30"
+                              suppressHydrationWarning
                             >
                               {posting ? 'Posting...' : 'Post'}
                             </button>
@@ -665,13 +686,13 @@ export default function CommunityDetailPage() {
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
                             {post.author.profile_picture ? (
-                              <div className="w-6 h-6 rounded-lg overflow-hidden flex-shrink-0">
+                              <div className="w-6 h-6 rounded-lg overflow-hidden flex-shrink-0 relative">
                                 <Image
                                   src={getImageUrl(post.author.profile_picture)!}
                                   alt={post.author.username}
-                                  width={24}
-                                  height={24}
-                                  className="object-cover w-full h-full"
+                                  fill
+                                  sizes="24px"
+                                  className="object-cover"
                                 />
                               </div>
                             ) : (
@@ -680,11 +701,9 @@ export default function CommunityDetailPage() {
                               </div>
                             )}
                             <span>Posted by</span>
-                            {/* ✅ FIX #1: Post author click */}
                             <span 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Check if it's your own profile
                                 if (user && post.author.id === user.id) {
                                   router.push('/profile');
                                 } else {
@@ -694,11 +713,12 @@ export default function CommunityDetailPage() {
                               className={`hover:text-white cursor-pointer font-semibold transition-colors ${
                                 user && post.author.id === user.id ? 'text-blue-400' : ''
                               }`}
+                              suppressHydrationWarning
                             >
                               u/{post.author.username}
                             </span>
                             <span>•</span>
-                            <span>{formatTime(post.created_at)}</span>
+                            <span suppressHydrationWarning>{formatTime(post.created_at)}</span>
                           </div>
 
                           {post.can_delete && (
@@ -709,6 +729,7 @@ export default function CommunityDetailPage() {
                                   setShowDeleteConfirm(showDeleteConfirm === post.id ? null : post.id);
                                 }}
                                 className="p-2 hover:bg-zinc-800/50 rounded-xl text-zinc-500 hover:text-red-500 transition-all"
+                                suppressHydrationWarning
                               >
                                 <Trash2 size={18} />
                               </button>
@@ -721,6 +742,7 @@ export default function CommunityDetailPage() {
                                       handleDeletePost(post.id);
                                     }}
                                     className="w-full flex items-center justify-center gap-2 px-4 py-3 hover:bg-zinc-800/50 transition-all text-sm text-red-400 hover:text-red-300 font-semibold"
+                                    suppressHydrationWarning
                                   >
                                     <Trash2 size={16} />
                                     <span>Sure? Delete</span>
@@ -739,17 +761,24 @@ export default function CommunityDetailPage() {
                           <p className="text-sm text-zinc-400 mb-3 line-clamp-3">{post.content}</p>
                         )}
 
-                        {getImageUrl(post.image) && (
-                          <div className="mb-4 rounded-xl overflow-hidden group/image">
-                            <Image
-                              src={getImageUrl(post.image)!}
-                              alt="Post"
-                              width={600}
-                              height={400}
-                              className="w-full max-h-[400px] object-cover transition-transform duration-300 group-hover/image:scale-105"
-                            />
-                          </div>
-                        )}
+                     {getImageUrl(post.image) && (
+                        <div className="mb-4 rounded-xl overflow-hidden">
+                          <Image
+                            src={getImageUrl(post.image)!}
+                            alt="Post"
+                            width={600}
+                            height={400}
+                            priority={index === 0}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 600px"
+                            style={{ 
+                              width: '100%', 
+                              height: 'auto',
+                              objectFit: 'cover',
+                              maxHeight: '400px'
+                            }}
+                          />
+                        </div>
+                      )}
 
                         <div className="flex items-center gap-2 flex-wrap">
                           <button
@@ -760,6 +789,7 @@ export default function CommunityDetailPage() {
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium group/like ${
                               post.is_liked ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'
                             }`}
+                            suppressHydrationWarning
                           >
                             <Heart 
                               size={18} 
@@ -775,6 +805,7 @@ export default function CommunityDetailPage() {
                               router.push(`/posts/${post.id}`);
                             }}
                             className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium text-zinc-400 hover:text-white group/comment"
+                            suppressHydrationWarning
                           >
                             <MessageSquare size={18} className="group-hover/comment:scale-110 transition-transform" />
                             <span>{post.comments_count}</span>
@@ -788,6 +819,7 @@ export default function CommunityDetailPage() {
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium group/share ${
                               copiedPostId === post.id ? 'text-green-500' : 'text-zinc-400 hover:text-white'
                             }`}
+                            suppressHydrationWarning
                           >
                             <Share2 size={18} className="group-hover/share:scale-110 transition-transform" />
                             <span className="hidden sm:inline">
@@ -835,11 +867,9 @@ export default function CommunityDetailPage() {
                           transition={{ delay: index * 0.05 }}
                           className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl hover:bg-zinc-800/50 transition-all group"
                         >
-                          {/* ✅ FIX #2: Member list click */}
                           <div 
                             className="flex items-center gap-3 cursor-pointer flex-1"
                             onClick={() => {
-                              // Check if it's your own profile
                               if (user && member.user.id === user.id) {
                                 router.push('/profile');
                               } else {
@@ -848,13 +878,13 @@ export default function CommunityDetailPage() {
                             }}
                           >
                             {member.user.profile_picture ? (
-                              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg flex-shrink-0 relative">
                                 <Image
                                   src={getImageUrl(member.user.profile_picture)!}
                                   alt={member.user.username}
-                                  width={48}
-                                  height={48}
-                                  className="object-cover w-full h-full"
+                                  fill
+                                  sizes="48px"
+                                  className="object-cover"
                                 />
                               </div>
                             ) : (
@@ -865,12 +895,12 @@ export default function CommunityDetailPage() {
                             <div className="flex-1 min-w-0">
                               <p className={`font-semibold hover:text-zinc-300 transition-colors truncate ${
                                 user && member.user.id === user.id ? 'text-blue-400' : 'text-white'
-                              }`}>
+                              }`} suppressHydrationWarning>
                                 u/{member.user.username}
                               </p>
                               <div className="flex items-center gap-2 flex-wrap">
                                 {getRoleBadge(member.role, isCreator)}
-                                <span className="text-xs text-zinc-500">
+                                <span className="text-xs text-zinc-500" suppressHydrationWarning>
                                   Joined {formatTime(member.joined_at)}
                                 </span>
                               </div>
@@ -885,6 +915,7 @@ export default function CommunityDetailPage() {
                                   setSelectedMember(selectedMember?.id === member.id ? null : member);
                                 }}
                                 className="p-2 hover:bg-zinc-700/50 rounded-xl transition-all"
+                                suppressHydrationWarning
                               >
                                 <Shield size={18} />
                               </button>
@@ -895,6 +926,7 @@ export default function CommunityDetailPage() {
                                     <button
                                       onClick={() => handlePromoteMember(member.user.id)}
                                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-all text-sm"
+                                      suppressHydrationWarning
                                     >
                                       <Shield size={16} />
                                       <span>Promote to Moderator</span>
@@ -905,6 +937,7 @@ export default function CommunityDetailPage() {
                                     <button
                                       onClick={() => handleDemoteMember(member.user.id)}
                                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-all text-sm"
+                                      suppressHydrationWarning
                                     >
                                       <UserCog size={16} />
                                       <span>Demote to Member</span>
@@ -914,6 +947,7 @@ export default function CommunityDetailPage() {
                                   <button
                                     onClick={() => setMemberToKick({ id: member.user.id, username: member.user.username })}
                                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-all text-sm text-red-400 hover:text-red-300"
+                                    suppressHydrationWarning
                                   >
                                     <Trash2 size={16} />
                                     <span>Remove from Community</span>
@@ -956,10 +990,8 @@ export default function CommunityDetailPage() {
                 <div className="flex items-center gap-3 text-sm p-3 bg-zinc-800/30 rounded-xl">
                   <Crown size={18} className="text-yellow-500" />
                   <span className="text-zinc-500">Created by</span>
-                  {/* ✅ FIX #3: Creator link */}
                   <span 
                     onClick={() => {
-                      // Check if it's your own profile
                       if (user && community.creator_id === user.id) {
                         router.push('/profile');
                       } else {
@@ -969,6 +1001,7 @@ export default function CommunityDetailPage() {
                     className={`font-semibold hover:text-zinc-300 cursor-pointer transition-colors ${
                       user && community.creator_id === user.id ? 'text-blue-400' : 'text-white'
                     }`}
+                    suppressHydrationWarning
                   >
                     u/{members.find(m => m.user.id === community.creator_id)?.user.username || 'Creator'}
                   </span>
@@ -976,7 +1009,7 @@ export default function CommunityDetailPage() {
 
                 <div className="flex items-center gap-3 text-sm p-3 bg-zinc-800/30 rounded-xl">
                   <Calendar size={18} className="text-zinc-400" />
-                  <span className="text-zinc-500">Created {formatTime(community.created_at)}</span>
+                  <span className="text-zinc-500" suppressHydrationWarning>Created {formatTime(community.created_at)}</span>
                 </div>
               </div>
             </motion.div>

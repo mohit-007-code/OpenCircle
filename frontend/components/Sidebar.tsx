@@ -223,6 +223,7 @@ export default function Sidebar() {
           isCollapsed ? 'left-12' : 'left-60'
         }`}
         title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        suppressHydrationWarning
       >
         <AnimatePresence mode="wait">
           {isCollapsed ? (

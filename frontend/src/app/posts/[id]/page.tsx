@@ -25,16 +25,19 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 
+
 interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info' | 'warning';
 }
+
 
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const postId = params?.id as string;
+
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -54,9 +57,11 @@ export default function PostDetailPage() {
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLTextAreaElement>(null);
 
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     setToast({ message, type });
   };
+
 
   useEffect(() => {
     if (postId) {
@@ -64,11 +69,13 @@ export default function PostDetailPage() {
     }
   }, [postId]);
 
+
   useEffect(() => {
     if (replyTo && replyInputRef.current) {
       replyInputRef.current.focus();
     }
   }, [replyTo]);
+
 
   const fetchPostData = async () => {
     setLoading(true);
@@ -77,6 +84,7 @@ export default function PostDetailPage() {
         api.get(`/posts/${postId}/`),
         api.get(`/posts/${postId}/comments/`)
       ]);
+
 
       setPost(postRes.data);
       setComments(commentsRes.data.filter((c: Comment) => !c.parent));
@@ -88,6 +96,7 @@ export default function PostDetailPage() {
     }
   };
 
+
   const fetchReplies = async (commentId: number) => {
     try {
       const res = await api.get(`/posts/comments/${commentId}/replies/`);
@@ -96,6 +105,7 @@ export default function PostDetailPage() {
       console.error('Error fetching replies:', error);
     }
   };
+
 
   const toggleReplies = useCallback(async (commentId: number) => {
     setExpandedReplies(prev => {
@@ -112,11 +122,13 @@ export default function PostDetailPage() {
     });
   }, [replies]);
 
+
   const handleVotePost = async () => {
     if (!user) {
       router.push('/login');
       return;
     }
+
 
     try {
       const response = await api.post(`/posts/${postId}/like/`);
@@ -130,11 +142,13 @@ export default function PostDetailPage() {
     }
   };
 
+
   const handleVoteComment = useCallback(async (commentId: number) => {
     if (!user) {
       router.push('/login');
       return;
     }
+
 
     try {
       const response = await api.post(`/posts/comments/${commentId}/like/`);
@@ -144,6 +158,7 @@ export default function PostDetailPage() {
           ? { ...c, is_liked: response.data.liked, likes_count: response.data.likes_count }
           : c
       ));
+
 
       setReplies(prev => {
         const updated = { ...prev };
@@ -161,9 +176,11 @@ export default function PostDetailPage() {
     }
   }, [user]);
 
+
   const handleCreateComment = async (e: FormEvent) => {
     e.preventDefault();
     if (!commentContent.trim()) return;
+
 
     setPosting(true);
     try {
@@ -182,9 +199,11 @@ export default function PostDetailPage() {
     }
   };
 
+
   const handleCreateReply = async (e: FormEvent) => {
     e.preventDefault();
     if (!replyContent.trim() || !replyTo) return;
+
 
     setPosting(true);
     try {
@@ -233,16 +252,19 @@ export default function PostDetailPage() {
     }
   };
 
+
   const handleStartReply = (commentId: number, username: string) => {
     setReplyTo(commentId);
     setReplyToUsername(username);
   };
+
 
   const handleCancelReply = () => {
     setReplyTo(null);
     setReplyToUsername('');
     setReplyContent('');
   };
+
 
   const handleDeleteComment = useCallback(async (commentId: number) => {
     setDeleting(true);
@@ -271,7 +293,7 @@ export default function PostDetailPage() {
     }
   }, []);
 
-  // ✅ NEW: Delete post handler
+
   const handleDeletePost = async () => {
     try {
       await api.delete(`/posts/${postId}/`);
@@ -284,6 +306,7 @@ export default function PostDetailPage() {
     }
   };
 
+
   const handleShare = async () => {
     const postUrl = `${window.location.origin}/posts/${postId}`;
     try {
@@ -294,7 +317,8 @@ export default function PostDetailPage() {
     }
   };
 
-  const getImageUrl = (imageUrl: string | null) => {
+
+  const getImageUrl = (imageUrl: string | null | undefined) => {
     if (!imageUrl) return null;
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
@@ -302,10 +326,12 @@ export default function PostDetailPage() {
     return `http://localhost:8000${imageUrl}`;
   };
 
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
 
     if (diffInSeconds < 60) return 'just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
@@ -313,7 +339,7 @@ export default function PostDetailPage() {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
-  // ✅ UPDATED: Comment Component with Heart voting
+
   const CommentItem = memo(({ 
     comment, 
     depth = 0,
@@ -333,7 +359,6 @@ export default function PostDetailPage() {
     isExpanded: boolean;
     commentReplies: Comment[] | undefined;
   }) => {
-    // ✅ FIX: Profile redirect check
     const handleUsernameClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (user && comment.author.id === user.id) {
@@ -343,17 +368,18 @@ export default function PostDetailPage() {
       }
     };
 
+
     return (
       <div className={`${depth > 0 ? 'ml-4 pl-3 border-l-2 border-zinc-700/30' : ''}`}>
         <div className="glass-effect bg-zinc-800/30 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-3 mb-3">
           <div className="flex gap-3">
-            {/* ✅ CHANGED: Heart voting (No arrows) */}
             <div className="flex items-center gap-1">
               <button
                 onClick={() => onVote(comment.id)}
                 className={`p-1.5 rounded-xl hover:bg-zinc-700/50 transition-all group ${
                   comment.is_liked ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'
                 }`}
+                suppressHydrationWarning
               >
                 <Heart 
                   size={16} 
@@ -363,35 +389,39 @@ export default function PostDetailPage() {
               </button>
               <span className={`text-xs font-bold min-w-[1.5rem] text-center ${
                 comment.is_liked ? 'text-red-500' : 'text-zinc-300'
-              }`}>
+              }`} suppressHydrationWarning>
                 {comment.likes_count}
               </span>
             </div>
 
+
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  {/* ✅ FIX: Username with profile redirect & blue color for self */}
                   <span 
                     className={`font-semibold hover:text-cyan-400 cursor-pointer transition-colors ${
                       user && comment.author.id === user.id ? 'text-blue-400' : 'text-zinc-100'
                     }`}
                     onClick={handleUsernameClick}
+                    suppressHydrationWarning
                   >
                     u/{comment.author.username}
                   </span>
                   <span>•</span>
-                  <span>{formatTime(comment.created_at)}</span>
+                  <span suppressHydrationWarning>{formatTime(comment.created_at)}</span>
                 </div>
+
 
                 {comment.can_delete && (
                   <div className="relative">
                     <button
                       onClick={() => setOpenDropdown(openDropdown === comment.id ? null : comment.id)}
                       className="p-1.5 hover:bg-zinc-700/50 rounded-xl text-zinc-500 hover:text-zinc-300 transition-all"
+                      suppressHydrationWarning
                     >
                       <MoreVertical size={16} />
                     </button>
+
 
                     <AnimatePresence>
                       {openDropdown === comment.id && (
@@ -406,6 +436,7 @@ export default function PostDetailPage() {
                             onClick={() => onDelete(comment.id)}
                             disabled={deleting}
                             className="w-full flex items-center gap-2 px-4 py-3 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all text-sm font-medium disabled:opacity-50"
+                            suppressHydrationWarning
                           >
                             <Trash2 size={16} />
                             <span>{deleting ? 'Deleting...' : 'Delete'}</span>
@@ -417,23 +448,28 @@ export default function PostDetailPage() {
                 )}
               </div>
 
+
               <p className="text-zinc-300 text-sm mb-2 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
+
 
               <div className="flex items-center gap-3">
                 {user && (
                   <button
                     onClick={() => onStartReply(comment.id, comment.author.username)}
                     className="flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-cyan-400 transition-colors"
+                    suppressHydrationWarning
                   >
                     <CornerDownRight size={12} />
                     <span>Reply</span>
                   </button>
                 )}
 
+
                 {comment.replies_count > 0 && (
                   <button
                     onClick={() => onToggleReplies(comment.id)}
                     className="text-xs font-semibold text-zinc-500 hover:text-cyan-400 transition-colors"
+                    suppressHydrationWarning
                   >
                     {isExpanded
                       ? `Hide ${comment.replies_count}`
@@ -445,6 +481,7 @@ export default function PostDetailPage() {
             </div>
           </div>
         </div>
+
 
         <AnimatePresence>
           {isExpanded && commentReplies && (
@@ -474,7 +511,9 @@ export default function PostDetailPage() {
     );
   });
 
+
   CommentItem.displayName = 'CommentItem';
+
 
   const PostSkeleton = () => (
     <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
@@ -483,6 +522,7 @@ export default function PostDetailPage() {
       <Skeleton className="h-48 w-full rounded-xl" />
     </div>
   );
+
 
   if (loading) {
     return (
@@ -497,6 +537,7 @@ export default function PostDetailPage() {
       </div>
     );
   }
+
 
   if (!post) {
     return (
@@ -516,6 +557,7 @@ export default function PostDetailPage() {
             <button
               onClick={() => router.push('/')}
               className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
+              suppressHydrationWarning
             >
               Go Home
             </button>
@@ -525,9 +567,11 @@ export default function PostDetailPage() {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-zinc-950 pb-24 lg:pb-0">
       <Navbar />
+
 
       {toast && (
         <Toast
@@ -537,8 +581,10 @@ export default function PostDetailPage() {
         />
       )}
 
+
       <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
+
 
         <main className="flex-1">
           <motion.button
@@ -546,10 +592,12 @@ export default function PostDetailPage() {
             animate={{ opacity: 1, x: 0 }}
             onClick={() => router.back()}
             className="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 mb-5 transition-colors group"
+            suppressHydrationWarning
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back</span>
           </motion.button>
+
 
           <motion.article
             initial={{ opacity: 0, y: -20 }}
@@ -557,17 +605,16 @@ export default function PostDetailPage() {
             transition={{ delay: 0.1 }}
             className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl mb-6 overflow-hidden"
           >
-            {/* ✅ CHANGED: Removed vote sidebar, added inline actions */}
             <div className="p-4 sm:p-5">
               <div className="flex items-center gap-2 text-sm text-zinc-500 mb-3 flex-wrap">
                 <span
                   className="hover:text-cyan-400 cursor-pointer transition-colors font-medium"
                   onClick={() => router.push(`/communities/${post.community_slug}`)}
+                  suppressHydrationWarning
                 >
                   c/{post.community_name}
                 </span>
                 <span>•</span>
-                {/* ✅ FIX: Profile redirect check */}
                 <span
                   className={`hover:text-cyan-400 cursor-pointer transition-colors ${
                     user && post.author.id === user.id ? 'text-blue-400 font-semibold' : ''
@@ -579,40 +626,45 @@ export default function PostDetailPage() {
                       router.push(`/users/${post.author.id}`);
                     }
                   }}
+                  suppressHydrationWarning
                 >
                   u/{post.author.username}
                 </span>
                 <span>•</span>
-                <span>{formatTime(post.created_at)}</span>
+                <span suppressHydrationWarning>{formatTime(post.created_at)}</span>
               </div>
+
 
               {post.title && (
                 <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 mb-3">{post.title}</h1>
               )}
 
+
               <p className="text-zinc-300 mb-4 whitespace-pre-wrap leading-relaxed">{post.content}</p>
 
+
               {getImageUrl(post.image) && (
-                <div className="mb-4 rounded-xl overflow-hidden">
+                <div className="mb-4 rounded-xl overflow-hidden bg-zinc-950">
                   <Image
                     src={getImageUrl(post.image)!}
                     alt="Post"
                     width={800}
                     height={600}
-                    className="w-full max-h-[600px] object-contain bg-zinc-950"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
+                    style={{ width: '100%', height: 'auto', maxHeight: '600px', objectFit: 'contain' }}
                   />
                 </div>
               )}
 
-              {/* ✅ NEW: Action buttons (Heart, Comment, Share, Delete) */}
+
               <div className="flex items-center justify-between gap-3 pt-3 border-t border-zinc-800/50">
                 <div className="flex items-center gap-2">
-                  {/* ✅ Heart button (replaces arrows) */}
                   <button
                     onClick={handleVotePost}
                     className={`flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all text-sm font-medium group ${
                       post.is_liked ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'
                     }`}
+                    suppressHydrationWarning
                   >
                     <Heart 
                       size={20} 
@@ -622,39 +674,46 @@ export default function PostDetailPage() {
                     <span>{post.likes_count}</span>
                   </button>
 
+
                   <button
                     onClick={() => setShowCommentDrawer(true)}
                     className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all text-zinc-400 hover:text-cyan-400 text-sm font-medium group"
+                    suppressHydrationWarning
                   >
                     <MessageSquare size={20} className="group-hover:scale-110 transition-transform" />
                     <span>{post.comments_count}</span>
                   </button>
 
+
                   <button 
                     onClick={handleShare}
                     className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/50 rounded-xl transition-all text-zinc-400 hover:text-cyan-400 text-sm font-medium group"
+                    suppressHydrationWarning
                   >
                     <Share2 size={20} className="group-hover:scale-110 transition-transform" />
                     <span className="hidden sm:inline">Share</span>
                   </button>
                 </div>
 
-                {/* ✅ NEW: Delete button (only for post owner) */}
+
                 {post.can_delete && (
                   <div className="relative">
                     <button
                       onClick={() => setShowDeletePostConfirm(!showDeletePostConfirm)}
                       className="flex items-center gap-2 px-3 py-2 hover:bg-red-500/10 rounded-xl transition-all text-red-400 hover:text-red-300 text-sm font-medium"
+                      suppressHydrationWarning
                     >
                       <Trash2 size={18} />
                       <span className="hidden sm:inline">Delete</span>
                     </button>
+
 
                     {showDeletePostConfirm && (
                       <div className="absolute right-0 bottom-full mb-2 w-48 glass-effect bg-zinc-900 backdrop-blur-xl border border-zinc-800/50 rounded-xl shadow-2xl z-50 overflow-hidden">
                         <button
                           onClick={handleDeletePost}
                           className="w-full flex items-center justify-center gap-2 px-4 py-3 hover:bg-red-500/20 transition-all text-sm text-red-400 hover:text-red-300 font-semibold"
+                          suppressHydrationWarning
                         >
                           <Trash2 size={16} />
                           <span>Sure? Delete Post</span>
@@ -667,6 +726,7 @@ export default function PostDetailPage() {
             </div>
           </motion.article>
         </main>
+
 
         <aside className="hidden xl:block w-80 flex-shrink-0">
           <div className="sticky top-20">
@@ -683,6 +743,7 @@ export default function PostDetailPage() {
               <button
                 onClick={() => router.push(`/communities/${post.community_slug}`)}
                 className="w-full text-left px-4 py-3 bg-zinc-800/30 hover:bg-zinc-800/50 rounded-xl transition-all group"
+                suppressHydrationWarning
               >
                 <p className="font-semibold text-cyan-400 group-hover:text-cyan-300 transition-colors">c/{post.community_name}</p>
                 <p className="text-sm text-zinc-500 mt-1">View Community</p>
@@ -692,7 +753,7 @@ export default function PostDetailPage() {
         </aside>
       </div>
 
-      {/* Comment Drawer */}
+
       <AnimatePresence>
         {showCommentDrawer && (
           <>
@@ -703,6 +764,7 @@ export default function PostDetailPage() {
               onClick={() => setShowCommentDrawer(false)}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
+
 
             <motion.div
               initial={{ y: '100%' }}
@@ -719,10 +781,12 @@ export default function PostDetailPage() {
                 <button
                   onClick={() => setShowCommentDrawer(false)}
                   className="p-2 hover:bg-zinc-800/50 rounded-xl transition-all"
+                  suppressHydrationWarning
                 >
                   <X size={20} />
                 </button>
               </div>
+
 
               <div className="px-4 py-3 border-b border-zinc-800/50 bg-zinc-900/50">
                 <div className="flex gap-3">
@@ -733,7 +797,7 @@ export default function PostDetailPage() {
                         alt="Post"
                         width={64}
                         height={64}
-                        className="w-full h-full object-cover"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     </div>
                   )}
@@ -750,6 +814,7 @@ export default function PostDetailPage() {
                   </div>
                 </div>
               </div>
+
 
               <div className="flex-1 overflow-y-auto px-4 py-4 bg-zinc-950">
                 {comments.length === 0 ? (
@@ -788,6 +853,7 @@ export default function PostDetailPage() {
                 <div ref={commentsEndRef} />
               </div>
 
+
               {user ? (
                 <div className="border-t border-zinc-800/50 bg-zinc-900">
                   {replyTo && (
@@ -804,11 +870,13 @@ export default function PostDetailPage() {
                       <button
                         onClick={handleCancelReply}
                         className="text-zinc-400 hover:text-zinc-100 transition-colors"
+                        suppressHydrationWarning
                       >
                         <X size={16} />
                       </button>
                     </motion.div>
                   )}
+
 
                   <form onSubmit={replyTo ? handleCreateReply : handleCreateComment} className="p-4">
                     <div className="flex gap-2">
@@ -824,6 +892,7 @@ export default function PostDetailPage() {
                         type="submit"
                         disabled={posting || (replyTo ? !replyContent.trim() : !commentContent.trim())}
                         className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-xl font-semibold disabled:opacity-50 transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 disabled:hover:scale-100 hover:scale-105 flex items-center gap-2"
+                        suppressHydrationWarning
                       >
                         {posting ? (
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -840,6 +909,7 @@ export default function PostDetailPage() {
                   <button
                     onClick={() => router.push('/login')}
                     className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
+                    suppressHydrationWarning
                   >
                     Log In
                   </button>

@@ -1,9 +1,9 @@
-// contexts/AuthContext.tsx
-'use client';
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
-import { useToast } from './ToastContext';
+"use client";
+
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import api from "@/lib/api";
+import { useToast } from "./ToastContext";
 
 interface User {
   id: number;
@@ -39,25 +39,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { showToast } = useToast();
 
+  // ✅ Check authentication once on mount (client-side only)
   useEffect(() => {
-    checkAuth();
+    if (typeof window !== "undefined") {
+      checkAuth();
+    }
   }, []);
 
+  // ✅ Verify stored token and fetch profile
   const checkAuth = async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (!token) {
       setLoading(false);
       return;
     }
 
     try {
-      const response = await api.get('/auth/profile/');
+      const response = await api.get("/auth/profile/");
       setUser(response.data);
     } catch (error: any) {
-      console.error('Auth check failed:', error);
+      console.error("Auth check failed:", error);
       if (error.response?.status === 401) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         setUser(null);
       }
     } finally {
@@ -65,29 +69,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ✅ Called after manual or Google login
   const login = (userData: User, tokens: Tokens) => {
-    localStorage.setItem('access_token', tokens.access);
-    localStorage.setItem('refresh_token', tokens.refresh);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("access_token", tokens.access);
+      localStorage.setItem("refresh_token", tokens.refresh);
+    }
     setUser(userData);
-    
-    // Show success toast
-    showToast(`Welcome back, ${userData.username}! 🎉`, 'success');
+    showToast(`Welcome back, ${userData.username}! 🎉`, "success");
+    router.push("/");
   };
 
+  // ✅ Logout + Toast + Redirect
   const logout = () => {
-    const username = user?.username || 'User';
-    
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    const username = user?.username || "User";
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+    }
     setUser(null);
-    
-    // Show logout toast
-    showToast(`Goodbye, ${username}! See you soon! 👋`, 'info');
-    
-    // Redirect to auth page after a short delay
-    setTimeout(() => {
-      router.push('/auth');
-    }, 500);
+    showToast(`Goodbye, ${username}! See you soon! 👋`, "info");
+
+    // Small delay for animation/toast
+    setTimeout(() => router.push("/auth"), 600);
   };
 
   return (
@@ -99,6 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
   return context;
 }

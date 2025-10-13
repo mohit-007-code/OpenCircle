@@ -12,6 +12,7 @@ import Image from 'next/image';
 import { Heart, MessageSquare, Share2, TrendingUp, Sparkles, Clock, Crown, Award, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+
 export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -22,35 +23,35 @@ export default function HomePage() {
   const [filter, setFilter] = useState<'new' | 'top' | 'best'>('new');
   const [copiedPostId, setCopiedPostId] = useState<number | null>(null);
 
+
   useEffect(() => {
     fetchFeed();
     fetchPopularCommunities();
   }, [filter]);
 
+
   const fetchFeed = async () => {
-    // Only show loading skeleton on initial load, not on filter change
-    if (posts.length === 0) {
-      setLoading(true);
-    }
+    if (posts.length === 0) setLoading(true);
     
     try {
       const response = await api.get('/posts/feed/');
       let allPosts = Array.isArray(response.data) ? response.data : [];
-      
       let filteredPosts = [...allPosts];
-      
+
+
       if (filter === 'new') {
-        filteredPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        filteredPosts.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       } else if (filter === 'top') {
-        filteredPosts.sort((a, b) => b.likes_count - a.likes_count);
+        filteredPosts.sort((a: Post, b: Post) => b.likes_count - a.likes_count);
       } else if (filter === 'best') {
-        filteredPosts.sort((a, b) => {
+        filteredPosts.sort((a: Post, b: Post) => {
           const scoreA = (a.likes_count * 2) + a.comments_count;
           const scoreB = (b.likes_count * 2) + b.comments_count;
           return scoreB - scoreA;
         });
       }
-      
+
+
       setPosts(filteredPosts);
       await fetchCommunitiesForPosts(filteredPosts);
     } catch (error) {
@@ -61,39 +62,41 @@ export default function HomePage() {
     }
   };
 
+
   const fetchCommunitiesForPosts = async (posts: Post[]) => {
     try {
       const response = await api.get('/communities/');
       let allCommunities = response.data.results || response.data || [];
-      if (!Array.isArray(allCommunities)) {
-        allCommunities = [];
-      }
-      
+      if (!Array.isArray(allCommunities)) allCommunities = [];
+
+
       const map: { [key: string]: Community } = {};
       allCommunities.forEach((community: Community) => {
         map[community.slug] = community;
       });
-      
+
+
       setCommunitiesMap(map);
     } catch (error) {
       console.error('Error fetching communities for posts:', error);
     }
   };
 
+
   const fetchPopularCommunities = async () => {
     try {
       const response = await api.get('/communities/');
       let communities = response.data.results || response.data || [];
-      if (!Array.isArray(communities)) {
-        communities = [];
-      }
-      
-      communities.sort((a, b) => b.member_count - a.member_count);
+      if (!Array.isArray(communities)) communities = [];
+
+
+      communities.sort((a: Community, b: Community) => b.member_count - a.member_count);
       setPopularCommunities(communities.slice(0, 3));
     } catch (error) {
       console.error('Error fetching popular communities:', error);
     }
   };
+
 
   const handleVote = async (postId: number) => {
     if (!user) {
@@ -101,9 +104,9 @@ export default function HomePage() {
       return;
     }
 
+
     try {
       const response = await api.post(`/posts/${postId}/like/`);
-      
       setPosts(posts.map(post => {
         if (post.id === postId) {
           return {
@@ -119,6 +122,7 @@ export default function HomePage() {
     }
   };
 
+
   const handleShare = async (postId: number) => {
     const postUrl = `${window.location.origin}/posts/${postId}`;
     try {
@@ -130,24 +134,26 @@ export default function HomePage() {
     }
   };
 
-  const getImageUrl = (imageUrl: string | null) => {
+
+  const getImageUrl = (imageUrl: string | null | undefined) => {
     if (!imageUrl) return null;
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
-    }
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) return imageUrl;
     return `http://localhost:8000${imageUrl}`;
   };
+
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
+
     if (diffInSeconds < 60) return 'just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
+
 
   const getRankIcon = (index: number) => {
     if (index === 0) return <Crown size={16} className="text-yellow-500" />;
@@ -156,19 +162,21 @@ export default function HomePage() {
     return null;
   };
 
+
   const getCommunityIcon = (post: Post) => {
     const community = communitiesMap[post.community_slug];
     const communityDP = community?.display_picture;
-    
+
+
     return (
-      <div className="w-6 h-6 rounded-xl bg-white flex items-center justify-center text-zinc-950 text-xs font-bold flex-shrink-0 overflow-hidden shadow-sm">
+      <div className="w-6 h-6 rounded-xl bg-white flex items-center justify-center text-zinc-950 text-xs font-bold flex-shrink-0 overflow-hidden shadow-sm relative">
         {getImageUrl(communityDP) ? (
           <Image
             src={getImageUrl(communityDP)!}
             alt={post.community_name}
-            width={24}
-            height={24}
-            className="object-cover w-full h-full"
+            fill
+            sizes="24px"
+            className="object-cover"
           />
         ) : (
           post.community_name[0].toUpperCase()
@@ -177,7 +185,7 @@ export default function HomePage() {
     );
   };
 
-  // ✨ IMPROVED SKELETON WITH STAGGERED ANIMATION
+
   const PostSkeleton = () => (
     <div className="space-y-4">
       {[1, 2, 3, 4, 5].map((i) => (
@@ -216,6 +224,7 @@ export default function HomePage() {
     </div>
   );
 
+
   return (
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
@@ -223,8 +232,8 @@ export default function HomePage() {
       <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
 
+
         <main className="flex-1 min-w-0">
-          {/* Filter Tabs */}
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -237,6 +246,7 @@ export default function HomePage() {
                   ? 'bg-white text-zinc-950 shadow-lg shadow-white/10'
                   : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
               }`}
+              suppressHydrationWarning
             >
               <Clock size={16} />
               <span className="hidden sm:inline">New</span>
@@ -248,6 +258,7 @@ export default function HomePage() {
                   ? 'bg-white text-zinc-950 shadow-lg shadow-white/10'
                   : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
               }`}
+              suppressHydrationWarning
             >
               <TrendingUp size={16} />
               <span className="hidden sm:inline">Top</span>
@@ -259,13 +270,14 @@ export default function HomePage() {
                   ? 'bg-white text-zinc-950 shadow-lg shadow-white/10'
                   : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
               }`}
+              suppressHydrationWarning
             >
               <Sparkles size={16} />
               <span className="hidden sm:inline">Best</span>
             </button>
           </motion.div>
 
-          {/* Posts */}
+
           {loading ? (
             <PostSkeleton />
           ) : posts.length === 0 ? (
@@ -297,15 +309,11 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ 
-                      delay: index * 0.05,
-                      duration: 0.3 
-                    }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
                     onClick={() => router.push(`/posts/${post.id}`)}
                     className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl hover:border-zinc-700/50 transition-all duration-300 overflow-hidden cursor-pointer group"
                   >
                     <div className="p-4">
-                      {/* Post Header */}
                       <div className="flex items-center gap-2 text-xs text-zinc-500 mb-3 flex-wrap">
                         <button
                           onClick={(e) => {
@@ -313,6 +321,7 @@ export default function HomePage() {
                             router.push(`/communities/${post.community_slug}`);
                           }}
                           className="flex items-center gap-2 hover:text-white transition-colors group/community"
+                          suppressHydrationWarning
                         >
                           {getCommunityIcon(post)}
                           <span className="font-bold text-zinc-300 group-hover/community:text-white">
@@ -321,11 +330,9 @@ export default function HomePage() {
                         </button>
                         <span className="hidden sm:inline">•</span>
                         <span className="hidden sm:inline">Posted by</span>
-                        {/* ✅ FIXED USERNAME CLICK */}
                         <span 
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Check if it's your own profile
                             if (user && post.author.id === user.id) {
                               router.push('/profile');
                             } else {
@@ -335,33 +342,33 @@ export default function HomePage() {
                           className={`hover:text-white cursor-pointer transition-colors font-semibold ${
                             user && post.author.id === user.id ? 'text-blue-400' : ''
                           }`}
+                          suppressHydrationWarning
                         >
                           u/{post.author.username}
                         </span>
                         <span className="hidden sm:inline">•</span>
-                        <span>{formatTime(post.created_at)}</span>
+                        <span suppressHydrationWarning>{formatTime(post.created_at)}</span>
                       </div>
 
-                      {/* Post Content */}
+
                       <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-3 hover:text-white transition-colors line-clamp-3">
                         {post.content}
                       </h2>
 
-                      {/* Post Image */}
+
                       {getImageUrl(post.image) && (
-                        <div className="mb-4 rounded-xl overflow-hidden group/image">
-                          <Image
+                        <div className="mb-4 rounded-xl overflow-hidden">
+                          <img
                             src={getImageUrl(post.image)!}
                             alt="Post"
-                            width={600}
-                            height={400}
-                            loading="lazy"
-                            className="w-full max-h-[400px] sm:max-h-[500px] object-cover transition-transform duration-300 group-hover/image:scale-105"
+                            className="w-full h-auto object-cover rounded-xl"
+                            style={{ maxHeight: '400px' }}
+                            loading={index < 3 ? 'eager' : 'lazy'}
                           />
                         </div>
                       )}
 
-                      {/* Post Actions */}
+
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
                           onClick={(e) => {
@@ -371,6 +378,7 @@ export default function HomePage() {
                           className={`flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium group/like ${
                             post.is_liked ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'
                           }`}
+                          suppressHydrationWarning
                         >
                           <Heart 
                             size={18} 
@@ -380,16 +388,19 @@ export default function HomePage() {
                           <span>{post.likes_count}</span>
                         </button>
 
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/posts/${post.id}`);
                           }}
                           className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium text-zinc-400 hover:text-white group/comment"
+                          suppressHydrationWarning
                         >
                           <MessageSquare size={18} className="group-hover/comment:scale-110 transition-transform" />
                           <span>{post.comments_count}</span>
                         </button>
+
 
                         <button 
                           onClick={(e) => {
@@ -399,6 +410,7 @@ export default function HomePage() {
                           className={`flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-zinc-800/50 transition-all duration-300 text-sm font-medium group/share ${
                             copiedPostId === post.id ? 'text-green-500' : 'text-zinc-400 hover:text-white'
                           }`}
+                          suppressHydrationWarning
                         >
                           <Share2 size={18} className="group-hover/share:scale-110 transition-transform" />
                           <span className="hidden sm:inline">
@@ -414,7 +426,7 @@ export default function HomePage() {
           )}
         </main>
 
-        {/* Right Sidebar */}
+
         <aside className="hidden xl:block w-80 flex-shrink-0">
           <div className="sticky top-20 space-y-4">
             <motion.div
@@ -444,6 +456,7 @@ export default function HomePage() {
               </Link>
             </motion.div>
 
+
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -465,6 +478,7 @@ export default function HomePage() {
                       transition={{ delay: 0.4 + (index * 0.1) }}
                       onClick={() => router.push(`/communities/${community.slug}`)}
                       className="w-full flex items-center gap-3 p-3 hover:bg-zinc-800/50 rounded-xl transition-all duration-300 text-left group"
+                      suppressHydrationWarning
                     >
                       <div className="flex items-center gap-2">
                         {getRankIcon(index)}
@@ -482,9 +496,10 @@ export default function HomePage() {
                           <Image
                             src={getImageUrl(community.display_picture)!}
                             alt={community.name}
-                            width={48}
-                            height={48}
-                            className="object-cover w-full h-full"
+                            fill
+                            sizes="48px"
+                            priority={index === 0}
+                            className="object-cover"
                           />
                         ) : (
                           <span className="text-xl">{community.name[0].toUpperCase()}</span>

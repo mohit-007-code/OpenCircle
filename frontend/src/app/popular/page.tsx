@@ -11,14 +11,17 @@ import { TrendingUp, Users, Calendar, Award, Crown, Flame, Plus, ArrowLeft } fro
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 
+
 export default function PopularPage() {
   const router = useRouter();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     fetchPopularCommunities();
   }, []);
+
 
   const fetchPopularCommunities = async () => {
     try {
@@ -29,7 +32,7 @@ export default function PopularPage() {
         allCommunities = [];
       }
       
-      allCommunities.sort((a, b) => b.member_count - a.member_count);
+      allCommunities.sort((a: Community, b: Community) => b.member_count - a.member_count);
       const top5 = allCommunities.slice(0, 5);
       
       setCommunities(top5);
@@ -40,7 +43,8 @@ export default function PopularPage() {
     }
   };
 
-  const getImageUrl = (imageUrl: string | null) => {
+
+  const getImageUrl = (imageUrl: string | null | undefined) => {
     if (!imageUrl) return null;
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
@@ -48,10 +52,12 @@ export default function PopularPage() {
     return `http://localhost:8000${imageUrl}`;
   };
 
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
 
     if (diffInSeconds < 60) return 'just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
@@ -60,6 +66,7 @@ export default function PopularPage() {
     if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo ago`;
     return `${Math.floor(diffInSeconds / 31536000)}y ago`;
   };
+
 
   const getRankBadge = (index: number) => {
     if (index === 0) {
@@ -76,6 +83,7 @@ export default function PopularPage() {
     );
   };
 
+
   const CommunitySkeleton = () => (
     <div className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 space-y-3">
       <div className="flex items-center gap-4">
@@ -89,6 +97,7 @@ export default function PopularPage() {
     </div>
   );
 
+
   return (
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
@@ -96,6 +105,7 @@ export default function PopularPage() {
       {/* ✨ FIXED LAYOUT - Proper container */}
       <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
+
 
         {/* ✨ MAIN CONTENT - Proper flex-1 */}
         <main className="flex-1 min-w-0">
@@ -105,10 +115,12 @@ export default function PopularPage() {
             animate={{ opacity: 1, x: 0 }}
             onClick={() => router.back()}
             className="flex items-center gap-2 text-zinc-400 hover:text-white mb-5 transition-colors group"
+            suppressHydrationWarning
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back</span>
           </motion.button>
+
 
           {/* ✨ WHITE THEME HEADER */}
           <motion.div
@@ -128,6 +140,7 @@ export default function PopularPage() {
               The hottest communities with the most members on OpenCircle
             </p>
           </motion.div>
+
 
           {/* Loading State */}
           {loading ? (
@@ -152,6 +165,7 @@ export default function PopularPage() {
               <button
                 onClick={() => router.push('/communities/create')}
                 className="inline-flex items-center gap-2 px-8 py-3 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
+                suppressHydrationWarning
               >
                 <Plus size={20} />
                 Create Community
@@ -181,10 +195,12 @@ export default function PopularPage() {
                           {getRankBadge(index)}
                         </div>
 
+
                         {/* ✨ WHITE DISPLAY PICTURE */}
                         <button
                           onClick={() => router.push(`/communities/${community.slug}`)}
                           className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white flex items-center justify-center text-zinc-950 text-2xl sm:text-3xl font-bold overflow-hidden flex-shrink-0 hover:scale-110 transition-all duration-300 shadow-lg shadow-white/20 group-hover:shadow-white/30"
+                          suppressHydrationWarning
                         >
                           {getImageUrl(community.display_picture) ? (
                             <Image
@@ -192,24 +208,29 @@ export default function PopularPage() {
                               alt={community.name}
                               width={80}
                               height={80}
-                              className="object-cover w-full h-full"
+                              priority={index === 0}
+                              className="object-cover"
+                              style={{ width: '100%', height: '100%' }}
                             />
                           ) : (
                             community.name[0].toUpperCase()
                           )}
                         </button>
 
+
                         {/* Community Details */}
                         <div className="flex-1 min-w-0">
                           <button
                             onClick={() => router.push(`/communities/${community.slug}`)}
                             className="text-lg sm:text-xl font-bold text-white hover:text-zinc-300 transition-colors text-left mb-2 line-clamp-1"
+                            suppressHydrationWarning
                           >
                             c/{community.name}
                           </button>
                           <p className="text-sm text-zinc-400 mb-3 line-clamp-2">
                             {community.description}
                           </p>
+
 
                           {/* Stats */}
                           <div className="flex flex-wrap items-center gap-4 text-sm mb-4">
@@ -220,14 +241,16 @@ export default function PopularPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar size={16} className="text-zinc-500" />
-                              <span className="text-zinc-500">Created {formatTime(community.created_at)}</span>
+                              <span className="text-zinc-500" suppressHydrationWarning>Created {formatTime(community.created_at)}</span>
                             </div>
                           </div>
+
 
                           {/* ✨ WHITE BUTTON */}
                           <button
                             onClick={() => router.push(`/communities/${community.slug}`)}
                             className="px-6 py-2 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
+                            suppressHydrationWarning
                           >
                             View Community
                           </button>
@@ -241,6 +264,7 @@ export default function PopularPage() {
           )}
         </main>
 
+
         {/* ✨ RIGHT SIDEBAR - Proper layout */}
         <aside className="hidden xl:block w-80 flex-shrink-0">
           <div className="sticky top-20 space-y-4">
@@ -251,8 +275,8 @@ export default function PopularPage() {
               transition={{ delay: 0.2 }}
               className="glass-effect bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl overflow-hidden"
             >
-              <div className="h-16 bg-white relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-20"></div>
+              <div className="h-16 bg-gradient-to-br from-white via-white to-zinc-100 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-white/40"></div>
               </div>
               <div className="p-5">
                 <h3 className="font-bold text-lg mb-3 flex items-center gap-2 text-white">
@@ -288,6 +312,7 @@ export default function PopularPage() {
               </div>
             </motion.div>
 
+
             {/* ✨ WHITE THEME - Call to Action Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -303,6 +328,7 @@ export default function PopularPage() {
               <button
                 onClick={() => router.push('/communities/create')}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-white/20 hover:shadow-white/30 hover:scale-105"
+                suppressHydrationWarning
               >
                 <Plus size={18} />
                 Create Community
