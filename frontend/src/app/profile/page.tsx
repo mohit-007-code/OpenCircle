@@ -368,7 +368,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 pb-24 lg:pb-0">
+    <div className="min-h-screen bg-zinc-950">
       <Navbar />
 
       {toast && (
@@ -705,9 +705,16 @@ export default function ProfilePage() {
           >
             <div className="relative">
               <div className="h-32 sm:h-40 md:h-48 bg-gradient-to-r from-white to-white relative">
-                {coverPreview && (
-                  <Image src={coverPreview} alt="Cover" fill className="object-cover" />
-                )}
+               {coverPreview && (
+  <Image 
+    src={coverPreview} 
+    alt="Cover" 
+    fill 
+    priority
+    sizes="(max-width: 1400px) 100vw, 1400px"
+    className="object-cover" 
+  />
+)}
                 {editMode && (
                   <button
                     onClick={() => coverInputRef.current?.click()}

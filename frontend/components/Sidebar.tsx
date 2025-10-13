@@ -28,7 +28,8 @@ export default function Sidebar() {
       return pathname === '/communities' || (pathname.startsWith('/communities/') && pathname !== '/communities/create');
     }
     if (path === '/profile') {
-      return pathname === '/profile' || pathname.startsWith('/profile/');
+      // ✅ FIX: Only return true if on exact /profile or /profile/* (NOT /users/*)
+      return pathname === '/profile' || (pathname.startsWith('/profile/') && !pathname.startsWith('/users/'));
     }
     if (path === '/popular') {
       return pathname === '/popular';
@@ -251,7 +252,7 @@ export default function Sidebar() {
       </motion.button>
 
 
-      {/* ✅ FINAL FIX: Mobile Floating Bottom Navigation */}
+      {/* ✅ Mobile Floating Bottom Navigation - ALWAYS VISIBLE */}
       <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999]" style={{ pointerEvents: 'auto' }}>
         <LayoutGroup>
           <motion.div 
@@ -483,7 +484,7 @@ export default function Sidebar() {
               </Link>
 
 
-              {/* ✅ Profile - COMPLETELY FIXED */}
+              {/* ✅ Profile - FIXED */}
               {user && (
                 <Link
                   href="/profile"
