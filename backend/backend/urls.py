@@ -29,6 +29,8 @@ urlpatterns = [
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Add this
 
     path('api/posts/', include('posts.urls')),
+
+    path('accounts/', include('allauth.urls')),
 ]
 
 if settings.DEBUG:
