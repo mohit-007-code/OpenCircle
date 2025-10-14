@@ -9,6 +9,9 @@ from django.contrib.auth import get_user_model
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.conf import settings
+from posts.models import Post, Comment
+from communities.models import CommunityMembership
+from .models import Follow
 from .serializers import (
     UserRegistrationSerializer, 
     UserProfileSerializer, 
@@ -200,9 +203,6 @@ def change_password(request):
 @permission_classes([permissions.IsAuthenticated])
 def user_stats(request):
     """Get user statistics"""
-    from posts.models import Post, Comment
-    from communities.models import CommunityMembership
-    from .models import Follow
     
     user = request.user
     
