@@ -319,3 +319,11 @@ temp/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# In .gitignore
+backend/.env
+.env
+db.sqlite3
+*.pyc
+__pycache__/
+

@@ -12,7 +12,6 @@ import Image from 'next/image';
 import { Heart, MessageSquare, Share2, TrendingUp, Sparkles, Clock, Crown, Award, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-
 export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -23,12 +22,10 @@ export default function HomePage() {
   const [filter, setFilter] = useState<'new' | 'top' | 'best'>('new');
   const [copiedPostId, setCopiedPostId] = useState<number | null>(null);
 
-
   useEffect(() => {
     fetchFeed();
     fetchPopularCommunities();
   }, [filter]);
-
 
   const fetchFeed = async () => {
     if (posts.length === 0) setLoading(true);
@@ -37,7 +34,6 @@ export default function HomePage() {
       const response = await api.get('/posts/feed/');
       let allPosts = Array.isArray(response.data) ? response.data : [];
       let filteredPosts = [...allPosts];
-
 
       if (filter === 'new') {
         filteredPosts.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -51,7 +47,6 @@ export default function HomePage() {
         });
       }
 
-
       setPosts(filteredPosts);
       await fetchCommunitiesForPosts(filteredPosts);
     } catch (error) {
@@ -62,19 +57,16 @@ export default function HomePage() {
     }
   };
 
-
   const fetchCommunitiesForPosts = async (posts: Post[]) => {
     try {
       const response = await api.get('/communities/');
       let allCommunities = response.data.results || response.data || [];
       if (!Array.isArray(allCommunities)) allCommunities = [];
 
-
       const map: { [key: string]: Community } = {};
       allCommunities.forEach((community: Community) => {
         map[community.slug] = community;
       });
-
 
       setCommunitiesMap(map);
     } catch (error) {
@@ -82,13 +74,11 @@ export default function HomePage() {
     }
   };
 
-
   const fetchPopularCommunities = async () => {
     try {
       const response = await api.get('/communities/');
       let communities = response.data.results || response.data || [];
       if (!Array.isArray(communities)) communities = [];
-
 
       communities.sort((a: Community, b: Community) => b.member_count - a.member_count);
       setPopularCommunities(communities.slice(0, 3));
@@ -97,13 +87,11 @@ export default function HomePage() {
     }
   };
 
-
   const handleVote = async (postId: number) => {
     if (!user) {
       router.push('/login');
       return;
     }
-
 
     try {
       const response = await api.post(`/posts/${postId}/like/`);
@@ -122,7 +110,6 @@ export default function HomePage() {
     }
   };
 
-
   const handleShare = async (postId: number) => {
     const postUrl = `${window.location.origin}/posts/${postId}`;
     try {
@@ -134,26 +121,22 @@ export default function HomePage() {
     }
   };
 
-
   const getImageUrl = (imageUrl: string | null | undefined) => {
     if (!imageUrl) return null;
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) return imageUrl;
     return `http://localhost:8000${imageUrl}`;
   };
 
-
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
 
     if (diffInSeconds < 60) return 'just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
-
 
   const getRankIcon = (index: number) => {
     if (index === 0) return <Crown size={16} className="text-yellow-500" />;
@@ -162,11 +145,9 @@ export default function HomePage() {
     return null;
   };
 
-
   const getCommunityIcon = (post: Post) => {
     const community = communitiesMap[post.community_slug];
     const communityDP = community?.display_picture;
-
 
     return (
       <div className="w-6 h-6 rounded-xl bg-white flex items-center justify-center text-zinc-950 text-xs font-bold flex-shrink-0 overflow-hidden shadow-sm relative">
@@ -184,7 +165,6 @@ export default function HomePage() {
       </div>
     );
   };
-
 
   const PostSkeleton = () => (
     <div className="space-y-4">
@@ -224,14 +204,12 @@ export default function HomePage() {
     </div>
   );
 
-
   return (
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
       
       <div className="max-w-[1400px] mx-auto flex gap-4 px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
         <Sidebar />
-
 
         <main className="flex-1 min-w-0">
           <motion.div 
@@ -276,7 +254,6 @@ export default function HomePage() {
               <span className="hidden sm:inline">Best</span>
             </button>
           </motion.div>
-
 
           {loading ? (
             <PostSkeleton />
@@ -350,11 +327,9 @@ export default function HomePage() {
                         <span suppressHydrationWarning>{formatTime(post.created_at)}</span>
                       </div>
 
-
                       <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-3 hover:text-white transition-colors line-clamp-3">
                         {post.content}
                       </h2>
-
 
                       {getImageUrl(post.image) && (
                         <div className="mb-4 rounded-xl overflow-hidden">
@@ -364,10 +339,14 @@ export default function HomePage() {
                             className="w-full h-auto object-cover rounded-xl"
                             style={{ maxHeight: '400px' }}
                             loading={index < 3 ? 'eager' : 'lazy'}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              console.error('Failed to load image:', post.image);
+                            }}
                           />
                         </div>
                       )}
-
 
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
@@ -388,7 +367,6 @@ export default function HomePage() {
                           <span>{post.likes_count}</span>
                         </button>
 
-
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -400,7 +378,6 @@ export default function HomePage() {
                           <MessageSquare size={18} className="group-hover/comment:scale-110 transition-transform" />
                           <span>{post.comments_count}</span>
                         </button>
-
 
                         <button 
                           onClick={(e) => {
@@ -425,7 +402,6 @@ export default function HomePage() {
             </div>
           )}
         </main>
-
 
         <aside className="hidden xl:block w-80 flex-shrink-0">
           <div className="sticky top-20 space-y-4">
@@ -455,7 +431,6 @@ export default function HomePage() {
                 Create Community
               </Link>
             </motion.div>
-
 
             <motion.div
               initial={{ opacity: 0, x: 20 }}
