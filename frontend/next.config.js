@@ -1,11 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // Disable ESLint during production builds
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Disable TypeScript type checking during builds
     ignoreBuildErrors: true,
   },
   images: {
@@ -20,4 +18,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+module.exports = nextConfig
