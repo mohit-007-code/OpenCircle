@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import dj_database_url  # Add this import
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,7 +14,8 @@ load_dotenv()
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-change-this')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app', '.now.sh']
+# ALLOWED_HOSTS - Only define once!
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.railway.app', '.vercel.app', '.now.sh']
 
 # Application definition
 INSTALLED_APPS = [
@@ -44,8 +46,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise should be here
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Moved before CommonMiddleware
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -74,16 +77,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Database Configuration
+# Database Configuration - Use dj_database_url for Railway
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
-    }
+    'default': dj_database_url.config(
+        default=f"postgresql://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASSWORD')}@{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT', '5432')}/{os.environ.get('DB_NAME')}",
+        conn_max_age=600
+    )
 }
 
 # Password validation
@@ -100,12 +99,13 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static and Media files
+# Static and Media files - Only define once!
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -143,14 +143,19 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# CORS settings
+# CORS settings - Only define once!
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    # Add after frontend deploys:
-    "https://open-circle.vercel.app",
+    "https://open-circle-web.vercel.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF Trusted Origins - Remove trailing slash!
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "https://open-circle-web.vercel.app",
+]
 
 # Django Allauth Configuration
 AUTHENTICATION_BACKENDS = [
@@ -158,7 +163,7 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# Updated Allauth Settings (for v65.5+)
+# Allauth Settings
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
@@ -183,25 +188,11 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-
+# Production Security Settings
 if not DEBUG:
-    # Security settings
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
-# Simplified static files for Vercel
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-
-ALLOWED_HOSTS = [
-'localhost',
-'127.0.0.1',
-'.vercel.app',
-'.now.sh'
-]
-
-# Make sure you have this for OAuth
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "https://open-circle-web.vercel.app/",
-]
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
