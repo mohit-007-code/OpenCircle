@@ -147,8 +147,8 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    # Add these after you get your Vercel URLs:
-    # "https://your-frontend.vercel.app",
+    # Add after frontend deploys:
+    # "https://your-frontend-name.vercel.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -190,5 +190,12 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     
-    # Simplified static files for Vercel
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+# Simplified static files for Vercel
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+ALLOWED_HOSTS = [
+'localhost',
+'127.0.0.1',
+'.vercel.app',
+'.now.sh'
+]
