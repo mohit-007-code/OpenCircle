@@ -81,3 +81,22 @@ export interface FollowUser {
   is_following: boolean;
   followed_at: string;
 }
+
+// Add these Auth types
+export interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  password2?: string;
+}
+
+export interface LoginData {
+  username: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  access: string;
+  refresh: string;
+  user: User;
+}
