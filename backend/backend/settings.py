@@ -148,7 +148,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     # Add after frontend deploys:
-    # "https://your-frontend-name.vercel.app",
+    "https://open-circle.vercel.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -198,4 +198,10 @@ ALLOWED_HOSTS = [
 '127.0.0.1',
 '.vercel.app',
 '.now.sh'
+]
+
+# Make sure you have this for OAuth
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "https://open-circle-web.vercel.app/",
 ]
