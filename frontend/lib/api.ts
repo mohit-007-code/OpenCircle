@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,9 +16,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 api.interceptors.response.use(
@@ -31,14 +29,12 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        
-        if (!refreshToken) {
-          throw new Error('No refresh token');
-        }
+        if (!refreshToken) throw new Error('No refresh token');
 
-        const response = await axios.post('http://localhost:8000/api/auth/token/refresh/', {
-          refresh: refreshToken,
-        });
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/token/refresh/`,
+          { refresh: refreshToken }
+        );
 
         const newAccessToken = response.data.access;
         localStorage.setItem('access_token', newAccessToken);
@@ -49,7 +45,6 @@ api.interceptors.response.use(
         console.error('Token refresh failed:', refreshError);
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        
         if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
           window.location.href = '/login';
         }
