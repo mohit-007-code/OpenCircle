@@ -1,8 +1,15 @@
 // frontend/src/lib/api.ts
 import axios from 'axios';
 
+// Normalize API base: allow NEXT_PUBLIC_API_URL to be provided either
+// with or without the trailing `/api` segment. If it's absent, we
+// append `/api`. This prevents calls like /auth/... going to the
+// host root (which was causing the missing CORS headers / 404s).
+const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE = RAW_API_URL ? RAW_API_URL.replace(/\/+$/, '') + '/api' : 'http://localhost:8000/api';
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
+  baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,7 +39,7 @@ api.interceptors.response.use(
         if (!refreshToken) throw new Error('No refresh token');
 
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/token/refresh/`,
+          `${API_BASE}/auth/token/refresh/`,
           { refresh: refreshToken }
         );
 
