@@ -6,13 +6,26 @@ import axios from 'axios';
 // append `/api`. This prevents calls like /auth/... going to the
 // host root (which was causing the missing CORS headers / 404s).
 const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL;
-const API_BASE = RAW_API_URL ? RAW_API_URL.replace(/\/+$/, '') + '/api' : 'http://localhost:8000/api';
+// Ensure base always ends with a single trailing slash (e.g. https://host/api/)
+const API_BASE = RAW_API_URL ? RAW_API_URL.replace(/\/+$/, '') + '/api/' : 'http://localhost:8000/api/';
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Normalize outgoing request URLs: many files call api.get('/auth/...') with a leading
+// slash. In axios a url starting with '/' replaces the path portion of the baseURL
+// (causing /api to be dropped). Strip leading slashes here so requests like
+// '/auth/profile/' become 'auth/profile/' and concatenate correctly with
+// baseURL 'https://host/api/'.
+api.interceptors.request.use((config) => {
+  if (config.url && typeof config.url === 'string') {
+    config.url = config.url.replace(/^\/+/, '');
+  }
+  return config;
 });
 
 api.interceptors.request.use(
@@ -39,7 +52,7 @@ api.interceptors.response.use(
         if (!refreshToken) throw new Error('No refresh token');
 
         const response = await axios.post(
-          `${API_BASE}/auth/token/refresh/`,
+          `${API_BASE}auth/token/refresh/`,
           { refresh: refreshToken }
         );
 
