@@ -87,11 +87,13 @@ class GoogleAuthView(APIView):
             }, status=status.HTTP_200_OK)
             
         except ValueError as e:
+            print(f"Google Auth ValueError: {str(e)}")  # For debugging
             return Response(
                 {'error': 'Invalid token', 'details': str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            print(f"Google Auth Error: {str(e)}")  # For debugging
             return Response(
                 {'error': 'Authentication failed', 'details': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
