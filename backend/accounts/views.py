@@ -56,10 +56,19 @@ class GoogleAuthView(APIView):
             )
         
         try:
+            client_id = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
+            if not client_id:
+                return Response(
+                    {'error': 'Google Client ID not configured'}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+                
+            print(f"Attempting to verify token with client_id: {client_id[:10]}...")  # Print first 10 chars for security
+            
             idinfo = id_token.verify_oauth2_token(
                 token, 
                 requests.Request(), 
-                settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
+                client_id
             )
             
             email = idinfo.get('email')
